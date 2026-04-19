@@ -1,0 +1,322 @@
+:root {
+    --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    --success-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    --danger-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    --bg-color: #fdfbf7; /* Warm Ivory / Premium Off-white */
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.4;
+    padding: 12px;
+    padding-bottom: 80px; /* Space for Bottom Nav */
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* View Management */
+.app-view {
+    display: none;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.app-view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+header {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 8px 12px;
+    gap: 4px;
+    color: var(--text-muted);
+}
+
+.nav-item.active {
+    color: #4f46e5;
+}
+
+.nav-icon {
+    font-size: 18px;
+}
+
+.nav-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+header h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: -0.025em;
+}
+
+header p {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.table-actions {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+button {
+    border-radius: 8px;
+    font-weight: 700;
+    font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.primary-btn {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 10px 16px;
+}
+
+#save-btn {
+    background: var(--success-gradient) !important; /* Force override for specialty button */
+    color: white;
+}
+
+.secondary-btn {
+    background: white;
+    border: 1.5px solid var(--border-color);
+    color: #475569;
+    padding: 8px 14px;
+}
+
+button:active {
+    transform: scale(0.96);
+    filter: brightness(0.9);
+}
+
+/* Table Enhancements */
+.table-container {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    border: 1px solid rgba(255,255,255,0.8);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: #f8fafc;
+    padding: 10px 4px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--border-color);
+}
+
+td {
+    padding: 8px 2px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+/* Specific Column Widths */
+th:nth-child(1), td:nth-child(1) { width: 28%; }
+th:nth-child(2), td:nth-child(2) { width: 15%; } /* Earn */
+th:nth-child(3), td:nth-child(3) { width: 14%; } /* Other */
+th:nth-child(4), td:nth-child(4) { width: 15%; color: #dc2626; } /* Spend Red */
+th:nth-child(5), td:nth-child(5) { width: 18%; }
+th:nth-child(6), td:nth-child(6) { width: 10%; }
+
+input {
+    width: 100%;
+    padding: 8px 2px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    outline: none;
+    border-radius: 4px;
+}
+
+/* Red color for Spend inputs specifically */
+td:nth-child(4) input {
+    color: #dc2626;
+}
+
+#grand-spends {
+    color: #dc2626;
+}
+
+input:focus {
+    background-color: #f0f9ff;
+}
+
+input[type="date"] {
+    font-size: 11px;
+    padding: 6px 0;
+}
+
+.balance-cell {
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.balance-cell.positive { color: #059669; }
+.balance-cell.negative { color: #dc2626; }
+
+.delete-btn {
+    background: none;
+    box-shadow: none;
+}
+
+.total-row td {
+    background-color: #f8fafc;
+    border-top: 2px solid var(--border-color);
+    color: #1e293b;
+    font-weight: 800;
+}
+
+/* Budget Section */
+.budget-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.budget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.budget-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#budget-input {
+    width: 80px;
+    padding: 5px;
+    font-size: 11px;
+    border: 1px solid var(--border-color);
+    background: #f8fafc;
+}
+
+.budget-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.budget-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.progress-bar {
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #10b981;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Chart Section */
+.chart-section {
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.chart-section h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+}
+
+.chart-container {
+    height: 200px;
+    width: 100%;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+}

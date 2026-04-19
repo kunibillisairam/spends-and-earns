@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for a clean look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Daily Expense Tracker</h1>
+            <p>Track your daily earnings and spends in a simple table format.</p>
+        </header>
+
+        <main>
+            <!-- View 1: Tracker -->
+            <section id="tracker-view" class="app-view active">
+                <div class="table-actions">
+                    <button id="add-row-btn" class="primary-btn">+ New</button>
+                    <button id="save-btn" class="primary-btn"
+                        style="background-color: var(--success-gradient);">Save</button>
+                    <button id="clear-all-btn" class="secondary-btn">Clear</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="expense-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Earn</th>
+                                <th>Oth</th>
+                                <th>Spend</th>
+                                <th>Bal</th>
+                                <th class="action-col"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Rows will be added here -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>Tot</strong></td>
+                                <td id="grand-earns">0</td>
+                                <td id="grand-other">0</td>
+                                <td id="grand-spends">0</td>
+                                <td id="grand-balance" class="bold">0</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <!-- View 2: Insights (Graphs) -->
+            <section id="insights-view" class="app-view">
+                <!-- Budget Section -->
+                <div class="budget-section">
+                    <div class="budget-header">
+                        <h2>Weekly Budget</h2>
+                        <input type="number" id="budget-input" placeholder="Set Limit">
+                    </div>
+                    <div class="budget-status">
+                        <div class="budget-labels">
+                            <span id="budget-spent">Spent: 0</span>
+                            <span id="budget-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <h2>Weekly Overview</h2>
+                    <div class="chart-container">
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="tracker-view">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Tracker</span>
+            </button>
+            <button class="nav-item" data-view="insights-view">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Insights</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
