@@ -374,3 +374,7 @@ clearAllBtn.addEventListener('click', clearAll);
 
 // Start
 init();
+
+// Expose functions to window for onclick/onchange in dynamic HTML (since we're using type="module")
+window.updateData = updateData;
+window.deleteRow = deleteRow;
