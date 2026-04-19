@@ -107,17 +107,50 @@
             alert("Please contact the administrator or reset via phone verification (Coming soon with database integration!)");
         });
 
-        authForm.addEventListener('submit', (e) => {
+        authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // For now, we simulate a successful login
-            const user = {
-                username: document.getElementById('username')?.value || "Guest User",
-                phone: document.getElementById('phone').value,
-            };
+            const username = document.getElementById('username')?.value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password')?.value;
+
+            if (!isLogin && password !== confirmPassword) {
+                return alert("Passwords do not match!");
+            }
+
+            submitBtn.textContent = "Processing...";
+            submitBtn.disabled = true;
+
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
             
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            window.location.href = 'index.html';
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, phone, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (isLogin) {
+                        localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        localStorage.setItem('authToken', data.token);
+                        window.location.href = 'index.html';
+                    } else {
+                        alert("Signup successful! Please login.");
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || "Something went wrong");
+                }
+            } catch (err) {
+                alert("Server error. Make sure your local MongoDB is running!");
+            } finally {
+                submitBtn.textContent = isLogin ? "Login" : "Sign Up";
+                submitBtn.disabled = false;
+            }
         });
 
         // Quick check: if already logged in, go to home

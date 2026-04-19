@@ -33,15 +33,58 @@ let weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
 let weeklyChart = null;
 
 // Initialize the app
-function init() {
+async function init() {
     autoAddMissingDays();
     if (trackerData.length === 0) {
         addNewRow();
     }
+    
+    // Sync with MongoDB if logged in
+    await fetchCloudData();
+    
     renderTable();
     updateChart();
     updateBudgetStatus();
     budgetInput.value = weeklyBudget || '';
+}
+
+async function fetchCloudData() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    try {
+        const response = await fetch('/api/data/tracker', {
+            headers: { 'token': token }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data.trackerData) {
+                trackerData = data.trackerData;
+                weeklyBudget = data.weeklyBudget || 0;
+                saveData(false); // Update local cache
+            }
+        }
+    } catch (err) {
+        console.error("Cloud fetch failed:", err);
+    }
+}
+
+async function syncToCloud() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    try {
+        await fetch('/api/data/tracker', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'token': token
+            },
+            body: JSON.stringify({ trackerData, weeklyBudget })
+        });
+    } catch (err) {
+        console.error("Cloud sync failed:", err);
+    }
 }
 
 function updateBudgetStatus() {
@@ -312,9 +355,10 @@ function clearAll() {
     }
 }
 
-// Save to Local Storage
-function saveData() {
+// Save to Local Storage & Sync Cloud
+function saveData(cloudSync = true) {
     localStorage.setItem('trackerData', JSON.stringify(trackerData));
+    if (cloudSync) syncToCloud();
 }
 
 // Update the footer totals
