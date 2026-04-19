@@ -3,30 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Notification Dashboard</title>
+    <title>Admin HQ - Spends & Earns</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        .admin-card {
-            max-width: 500px;
-            margin: 50px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    <script>
+        // Basic Security: Check if ANY user is logged in
+        if (!localStorage.getItem('currentUser')) {
+            window.location.replace('auth.html');
         }
+        // In a real app, you would check if currentUser.phone === 'YOUR_ADMIN_NUMBER'
+    </script>
+    <style>
+        body { background: #f8fafc; }
+        .admin-main { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .admin-header h1 { font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.05em; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card h3 { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9; }
+        .stat-card .value { font-size: 48px; font-weight: 800; margin-top: 5px; }
+        .stat-card .bg-icon { position: absolute; right: -20px; bottom: -20px; font-size: 100px; opacity: 0.1; }
+
+        .broadcast-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .broadcast-panel h2 { font-size: 20px; font-weight: 800; margin-bottom: 20px; }
+        
+        .templates { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .template-btn { 
+            background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 16px; 
+            border-radius: 20px; font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+        }
+        .template-btn:hover { background: #e2e8f0; }
+
         .form-group { margin-bottom: 20px; }
         label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-family: inherit; }
-        .send-btn { width: 100%; padding: 15px; margin-top: 20px; font-size: 16px; }
+        input, textarea { width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 15px; }
+        input:focus, textarea:focus { border-color: var(--primary-color); outline: none; }
+        
+        .send-btn { width: 100%; padding: 18px; font-size: 16px; border-radius: 14px; }
+        #status { margin-top: 15px; text-align: center; font-weight: 700; height: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="admin-card">
-            <header style="margin-bottom: 30px; box-shadow: none; padding: 0;">
-                <h1>Admin Dashboard</h1>
-                <p>Send a live notification to all active users.</p>
-            </header>
+    <div class="admin-main">
+        <div class="admin-header">
+            <h1>Admin HQ ⚡</h1>
+            <a href="index.html" style="text-decoration: none; color: #6366f1; font-weight: 600;">Home</a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="bg-icon">👥</div>
+                <h3>Registered Users</h3>
+                <div class="value" id="user-count">...</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <div class="bg-icon">📢</div>
+                <h3>Broadcast Status</h3>
+                <div class="value" style="font-size: 30px; margin-top: 15px;">Ready</div>
+            </div>
+        </div>
+
+        <div class="broadcast-panel">
+            <h2>Send Broadcast Message</h2>
+            
+            <div class="templates">
+                <button class="template-btn" data-title="New Update! 🚀" data-body="A new version of Spends & Earns is available. Refresh your app!">Update Layout</button>
+                <button class="template-btn" data-title="Server Maintenance 🛠️" data-body="We will be doing brief maintenance at midnight. Your data is safe!">Maintenance</button>
+                <button class="template-btn" data-title="Tip of the Day 💡" data-body="Did you know? You can now export your expenses as a CSV file from your profile!">Tip</button>
+            </div>
 
             <div class="form-group">
                 <label>Notification Title</label>
@@ -38,38 +107,59 @@
                 <textarea id="message" rows="4" placeholder="Type your message here..."></textarea>
             </div>
 
-            <button id="send-btn" class="primary-btn send-btn">Send Broadcast</button>
-
-            <p id="status" style="margin-top: 20px; text-align: center; color: var(--success-color); font-weight: 700; display: none;">
-                Message Sent Successfully!
-            </p>
+            <button id="send-btn" class="primary-btn send-btn">Send Broadcast Now</button>
+            <div id="status"></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const sendBtn = document.getElementById('send-btn');
+        // Fetch Total Users
+        async function fetchUserCount() {
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                document.getElementById('user-count').textContent = usersSnap.size;
+            } catch (err) {
+                console.error("Could not fetch users", err);
+                document.getElementById('user-count').textContent = "Error";
+            }
+        }
+        fetchUserCount();
+
+        // Templates Logic
         const titleInput = document.getElementById('title');
         const messageInput = document.getElementById('message');
+        document.querySelectorAll('.template-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                titleInput.value = btn.getAttribute('data-title');
+                messageInput.value = btn.getAttribute('data-body');
+            });
+        });
+
+        // Broadcast Logic
+        const sendBtn = document.getElementById('send-btn');
         const statusEl = document.getElementById('status');
 
         sendBtn.addEventListener('click', async () => {
             const title = titleInput.value;
             const message = messageInput.value;
 
-            if (!message) return alert("Please enter a message!");
+            if (!message) {
+                statusEl.textContent = "❌ Please enter a message!";
+                statusEl.style.color = "#ef4444";
+                return;
+            }
 
             sendBtn.textContent = "Sending...";
             sendBtn.disabled = true;
 
             try {
-                // Update the broadcast document
                 await setDoc(doc(db, "notifications", "broadcast"), {
                     title: title || "Global Announcement",
                     message: message,
@@ -77,22 +167,26 @@
                     timestamp: serverTimestamp()
                 });
 
-                statusEl.style.display = "block";
+                statusEl.textContent = "✅ Broadcast Sent Successfully!";
+                statusEl.style.color = "#10b981";
+                titleInput.value = "";
                 messageInput.value = "";
                 
                 setTimeout(() => {
-                    statusEl.style.display = "none";
-                    sendBtn.textContent = "Send Broadcast";
+                    statusEl.textContent = "";
+                    sendBtn.textContent = "Send Broadcast Now";
                     sendBtn.disabled = false;
-                }, 3000);
+                }, 4000);
 
             } catch (err) {
                 console.error(err);
-                alert("Error sending: " + err.message + "\n\nMake sure Firestore is ENABLED in Firebase Console!");
-                sendBtn.textContent = "Send Broadcast";
+                statusEl.textContent = "❌ Error: Could not send broadcast.";
+                statusEl.style.color = "#ef4444";
+                sendBtn.textContent = "Send Broadcast Now";
                 sendBtn.disabled = false;
             }
         });
     </script>
 </body>
 </html>
+
