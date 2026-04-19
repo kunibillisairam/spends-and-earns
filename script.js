@@ -444,14 +444,18 @@ onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
         const data = doc.data();
         if (data.active && data.message) {
             const title = data.title || "Admin Notice";
+            const message = data.message;
             const options = {
-                body: data.message,
+                body: message,
                 icon: "/icon-192.png",
                 badge: "/icon-192.png",
                 vibrate: [200, 100, 200]
             };
 
-            // Try showing a real system notification via the Service Worker
+            // 1. Always show the in-app fallback alert (Fail-safe)
+            alert(`📢 ${title.toUpperCase()}\n\n${message}`);
+
+            // 2. Also try showing a real system notification
             if (Notification.permission === "granted") {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.ready.then(registration => {
@@ -460,9 +464,6 @@ onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
                 } else {
                     new Notification(title, options);
                 }
-            } else {
-                console.log("Notification permission not granted, showing fallback alert.");
-                alert(`ADMIN NOTICE: ${data.message}`);
             }
         }
     }
