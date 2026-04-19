@@ -439,10 +439,14 @@ onMessage(messaging, (payload) => {
 });
 
 // Broadcast listener: Listen for a document named 'broadcast' in 'notifications' collection
-onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
-    if (doc.exists()) {
-        const data = doc.data();
-        if (data.active && data.message) {
+onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
+    if (snapshot.exists()) {
+        const data = snapshot.data();
+        const msgId = data.timestamp ? data.timestamp.toMillis() : null;
+        const lastRead = localStorage.getItem('lastReadMessage');
+
+        // Only show if it's a new message we haven't seen in this session
+        if (data.active && data.message && msgId && msgId.toString() !== lastRead) {
             const title = data.title || "Admin Notice";
             const message = data.message;
             const options = {
@@ -452,10 +456,13 @@ onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
                 vibrate: [200, 100, 200]
             };
 
-            // 1. Always show the in-app fallback alert (Fail-safe)
+            // 1. Show the alert
             alert(`📢 ${title.toUpperCase()}\n\n${message}`);
 
-            // 2. Also try showing a real system notification
+            // 2. Mark as read
+            localStorage.setItem('lastReadMessage', msgId.toString());
+
+            // 3. Try showing a real system notification
             if (Notification.permission === "granted") {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.ready.then(registration => {
