@@ -395,20 +395,33 @@ async function checkNotificationPermission() {
     }
 }
 
+function hideBanner() {
+    if (notifBanner) {
+        notifBanner.classList.add('hide');
+        setTimeout(() => {
+            notifBanner.style.display = 'none';
+        }, 400); // Match animation duration
+    }
+}
+
 if (notifAllowBtn) {
     notifAllowBtn.addEventListener('click', async () => {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            const token = await getToken(messaging, { vapidKey: vapidKey });
-            if (token) console.log('FCM Token:', token);
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const token = await getToken(messaging, { vapidKey: vapidKey });
+                if (token) console.log('FCM Token generated');
+            }
+        } catch (err) {
+            console.error("Permission/Token error:", err);
         }
-        notifBanner.style.display = 'none';
+        hideBanner();
     });
 }
 
 if (notifCloseBtn) {
     notifCloseBtn.addEventListener('click', () => {
-        notifBanner.style.display = 'none';
+        hideBanner();
     });
 }
 
