@@ -395,17 +395,26 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 if (installBtn) {
+    // Hide button if already in standalone mode (already installed)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        installBtn.style.display = 'none';
+    }
+
     installBtn.addEventListener('click', async () => {
         if (deferredPrompt) {
-            // Show the install prompt
             deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
             const { outcome } = await deferredPrompt.userChoice;
             console.log(`User response to the install prompt: ${outcome}`);
-            // We've used the prompt, and can't use it again, throw it away
             deferredPrompt = null;
-            // Hide the install button
             installBtn.style.display = 'none';
+        } else {
+            // Fallback for devices/browsers that don't support beforeinstallprompt
+            const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isiOS) {
+                alert('To install on iPhone/iPad:\n1. Tap the "Share" button at the bottom.\n2. Scroll down and tap "Add to Home Screen".');
+            } else {
+                alert('To install this app:\n1. Click the "Install" icon in your browser address bar (top right).\nOR\n2. Open your browser menu (3 dots) and select "Install App" or "Add to Home Screen".');
+            }
         }
     });
 }
