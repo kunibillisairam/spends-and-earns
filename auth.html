@@ -81,6 +81,14 @@
     </div>
 
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         let isLogin = true;
         const authTitle = document.getElementById('auth-title');
         const authSubtitle = document.getElementById('auth-subtitle');
@@ -110,7 +118,7 @@
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const username = document.getElementById('username')?.value;
+            const usernameInput = document.getElementById('username')?.value;
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password')?.value;
@@ -122,31 +130,44 @@
             submitBtn.textContent = "Processing...";
             submitBtn.disabled = true;
 
-            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-            
             try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, phone, password })
-                });
+                const userRef = doc(db, "users", phone);
+                const userSnap = await getDoc(userRef);
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    if (isLogin) {
-                        localStorage.setItem('currentUser', JSON.stringify(data.user));
-                        localStorage.setItem('authToken', data.token);
-                        window.location.href = 'index.html';
+                if (isLogin) {
+                    // LOGIN LOGIC
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        if (userData.password === password) {
+                            localStorage.setItem('currentUser', JSON.stringify({
+                                username: userData.username,
+                                phone: userData.phone
+                            }));
+                            window.location.href = 'index.html';
+                        } else {
+                            alert("Invalid password!");
+                        }
                     } else {
+                        alert("User not found!");
+                    }
+                } else {
+                    // SIGNUP LOGIC
+                    if (userSnap.exists()) {
+                        alert("Phone number already registered!");
+                    } else {
+                        await setDoc(userRef, {
+                            username: usernameInput,
+                            phone: phone,
+                            password: password, // In a real big app, we'd hash this, but for testing Firestore simple is best
+                            createdAt: new Date().toISOString()
+                        });
                         alert("Signup successful! Please login.");
                         window.location.reload();
                     }
-                } else {
-                    alert(data.message || "Something went wrong");
                 }
             } catch (err) {
-                alert("Server error. Make sure your local MongoDB is running!");
+                console.error(err);
+                alert("Firebase Error: " + err.message + "\n\nMake sure Firestore is ENABLED in Firebase Console!");
             } finally {
                 submitBtn.textContent = isLogin ? "Login" : "Sign Up";
                 submitBtn.disabled = false;
