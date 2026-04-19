@@ -443,13 +443,25 @@ onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
     if (doc.exists()) {
         const data = doc.data();
         if (data.active && data.message) {
-            // Show a notification if the app is open
+            const title = data.title || "Admin Notice";
+            const options = {
+                body: data.message,
+                icon: "/icon-192.png",
+                badge: "/icon-192.png",
+                vibrate: [200, 100, 200]
+            };
+
+            // Try showing a real system notification via the Service Worker
             if (Notification.permission === "granted") {
-                new Notification(data.title || "Admin Notice", {
-                    body: data.message,
-                    icon: "/icon-192.png"
-                });
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, options);
+                    });
+                } else {
+                    new Notification(title, options);
+                }
             } else {
+                console.log("Notification permission not granted, showing fallback alert.");
                 alert(`ADMIN NOTICE: ${data.message}`);
             }
         }
