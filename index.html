@@ -91,6 +91,18 @@
             </section>
         </main>
 
+        <!-- Update Available Banner -->
+        <div id="update-banner" class="glass-banner" style="bottom: 12px; display: none; background: var(--primary-gradient); color: white;">
+            <div class="banner-content">
+                <div class="banner-icon">🚀</div>
+                <div class="banner-text">
+                    <h3 style="color: white;">New Version Available!</h3>
+                    <p style="color: rgba(255,255,255,0.8);">Update now to get the latest features and notifications.</p>
+                </div>
+            </div>
+            <button id="update-btn" class="secondary-btn" style="width: 100%; border: none; font-weight: 800;">Update Now</button>
+        </div>
+
         <!-- Notification Permission Banner (Premium UI) -->
         <div id="notif-banner" class="glass-banner">
             <div class="banner-content">
@@ -125,11 +137,23 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Registered'))
-                    .catch(err => console.log('SW Error', err));
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New update found and installed! Show the update banner.
+                                document.getElementById('update-banner').style.display = 'flex';
+                            }
+                        });
+                    });
+                });
             });
         }
+
+        document.getElementById('update-btn')?.addEventListener('click', () => {
+            window.location.reload();
+        });
     </script>
 </body>
 
