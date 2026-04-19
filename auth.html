@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Signup - Spends & Earns</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .auth-card {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+        .auth-header p { color: var(--text-muted); font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 15px; }
+        
+        .auth-toggle { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-muted); }
+        .auth-toggle span { color: var(--primary-color); font-weight: 700; cursor: pointer; }
+        
+        .error-msg { color: #ef4444; font-size: 12px; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1 id="auth-title">Welcome Back!</h1>
+                <p id="auth-subtitle">Login to track your daily expenses.</p>
+            </div>
+
+            <form id="auth-form">
+                <!-- Signup Only Fields -->
+                <div class="form-group signup-only" style="display: none;">
+                    <label>Full Name</label>
+                    <input type="text" id="username" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" placeholder="Enter phone number" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <!-- Signup Only Fields -->
+                <div class="form-group signup-only" style="display: none;">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirm-password" placeholder="••••••••">
+                    <p id="pw-error" class="error-msg">Passwords do not match!</p>
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="primary-btn" style="width: 100%; padding: 16px; font-size: 16px;">Login</button>
+            </form>
+
+            <div class="auth-toggle">
+                <p id="toggle-text">Don't have an account? <span id="switch-auth">Sign Up</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        let isLogin = true;
+        const authTitle = document.getElementById('auth-title');
+        const authSubtitle = document.getElementById('auth-subtitle');
+        const signupFields = document.querySelectorAll('.signup-only');
+        const switchAuth = document.getElementById('switch-auth');
+        const toggleText = document.getElementById('toggle-text');
+        const authForm = document.getElementById('auth-form');
+        const submitBtn = document.getElementById('auth-submit-btn');
+
+        switchAuth.addEventListener('click', () => {
+            isLogin = !isLogin;
+            authTitle.textContent = isLogin ? "Welcome Back!" : "Create Account";
+            authSubtitle.textContent = isLogin ? "Login to track your daily expenses." : "Start your financial journey with us.";
+            submitBtn.textContent = isLogin ? "Login" : "Sign Up";
+            toggleText.innerHTML = isLogin ? "Don't have an account? <span>Sign Up</span>" : "Already have an account? <span>Login</span>";
+            
+            signupFields.forEach(f => f.style.display = isLogin ? 'none' : 'block');
+            
+            // Re-bind click after innerHTML change
+            document.querySelector('#toggle-text span').addEventListener('click', () => switchAuth.click());
+        });
+
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // For now, we simulate a successful login
+            const user = {
+                username: document.getElementById('username')?.value || "Guest User",
+                phone: document.getElementById('phone').value,
+            };
+            
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            window.location.href = 'index.html';
+        });
+
+        // Quick check: if already logged in, go to home
+        if(localStorage.getItem('currentUser')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

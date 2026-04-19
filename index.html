@@ -12,12 +12,21 @@
     <meta name="theme-color" content="#6366f1">
     <!-- Google Fonts for a clean look -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        // AUTH PROTECTION: Immediately check if user is logged in
+        if (!localStorage.getItem('currentUser')) {
+            window.location.href = 'auth.html';
+        }
+    </script>
 </head>
 
 <body>
     <div class="container">
         <header>
             <div class="header-main">
+                <div id="profile-trigger" class="profile-icon-btn">
+                    <span id="user-initial">U</span>
+                </div>
                 <h1>Daily Expense Tracker</h1>
                 <button id="install-btn" class="install-btn">Install App</button>
             </div>
@@ -174,6 +183,32 @@
             </div>
             <div class="bc-footer">
                 <button id="bc-close-btn" class="primary-btn bc-btn vibrant-shadow">Sweet, thanks! ✌️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Sidebar (Drawer) -->
+    <div id="profile-drawer" class="drawer-overlay" style="display:none;">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <div class="large-avatar">
+                    <span id="drawer-initial">U</span>
+                </div>
+                <h2 id="display-name">Username</h2>
+                <p id="display-phone">+91 00000 00000</p>
+            </div>
+            <div class="drawer-body">
+                <div class="drawer-item">
+                    <span>Account Security</span>
+                    <span>🔒</span>
+                </div>
+                <div class="drawer-item">
+                    <span>Help & Support</span>
+                    <span>❓</span>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <button id="logout-btn" class="secondary-btn logout-danger">Logout</button>
             </div>
         </div>
     </div>

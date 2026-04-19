@@ -489,8 +489,44 @@ onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
     }
 });
 
+// Profile Drawer Logic
+const profileTrigger = document.getElementById('profile-trigger');
+const profileDrawer = document.getElementById('profile-drawer');
+const logoutBtn = document.getElementById('logout-btn');
+const userInitial = document.getElementById('user-initial');
+const drawerInitial = document.getElementById('drawer-initial');
+const displayName = document.getElementById('display-name');
+const displayPhone = document.getElementById('display-phone');
+
+function initUser() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        const initial = user.username.charAt(0).toUpperCase();
+        userInitial.textContent = initial;
+        drawerInitial.textContent = initial;
+        displayName.textContent = user.username;
+        displayPhone.textContent = user.phone;
+    }
+}
+
+profileTrigger?.addEventListener('click', () => {
+    profileDrawer.style.display = 'block';
+});
+
+profileDrawer?.addEventListener('click', (e) => {
+    if (e.target === profileDrawer) {
+        profileDrawer.style.display = 'none';
+    }
+});
+
+logoutBtn?.addEventListener('click', () => {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'auth.html';
+});
+
 // Start
 init();
+initUser();
 // Check for notification permission after 8 seconds (to let user settle in)
 setTimeout(checkNotificationPermission, 8000);
 

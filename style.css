@@ -487,3 +487,87 @@ input[type="date"] {
     transform: translateY(-2px);
     box-shadow: 0 15px 20px -3px rgba(168, 85, 247, 0.5);
 }
+
+/* Profile Icon Button */
+.profile-icon-btn {
+    width: 38px;
+    height: 38px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+.profile-icon-btn:hover { transform: scale(1.05); }
+
+/* User Drawer (Slide-in) */
+.drawer-overlay {
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 6000;
+    backdrop-filter: blur(5px);
+}
+
+.drawer-content {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 85%;
+    max-width: 320px;
+    background: white;
+    box-shadow: 5px 0 25px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.drawer-header {
+    background: #f8fafc;
+    padding: 40px 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.large-avatar {
+    width: 80px;
+    height: 80px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    font-weight: 800;
+}
+
+.drawer-header h2 { font-size: 20px; font-weight: 800; color: var(--text-color); margin-bottom: 5px; }
+.drawer-header p { font-size: 13px; color: var(--text-muted); }
+
+.drawer-body { flex: 1; padding: 20px; }
+.drawer-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: #f1f5f9;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.drawer-footer { padding: 20px; border-top: 1px solid var(--border-color); }
+.logout-danger { width: 100%; border-color: #ef4444; color: #ef4444; font-weight: 700; }
