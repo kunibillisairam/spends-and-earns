@@ -12,6 +12,7 @@ const db = getFirestore(app);
 const tableBody = document.getElementById('table-body');
 const addRowBtn = document.getElementById('add-row-btn');
 const clearAllBtn = document.getElementById('clear-all-btn');
+const tableSearch = document.getElementById('table-search');
 
 // Grand Totals Elements
 const grandEarnsEl = document.getElementById('grand-earns');
@@ -197,13 +198,23 @@ function autoAddMissingDays() {
 }
 
 function renderTable() {
-    const displayData = [...trackerData].sort((a, b) => new Date(b.date) - new Date(a.date));
-    tableBody.innerHTML = '';
-    displayData.forEach((row) => {
-        const actualIndex = trackerData.findIndex(d => d.date === row.date);
-        createRowUI(row, actualIndex);
+    const searchTerm = tableSearch ? tableSearch.value.toLowerCase() : '';
+    const filteredData = trackerData.filter(row => {
+        return (row.date || '').toLowerCase().includes(searchTerm);
     });
-    updateGrandTotals();
+    const displayData = [...filteredData].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    tableBody.innerHTML = '';
+    
+    if (displayData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No records found.</td></tr>';
+    } else {
+        displayData.forEach((row) => {
+            const actualIndex = trackerData.findIndex(d => d.date === row.date);
+            createRowUI(row, actualIndex);
+        });
+    }
+    updateGrandTotals(filteredData);
 }
 
 function createRowUI(row, index) {
@@ -249,6 +260,7 @@ function updateData(index, field, value) {
     updateGrandTotals();
     updateChart();
     updateBudgetStatus();
+    renderTable();
 }
 
 function deleteRow(index) {
@@ -274,9 +286,9 @@ function saveData(cloudSync = true) {
     if (cloudSync) syncToCloud();
 }
 
-function updateGrandTotals() {
+function updateGrandTotals(dataToCalculate = trackerData) {
     let tEarns = 0, tOther = 0, tSpends = 0;
-    trackerData.forEach(row => {
+    dataToCalculate.forEach(row => {
         tEarns += (row.earns || 0); tOther += (row.other || 0); tSpends += (row.spends || 0);
     });
     const tBalance = tEarns + tOther - tSpends;
@@ -316,6 +328,7 @@ navItems.forEach(item => {
 addRowBtn.addEventListener('click', addNewRow);
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
+tableSearch?.addEventListener('input', renderTable);
 
 const notifBanner = document.getElementById('notif-banner');
 const notifAllowBtn = document.getElementById('notif-allow-btn');
