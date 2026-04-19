@@ -6,13 +6,6 @@
     <title>Admin HQ - Spends & Earns</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script>
-        // Basic Security: Check if ANY user is logged in
-        if (!localStorage.getItem('currentUser')) {
-            window.location.replace('auth.html');
-        }
-        // In a real app, you would check if currentUser.phone === 'YOUR_ADMIN_NUMBER'
-    </script>
     <style>
         body { background: #f8fafc; }
         .admin-main { max-width: 800px; margin: 40px auto; padding: 0 20px; }
@@ -69,7 +62,25 @@
     </style>
 </head>
 <body>
-    <div class="admin-main">
+    <!-- ADMIN LOGIN SCREEN -->
+    <div id="admin-login-screen" style="max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <h2 style="text-align: center; margin-bottom: 5px; font-weight: 800; color: #1e293b;">Admin Access</h2>
+        <p style="text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 30px;">Authorized personnel only</p>
+        
+        <div class="form-group">
+            <label>Admin Username</label>
+            <input type="text" id="admin-username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Admin Password</label>
+            <input type="password" id="admin-password" placeholder="••••••••">
+        </div>
+        <button id="admin-login-btn" class="primary-btn send-btn" style="background: linear-gradient(135deg, #1e293b, #0f172a);">Login</button>
+        <p id="admin-login-error" style="color: #ef4444; font-size: 13px; text-align: center; margin-top: 15px; display: none;">Invalid credentials!</p>
+    </div>
+
+    <!-- ADMIN DASHBOARD (Hidden by default) -->
+    <div class="admin-main" id="admin-dashboard-screen" style="display:none;">
         <div class="admin-header">
             <h1>Admin HQ ⚡</h1>
             <a href="index.html" style="text-decoration: none; color: #6366f1; font-weight: 600;">Home</a>
@@ -117,6 +128,36 @@
         import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
+        // Admin Auth Logic
+        const loginScreen = document.getElementById('admin-login-screen');
+        const dashboardScreen = document.getElementById('admin-dashboard-screen');
+        const loginBtn = document.getElementById('admin-login-btn');
+        const errorEl = document.getElementById('admin-login-error');
+
+        // Check session
+        if (sessionStorage.getItem('adminAuth') === 'true') {
+            showDashboard();
+        }
+
+        loginBtn.addEventListener('click', () => {
+            const user = document.getElementById('admin-username').value;
+            const pass = document.getElementById('admin-password').value;
+
+            // Simple Admin check (You can change these values)
+            if (user === 'admin' && pass === 'admin123') {
+                sessionStorage.setItem('adminAuth', 'true');
+                showDashboard();
+            } else {
+                errorEl.style.display = 'block';
+            }
+        });
+
+        function showDashboard() {
+            loginScreen.style.display = 'none';
+            dashboardScreen.style.display = 'block';
+            fetchUserCount();
+        }
+
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -130,7 +171,6 @@
                 document.getElementById('user-count').textContent = "Error";
             }
         }
-        fetchUserCount();
 
         // Templates Logic
         const titleInput = document.getElementById('title');
