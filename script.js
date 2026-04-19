@@ -397,7 +397,12 @@ function initUser() {
 
 profileTrigger?.addEventListener('click', () => { profileDrawer.style.display = 'block'; });
 profileDrawer?.addEventListener('click', (e) => { if (e.target === profileDrawer) profileDrawer.style.display = 'none'; });
-logoutBtn?.addEventListener('click', () => { localStorage.removeItem('currentUser'); window.location.href = 'auth.html'; });
+logoutBtn?.addEventListener('click', () => { 
+    localStorage.removeItem('currentUser'); 
+    localStorage.removeItem('trackerData');
+    localStorage.removeItem('weeklyBudget');
+    window.location.href = 'auth.html'; 
+});
 
 init();
 initUser();
