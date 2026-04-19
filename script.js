@@ -439,6 +439,15 @@ onMessage(messaging, (payload) => {
 });
 
 // Broadcast listener: Listen for a document named 'broadcast' in 'notifications' collection
+const broadcastModal = document.getElementById('broadcast-modal');
+const bcTitle = document.getElementById('bc-title');
+const bcMessage = document.getElementById('bc-message');
+const bcCloseBtn = document.getElementById('bc-close-btn');
+
+bcCloseBtn?.addEventListener('click', () => {
+    broadcastModal.style.display = 'none';
+});
+
 onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
     if (snapshot.exists()) {
         const data = snapshot.data();
@@ -447,7 +456,7 @@ onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
 
         // Only show if it's a new message we haven't seen in this session
         if (data.active && data.message && msgId && msgId.toString() !== lastRead) {
-            const title = data.title || "Admin Notice";
+            const title = data.title || "Admin Announcement";
             const message = data.message;
             const options = {
                 body: message,
@@ -456,10 +465,14 @@ onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
                 vibrate: [200, 100, 200]
             };
 
-            // 1. Show the alert
-            alert(`📢 ${title.toUpperCase()}\n\n${message}`);
+            // 1. Show the Premium UI Modal
+            if (broadcastModal) {
+                bcTitle.textContent = title.toUpperCase();
+                bcMessage.textContent = message;
+                broadcastModal.style.display = 'flex';
+            }
 
-            // 2. Mark as read
+            // 2. Mark as read immediately
             localStorage.setItem('lastReadMessage', msgId.toString());
 
             // 3. Try showing a real system notification
