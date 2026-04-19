@@ -381,37 +381,6 @@ navItems.forEach(item => {
 addRowBtn.addEventListener('click', addNewRow);
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
-document.getElementById('system-test-btn')?.addEventListener('click', async () => {
-    // Check Permission Status
-    const status = Notification.permission;
-    
-    if (status === 'denied') {
-        alert("❌ Notifications are BLOCKED in your phone settings. Please tap the lock icon in the URL bar and reset permissions.");
-        return;
-    }
-
-    if (status === 'default') {
-        alert("⚠️ You haven't allowed notifications yet. Wait for the 'Enable Notifications' banner to appear and click Allow.");
-        return;
-    }
-
-    // Attempt to show notification
-    if ('serviceWorker' in navigator) {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            await registration.showNotification('🎉 Notification Test', {
-                body: 'Your mobile is successfully connected for system notifications!',
-                icon: '/icon-192.png',
-                badge: '/icon-192.png',
-                vibrate: [200, 100, 200]
-            });
-        } catch (err) {
-            alert("❌ System Error: " + err.message + "\nAre you on iPhone? Make sure you 'Add to Home Screen' first!");
-        }
-    } else {
-        alert("❌ This browser does not support system notifications.");
-    }
-});
 
 // Notification Logic
 const notifBanner = document.getElementById('notif-banner');
