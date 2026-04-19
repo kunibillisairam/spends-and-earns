@@ -186,28 +186,36 @@ td {
 }
 
 /* Specific Column Widths */
-th:nth-child(1), td:nth-child(1) { width: 28%; }
-th:nth-child(2), td:nth-child(2) { width: 15%; } /* Earn */
-th:nth-child(3), td:nth-child(3) { width: 14%; } /* Other */
-th:nth-child(4), td:nth-child(4) { width: 15%; color: #dc2626; } /* Spend Red */
-th:nth-child(5), td:nth-child(5) { width: 18%; }
-th:nth-child(6), td:nth-child(6) { width: 10%; }
+th:nth-child(1), td:nth-child(1) { width: 25%; } /* Date */
+th:nth-child(2), td:nth-child(2) { width: 15%; } /* Category */
+th:nth-child(3), td:nth-child(3) { width: 12%; } /* Earn */
+th:nth-child(4), td:nth-child(4) { width: 10%; } /* Oth */
+th:nth-child(5), td:nth-child(5) { width: 12%; color: #dc2626; } /* Spend Red */
+th:nth-child(6), td:nth-child(6) { width: 15%; } /* Bal */
+th:nth-child(7), td:nth-child(7) { width: 11%; } /* Action */
 
-input {
+input, select {
     width: 100%;
-    padding: 8px 2px;
+    padding: 8px 1px;
     border: none;
     background: transparent;
     text-align: center;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     font-family: inherit;
     outline: none;
     border-radius: 4px;
+    transition: all 0.2s;
+}
+
+select {
+    font-size: 10px;
+    cursor: pointer;
+    text-align-last: center;
 }
 
 /* Red color for Spend inputs specifically */
-td:nth-child(4) input {
+td:nth-child(5) input {
     color: #dc2626;
 }
 

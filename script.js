@@ -31,6 +31,18 @@ let weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
 
 // Chart management
 let weeklyChart = null;
+let categoryChart = null;
+
+const CATEGORIES = [
+    { name: 'Food', emoji: '🍎', color: '#6366f1' },
+    { name: 'Travel', emoji: '🚗', color: '#a855f7' },
+    { name: 'Shopping', emoji: '🛍️', color: '#ec4899' },
+    { name: 'Rent', emoji: '🏠', color: '#f59e0b' },
+    { name: 'Bills', emoji: '💳', color: '#10b981' },
+    { name: 'Salary', emoji: '💰', color: '#3b82f6' },
+    { name: 'Gift', emoji: '🎁', color: '#fb7185' },
+    { name: 'Other', emoji: '✨', color: '#94a3b8' }
+];
 
 // Initialize the app
 async function init() {
@@ -171,6 +183,60 @@ function updateChart() {
             plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } } }
         }
     });
+
+    updateCategoryChart();
+}
+
+function updateCategoryChart() {
+    const canvas = document.getElementById('category-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const catData = {};
+    trackerData.forEach(row => {
+        if (row.category && row.spends) {
+            catData[row.category] = (catData[row.category] || 0) + row.spends;
+        }
+    });
+
+    const labels = Object.keys(catData);
+    const data = Object.values(catData);
+    const colors = labels.map(label => {
+        const cat = CATEGORIES.find(c => c.name === label);
+        return cat ? cat.color : '#cbd5e1';
+    });
+
+    if (categoryChart) categoryChart.destroy();
+    
+    if (labels.length === 0) return;
+
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15,
+                        font: { size: 11, weight: 'bold' }
+                    }
+                }
+            }
+        }
+    });
 }
 
 function autoAddMissingDays() {
@@ -210,8 +276,19 @@ function createRowUI(row, index) {
     const tr = document.createElement('tr');
     const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
     const balanceClass = balance >= 0 ? 'positive' : 'negative';
+
+    let categoryOptions = CATEGORIES.map(cat => 
+        `<option value="${cat.name}" ${row.category === cat.name ? 'selected' : ''}>${cat.emoji} ${cat.name}</option>`
+    ).join('');
+
     tr.innerHTML = `
         <td><input type="date" value="${row.date || ''}" onchange="updateData(${index}, 'date', this.value)"></td>
+        <td>
+            <select onchange="updateData(${index}, 'category', this.value)" class="cat-select">
+                <option value="">Select</option>
+                ${categoryOptions}
+            </select>
+        </td>
         <td><input type="number" placeholder="0" value="${row.earns || ''}" onfocus="this.select()" oninput="updateData(${index}, 'earns', this.value)"></td>
         <td><input type="number" placeholder="0" value="${row.other || ''}" onfocus="this.select()" oninput="updateData(${index}, 'other', this.value)"></td>
         <td><input type="number" placeholder="0" value="${row.spends || ''}" onfocus="this.select()" oninput="updateData(${index}, 'spends', this.value)"></td>
