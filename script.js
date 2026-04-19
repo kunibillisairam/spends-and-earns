@@ -381,6 +381,18 @@ navItems.forEach(item => {
 addRowBtn.addEventListener('click', addNewRow);
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
+document.getElementById('system-test-btn')?.addEventListener('click', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('🎉 Notification Test', {
+                body: 'Your mobile is successfully connected for system notifications!',
+                icon: '/icon-192.png'
+            });
+        }).catch(err => alert("SW Error: " + err));
+    } else {
+        alert("System notifications not supported in this browser.");
+    }
+});
 
 // Notification Logic
 const notifBanner = document.getElementById('notif-banner');
