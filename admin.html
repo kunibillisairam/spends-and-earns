@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Notification Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-card {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; font-family: inherit; }
+        .send-btn { width: 100%; padding: 15px; margin-top: 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="admin-card">
+            <header style="margin-bottom: 30px; box-shadow: none; padding: 0;">
+                <h1>Admin Dashboard</h1>
+                <p>Send a live notification to all active users.</p>
+            </header>
+
+            <div class="form-group">
+                <label>Notification Title</label>
+                <input type="text" id="title" placeholder="e.g. System Update">
+            </div>
+
+            <div class="form-group">
+                <label>Message Content</label>
+                <textarea id="message" rows="4" placeholder="Type your message here..."></textarea>
+            </div>
+
+            <button id="send-btn" class="primary-btn send-btn">Send Broadcast</button>
+
+            <p id="status" style="margin-top: 20px; text-align: center; color: var(--success-color); font-weight: 700; display: none;">
+                Message Sent Successfully!
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const sendBtn = document.getElementById('send-btn');
+        const titleInput = document.getElementById('title');
+        const messageInput = document.getElementById('message');
+        const statusEl = document.getElementById('status');
+
+        sendBtn.addEventListener('click', async () => {
+            const title = titleInput.value;
+            const message = messageInput.value;
+
+            if (!message) return alert("Please enter a message!");
+
+            sendBtn.textContent = "Sending...";
+            sendBtn.disabled = true;
+
+            try {
+                // Update the broadcast document
+                await setDoc(doc(db, "notifications", "broadcast"), {
+                    title: title || "Global Announcement",
+                    message: message,
+                    active: true,
+                    timestamp: serverTimestamp()
+                });
+
+                statusEl.style.display = "block";
+                messageInput.value = "";
+                
+                setTimeout(() => {
+                    statusEl.style.display = "none";
+                    sendBtn.textContent = "Send Broadcast";
+                    sendBtn.disabled = false;
+                }, 3000);
+
+            } catch (err) {
+                console.error(err);
+                alert("Error sending: " + err.message + "\n\nMake sure Firestore is ENABLED in Firebase Console!");
+                sendBtn.textContent = "Send Broadcast";
+                sendBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

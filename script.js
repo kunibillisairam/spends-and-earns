@@ -1,3 +1,13 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { firebaseConfig, vapidKey } from "./firebase-config.js";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+const db = getFirestore(app);
+
 // DOM Elements
 const tableBody = document.getElementById('table-body');
 const addRowBtn = document.getElementById('add-row-btn');
@@ -372,8 +382,50 @@ addRowBtn.addEventListener('click', addNewRow);
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
 
+// Notification Logic
+async function requestNotificationPermission() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('Notification permission granted.');
+            const token = await getToken(messaging, { vapidKey: vapidKey });
+            if (token) {
+                console.log('FCM Token:', token);
+                // In a real app, you would save this token to Firestore to send targetted messages.
+            }
+        }
+    } catch (error) {
+        console.error('An error occurred while retrieving token. ', error);
+    }
+}
+
+// Foreground Message Listener
+onMessage(messaging, (payload) => {
+    console.log('Message received. ', payload);
+    alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+});
+
+// Broadcast listener: Listen for a document named 'broadcast' in 'notifications' collection
+onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
+    if (doc.exists()) {
+        const data = doc.data();
+        if (data.active && data.message) {
+            // Show a notification if the app is open
+            if (Notification.permission === "granted") {
+                new Notification(data.title || "Admin Notice", {
+                    body: data.message,
+                    icon: "/icon-192.png"
+                });
+            } else {
+                alert(`ADMIN NOTICE: ${data.message}`);
+            }
+        }
+    }
+});
+
 // Start
 init();
+setTimeout(requestNotificationPermission, 5000); // Ask for permission after 5 seconds
 
 // Expose functions to window for onclick/onchange in dynamic HTML (since we're using type="module")
 window.updateData = updateData;
