@@ -383,26 +383,46 @@ saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
 
 // Notification Logic
-async function requestNotificationPermission() {
-    try {
+const notifBanner = document.getElementById('notif-banner');
+const notifAllowBtn = document.getElementById('notif-allow-btn');
+const notifCloseBtn = document.getElementById('notif-close-btn');
+
+async function checkNotificationPermission() {
+    // Only show the banner if permission is not yet decided (default)
+    // and if the user has already installed the app (optional, but requested)
+    if (Notification.permission === 'default') {
+        notifBanner.style.display = 'flex';
+    }
+}
+
+if (notifAllowBtn) {
+    notifAllowBtn.addEventListener('click', async () => {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            console.log('Notification permission granted.');
             const token = await getToken(messaging, { vapidKey: vapidKey });
-            if (token) {
-                console.log('FCM Token:', token);
-                // In a real app, you would save this token to Firestore to send targetted messages.
-            }
+            if (token) console.log('FCM Token:', token);
         }
-    } catch (error) {
-        console.error('An error occurred while retrieving token. ', error);
-    }
+        notifBanner.style.display = 'none';
+    });
+}
+
+if (notifCloseBtn) {
+    notifCloseBtn.addEventListener('click', () => {
+        notifBanner.style.display = 'none';
+    });
 }
 
 // Foreground Message Listener
 onMessage(messaging, (payload) => {
     console.log('Message received. ', payload);
-    alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+    if (Notification.permission === "granted") {
+        new Notification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: "/icon-192.png"
+        });
+    } else {
+        alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+    }
 });
 
 // Broadcast listener: Listen for a document named 'broadcast' in 'notifications' collection
@@ -425,7 +445,8 @@ onSnapshot(doc(db, "notifications", "broadcast"), (doc) => {
 
 // Start
 init();
-setTimeout(requestNotificationPermission, 5000); // Ask for permission after 5 seconds
+// Check for notification permission after 8 seconds (to let user settle in)
+setTimeout(checkNotificationPermission, 8000);
 
 // Expose functions to window for onclick/onchange in dynamic HTML (since we're using type="module")
 window.updateData = updateData;
