@@ -25,6 +25,9 @@ let weeklyChart = null;
 // Initialize the app
 function init() {
     autoAddMissingDays();
+    if (trackerData.length === 0) {
+        addNewRow();
+    }
     renderTable();
     updateChart();
     updateBudgetStatus();
