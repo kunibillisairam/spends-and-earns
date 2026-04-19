@@ -15,7 +15,7 @@
     <script>
         // AUTH PROTECTION: Immediately check if user is logged in
         if (!localStorage.getItem('currentUser')) {
-            window.location.href = 'auth.html';
+            window.location.replace('auth.html');
         }
     </script>
 </head>

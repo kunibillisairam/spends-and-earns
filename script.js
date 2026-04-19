@@ -401,7 +401,7 @@ logoutBtn?.addEventListener('click', () => {
     localStorage.removeItem('currentUser'); 
     localStorage.removeItem('trackerData');
     localStorage.removeItem('weeklyBudget');
-    window.location.href = 'auth.html'; 
+    window.location.replace('auth.html'); 
 });
 
 init();

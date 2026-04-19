@@ -143,7 +143,7 @@
                                 username: userData.username,
                                 phone: userData.phone
                             }));
-                            window.location.href = 'index.html';
+                            window.location.replace('index.html');
                         } else {
                             alert("Invalid password!");
                         }
@@ -176,7 +176,7 @@
 
         // Quick check: if already logged in, go to home
         if(localStorage.getItem('currentUser')) {
-            window.location.href = 'index.html';
+            window.location.replace('index.html');
         }
     </script>
 </body>
