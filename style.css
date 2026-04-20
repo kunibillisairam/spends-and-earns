@@ -255,14 +255,15 @@ input[type="date"] {
 }
 
 .total-row td {
-    position: sticky;
-    bottom: 65px; /* Stay above the 65px bottom nav */
-    z-index: 10;
     background-color: #f8fafc;
-    border-top: 2px solid var(--border-color);
-    color: #1e293b;
     font-weight: 800;
-    box-shadow: 0 -4px 6px -2px rgba(0,0,0,0.1);
+    color: #1e293b;
+    position: sticky;
+    bottom: 60px;
+    z-index: 100;
+    border-top: 2px solid #e2e8f0;
+    padding: 8px 1px;
+    font-size: 11px;
 }
 
 /* Budget Section */
