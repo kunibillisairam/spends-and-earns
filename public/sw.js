@@ -1,7 +1,10 @@
-const CACHE_NAME = 'spends-earns-v2';
+const CACHE_NAME = 'spends-earns-v3';
 const ASSETS = [
   './',
   './index.html',
+  './analytics.html',
+  './settings.html',
+  './auth.html',
   './style.css',
   './script.js',
   './manifest.json',
