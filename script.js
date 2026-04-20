@@ -260,7 +260,9 @@ function updateData(index, field, value) {
     updateGrandTotals();
     updateChart();
     updateBudgetStatus();
-    renderTable();
+    if (field === 'date') {
+        renderTable();
+    }
 }
 
 function deleteRow(index) {
