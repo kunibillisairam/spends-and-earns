@@ -189,6 +189,14 @@
     </div>
 
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         const user = JSON.parse(localStorage.getItem('currentUser'));
         const trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
 
@@ -201,15 +209,35 @@
 
         // Modal Logic
         const modal = document.getElementById('edit-modal');
+        const saveBtn = document.getElementById('save-profile');
+        
         document.getElementById('edit-profile-btn').addEventListener('click', () => modal.style.display = 'flex');
         document.getElementById('close-modal').addEventListener('click', () => modal.style.display = 'none');
         
-        document.getElementById('save-profile').addEventListener('click', () => {
+        saveBtn.addEventListener('click', async () => {
             const newName = document.getElementById('new-name').value;
-            if (newName) {
-                user.username = newName;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                window.location.reload();
+            if (newName && user) {
+                saveBtn.textContent = "Syncing with Cloud...";
+                saveBtn.disabled = true;
+
+                try {
+                    // Sync with Firebase Firestore
+                    const userRef = doc(db, "users", user.phone);
+                    await updateDoc(userRef, {
+                        username: newName
+                    });
+
+                    // Update Local
+                    user.username = newName;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    
+                    window.location.reload();
+                } catch (err) {
+                    console.error("Cloud sync failed:", err);
+                    alert("Could not sync with cloud. Check your internet.");
+                    saveBtn.textContent = "Save Changes";
+                    saveBtn.disabled = false;
+                }
             }
         });
 
