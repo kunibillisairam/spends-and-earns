@@ -87,14 +87,21 @@ async function syncToCloud() {
     }
 }
 
+function parseDate(str) {
+    if (!str) return new Date();
+    if (str instanceof Date) return new Date(str);
+    const [y, m, d] = str.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
 function updateBudgetStatus() {
     if (!budgetSpentEl) return;
     
-    const monday = getMonday(new Date());
-    monday.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const monday = getMonday(now);
     
     const weekSpends = trackerData.reduce((total, row) => {
-        const d = new Date(row.date);
+        const d = parseDate(row.date);
         if (d >= monday) return total + (row.spends || 0);
         return total;
     }, 0);
@@ -121,37 +128,44 @@ budgetInput.addEventListener('input', (e) => {
 });
 
 function getLocalDateString(date) {
-    if (typeof date === 'string') date = new Date(date);
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
+    const d = parseDate(date);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
 
 function getMonday(d) {
-    d = new Date(d);
-    const day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1);
-    const monday = new Date(d.setDate(diff));
-    monday.setHours(0, 0, 0, 0);
-    return monday;
+    const date = parseDate(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    date.setDate(diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
 }
 
 function updateChart() {
     const canvas = document.getElementById('weekly-chart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const weeklyData = {};
+    
+    // Show last 30 days of daily data
+    const dailyData = {};
     trackerData.forEach(row => {
         if (!row.date) return;
-        const monday = getLocalDateString(getMonday(row.date));
-        if (!weeklyData[monday]) weeklyData[monday] = { earns: 0, spends: 0 };
-        weeklyData[monday].earns += (row.earns || 0) + (row.other || 0);
-        weeklyData[monday].spends += (row.spends || 0);
+        const dateKey = row.date;
+        if (!dailyData[dateKey]) dailyData[dateKey] = { earns: 0, spends: 0 };
+        dailyData[dateKey].earns += (row.earns || 0) + (row.other || 0);
+        dailyData[dateKey].spends += (row.spends || 0);
     });
-    const sortedWeeks = Object.keys(weeklyData).sort((a, b) => new Date(a) - new Date(b));
-    const labels = sortedWeeks.map(w => new Date(w).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
-    const earns = sortedWeeks.map(w => weeklyData[w].earns);
-    const spends = sortedWeeks.map(w => weeklyData[w].spends);
+
+    const sortedDates = Object.keys(dailyData).sort().slice(-14); // Last 14 days
+    const labels = sortedDates.map(d => {
+        const dateObj = parseDate(d);
+        return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+    const earns = sortedDates.map(d => dailyData[d].earns);
+    const spends = sortedDates.map(d => dailyData[d].spends);
     if (weeklyChart) weeklyChart.destroy();
     weeklyChart = new Chart(ctx, {
         type: 'line',
@@ -181,8 +195,8 @@ function autoAddMissingDays() {
         trackerData.push({ date: getLocalDateString(today), earns: null, other: null, spends: null });
     } else {
         const existingDates = new Set(trackerData.map(d => d.date));
-        trackerData.sort((a, b) => new Date(a.date) - new Date(b.date));
-        const firstEntryDate = new Date(trackerData[0].date);
+        trackerData.sort((a, b) => a.date.localeCompare(b.date));
+        const firstEntryDate = parseDate(trackerData[0].date);
         firstEntryDate.setHours(0, 0, 0, 0);
         let currentDate = new Date(firstEntryDate);
         while (currentDate <= today) {
@@ -202,7 +216,7 @@ function renderTable() {
     const filteredData = trackerData.filter(row => {
         return (row.date || '').toLowerCase().includes(searchTerm);
     });
-    const displayData = [...filteredData].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const displayData = [...filteredData].sort((a, b) => b.date.localeCompare(a.date));
     
     tableBody.innerHTML = '';
     
