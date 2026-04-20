@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings - Spends & Earns</title>
+    <link rel="stylesheet" href="./style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .profile-hero {
+            background: linear-gradient(135deg, #4f46e5 0%, #a855f7 100%);
+            border-radius: 24px;
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 35px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-hero h2 { font-size: 24px; font-weight: 800; margin: 0; }
+        .profile-hero p { font-size: 14px; opacity: 0.8; margin-top: 5px; }
+
+        .settings-group {
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-item:last-child { border: none; }
+        .settings-item:hover { background: #f8fafc; border-radius: 12px; }
+
+        .settings-left { display: flex; align-items: center; gap: 15px; }
+        .settings-icon { font-size: 20px; }
+        .settings-label { font-size: 14px; font-weight: 600; color: #1e293b; }
+
+        .settings-right { color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 5px; }
+
+        .danger-zone .settings-label { color: #ef4444; }
+
+        .version-tag {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* Modal for editing profile */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 360px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Settings & Profile</h1>
+            <p>Manage your account and preferences.</p>
+        </header>
+
+        <main>
+            <div class="profile-hero">
+                <div class="profile-avatar" id="p-avatar">U</div>
+                <h2 id="p-name">User Name</h2>
+                <p id="p-phone">+91 00000 00000</p>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-item" id="edit-profile-btn">
+                    <div class="settings-left">
+                        <span class="settings-icon">👤</span>
+                        <span class="settings-label">Edit Profile</span>
+                    </div>
+                    <div class="settings-right"><span>›</span></div>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-left">
+                        <span class="settings-icon">🔔</span>
+                        <span class="settings-label">Notifications</span>
+                    </div>
+                    <div class="settings-right"><span>Enabled</span></div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-item" id="export-csv">
+                    <div class="settings-left">
+                        <span class="settings-icon">📊</span>
+                        <span class="settings-label">Export Data (CSV)</span>
+                    </div>
+                    <div class="settings-right"><span>Save Report</span></div>
+                </div>
+                <div class="settings-item">
+                    <div class="settings-left">
+                        <span class="settings-icon">🔒</span>
+                        <span class="settings-label">Security & PIN</span>
+                    </div>
+                    <div class="settings-right"><span>Manage</span></div>
+                </div>
+            </div>
+
+            <div class="settings-group danger-zone">
+                <div class="settings-item" id="logout-btn">
+                    <div class="settings-left">
+                        <span class="settings-icon">🚪</span>
+                        <span class="settings-label">Logout</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="version-tag">Spends & Earns v2.1.0 • Built with ❤️</div>
+        </main>
+
+        <!-- Edit Profile Modal -->
+        <div class="modal" id="edit-modal">
+            <div class="modal-content">
+                <div class="modal-title">Edit Profile</div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="new-name" placeholder="Full Name">
+                </div>
+                <button class="primary-btn" id="save-profile" style="width: 100%;">Save Changes</button>
+                <button class="text-btn" id="close-modal" style="width: 100%; margin-top: 10px; color: #64748b;">Cancel</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Tracker</span>
+            </a>
+            <a href="analytics.html" class="nav-item">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Analytics</span>
+            </a>
+            <a href="settings.html" class="nav-item active">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <script type="module">
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
+
+        if (user) {
+            document.getElementById('p-name').textContent = user.username;
+            document.getElementById('p-phone').textContent = user.phone;
+            document.getElementById('p-avatar').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('new-name').value = user.username;
+        }
+
+        // Modal Logic
+        const modal = document.getElementById('edit-modal');
+        document.getElementById('edit-profile-btn').addEventListener('click', () => modal.style.display = 'flex');
+        document.getElementById('close-modal').addEventListener('click', () => modal.style.display = 'none');
+        
+        document.getElementById('save-profile').addEventListener('click', () => {
+            const newName = document.getElementById('new-name').value;
+            if (newName) {
+                user.username = newName;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.reload();
+            }
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem('currentUser');
+                window.location.replace('auth.html');
+            }
+        });
+
+        // CSV Export
+        document.getElementById('export-csv').addEventListener('click', () => {
+            if (trackerData.length === 0) return alert("No data to export!");
+            const headers = ["Date", "Earn", "Other", "Spend", "Balance"];
+            const csv = [
+                headers.join(","),
+                ...trackerData.map(r => [
+                    r.date, 
+                    r.earns || 0, 
+                    r.other || 0, 
+                    r.spends || 0, 
+                    (r.earns || 0) + (r.other || 0) - (r.spends || 0)
+                ].join(","))
+            ].join("\n");
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+</html>
