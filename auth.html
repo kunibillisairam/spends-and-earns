@@ -3,79 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login / Signup - Spends & Earns</title>
+    <title>Get Started - Spends & Earns</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        .auth-container {
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --accent-primary: #4f46e5;
+            --accent-secondary: #a855f7;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            background: #f8fafc;
+            background: #000;
+            overflow: hidden;
         }
-        .auth-card {
-            background: white;
+
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('auth_background_mesh_1776662792547.png') no-repeat center center/cover;
+            filter: blur(5px) brightness(0.8);
+            transform: scale(1.1);
+            z-index: -1;
+            transition: all 1s ease;
+        }
+
+        .auth-container {
             width: 100%;
-            max-width: 400px;
-            padding: 40px;
-            border-radius: 30px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            max-width: 440px;
+            padding: 20px;
+            z-index: 10;
+            perspective: 1000px;
         }
-        .auth-header { text-align: center; margin-bottom: 30px; }
-        .auth-header h1 { font-size: 24px; font-weight: 800; margin-bottom: 10px; }
-        .auth-header p { color: var(--text-muted); font-size: 14px; }
-        
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
-        .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; font-size: 15px; }
-        
-        .auth-toggle { text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-muted); }
-        .auth-toggle span { color: var(--primary-color); font-weight: 700; cursor: pointer; }
-        
-        .error-msg { color: #ef4444; font-size: 12px; margin-top: 5px; display: none; }
+
+        .auth-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes cardEntrance {
+            from { transform: translateY(30px) rotateX(-10deg); opacity: 0; }
+            to { transform: translateY(0) rotateX(0); opacity: 1; }
+        }
+
+        /* Decorative blobs */
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 120px; height: 120px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            opacity: 0.2;
+            filter: blur(30px);
+            z-index: -1;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .auth-logo {
+            font-size: 40px;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .auth-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .auth-header p {
+            color: #475569;
+            font-size: 15px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+            margin-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 16px 15px 44px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #0f172a;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            background: white;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .form-group input::placeholder {
+            color: #94a3b8;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .auth-footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 15px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .auth-footer span {
+            color: var(--accent-primary);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            margin-left: 5px;
+        }
+
+        .auth-footer span:hover {
+            color: var(--accent-secondary);
+            text-decoration: underline;
+        }
+
+        .helper-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .helper-links span {
+            color: #64748b;
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .helper-links span:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Animations for switching states */
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 30px 20px;
+            }
+            .auth-header h1 {
+                font-size: 26px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="bg-overlay"></div>
+
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <h1 id="auth-title">Welcome Back!</h1>
-                <p id="auth-subtitle">Login to track your daily expenses.</p>
+                <span class="auth-logo">💰</span>
+                <h1 id="auth-title">Welcome Back</h1>
+                <p id="auth-subtitle">Login to manage your daily expenses.</p>
             </div>
 
             <form id="auth-form">
-                <!-- Signup Only Fields -->
+                <!-- Signup Only Field -->
                 <div class="form-group signup-only" style="display: none;">
                     <label>Full Name</label>
-                    <input type="text" id="username" placeholder="Enter your name">
+                    <div class="input-wrapper">
+                        <i>👤</i>
+                        <input type="text" id="username" placeholder="John Doe">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label>Phone Number</label>
-                    <input type="tel" id="phone" placeholder="10-digit number" pattern="[0-9]{10}" maxlength="10" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <div class="input-wrapper">
+                        <i>📱</i>
+                        <input type="tel" id="phone" placeholder="9876543210" pattern="[0-9]{10}" maxlength="10" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
-                    <div style="text-align: right; margin-top: 8px;">
-                        <span id="forgot-pw" style="font-size: 12px; color: var(--primary-color); cursor: pointer; font-weight: 600;">Forgot Password?</span>
+                    <div class="input-wrapper">
+                        <i>🔒</i>
+                        <input type="password" id="password" placeholder="••••••••" required theme="dark">
+                    </div>
+                    <div class="helper-links login-only">
+                        <span></span> <!-- Spacer -->
+                        <span id="forgot-pw">Forgot Password?</span>
                     </div>
                 </div>
 
-                <!-- Signup Only Fields -->
+                <!-- Signup Only Field -->
                 <div class="form-group signup-only" style="display: none;">
                     <label>Confirm Password</label>
-                    <input type="password" id="confirm-password" placeholder="••••••••">
-                    <p id="pw-error" class="error-msg">Passwords do not match!</p>
+                    <div class="input-wrapper">
+                        <i>✅</i>
+                        <input type="password" id="confirm-password" placeholder="••••••••">
+                    </div>
                 </div>
 
-                <button type="submit" id="auth-submit-btn" class="primary-btn" style="width: 100%; padding: 16px; font-size: 16px;">Login</button>
+                <button type="submit" id="auth-submit-btn" class="submit-btn">Login</button>
             </form>
 
-            <div class="auth-toggle">
-                <p id="toggle-text">Don't have an account? <span id="switch-auth">Sign Up</span></p>
+            <div class="auth-footer">
+                <p id="toggle-text">New here?<span id="switch-auth">Create Account</span></p>
             </div>
         </div>
     </div>
@@ -93,26 +324,40 @@
         const authTitle = document.getElementById('auth-title');
         const authSubtitle = document.getElementById('auth-subtitle');
         const signupFields = document.querySelectorAll('.signup-only');
+        const loginOnlyFields = document.querySelectorAll('.login-only');
         const switchAuth = document.getElementById('switch-auth');
         const toggleText = document.getElementById('toggle-text');
         const authForm = document.getElementById('auth-form');
         const submitBtn = document.getElementById('auth-submit-btn');
 
-        switchAuth.addEventListener('click', () => {
+        function toggleMode() {
             isLogin = !isLogin;
-            authTitle.textContent = isLogin ? "Welcome Back!" : "Create Account";
-            authSubtitle.textContent = isLogin ? "Login to track your daily expenses." : "Start your financial journey with us.";
-            submitBtn.textContent = isLogin ? "Login" : "Sign Up";
-            toggleText.innerHTML = isLogin ? "Don't have an account? <span>Sign Up</span>" : "Already have an account? <span>Login</span>";
             
+            // Add fade animation class
+            const card = document.querySelector('.auth-card');
+            card.classList.remove('fade-in');
+            void card.offsetWidth; // Trigger reflow
+            card.classList.add('fade-in');
+
+            authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
+            authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
+            submitBtn.textContent = isLogin ? "Login" : "Get Started";
+            
+            toggleText.innerHTML = isLogin ? 
+                'New here? <span id="switch-auth">Create Account</span>' : 
+                'Already joined? <span id="switch-auth">Login Instead</span>';
+
             signupFields.forEach(f => f.style.display = isLogin ? 'none' : 'block');
+            loginOnlyFields.forEach(f => f.style.display = isLogin ? 'flex' : 'none');
             
-            // Re-bind click after innerHTML change
-            document.querySelector('#toggle-text span').addEventListener('click', () => switchAuth.click());
-        });
+            // Re-bind listeners because we replaced the innerHTML
+            document.getElementById('switch-auth').addEventListener('click', toggleMode);
+        }
+
+        switchAuth.addEventListener('click', toggleMode);
 
         document.getElementById('forgot-pw').addEventListener('click', () => {
-            alert("Please contact the administrator or reset via phone verification (Coming soon with database integration!)");
+            alert("Password recovery is coming soon! For now, please contact support.");
         });
 
         authForm.addEventListener('submit', async (e) => {
@@ -127,7 +372,7 @@
                 return alert("Passwords do not match!");
             }
 
-            submitBtn.textContent = "Processing...";
+            submitBtn.textContent = "Checking Details...";
             submitBtn.disabled = true;
 
             try {
@@ -135,7 +380,6 @@
                 const userSnap = await getDoc(userRef);
 
                 if (isLogin) {
-                    // LOGIN LOGIC
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
                         if (userData.password === password) {
@@ -145,36 +389,34 @@
                             }));
                             window.location.replace('index.html');
                         } else {
-                            alert("Invalid password!");
+                            alert("Incorrect password. Please try again.");
                         }
                     } else {
-                        alert("User not found!");
+                        alert("Account not found with this phone number.");
                     }
                 } else {
-                    // SIGNUP LOGIC
                     if (userSnap.exists()) {
-                        alert("Phone number already registered!");
+                        alert("This phone number is already registered.");
                     } else {
                         await setDoc(userRef, {
                             username: usernameInput,
                             phone: phone,
-                            password: password, // In a real big app, we'd hash this, but for testing Firestore simple is best
+                            password: password,
                             createdAt: new Date().toISOString()
                         });
-                        alert("Signup successful! Please login.");
+                        alert("Account created successfully! Welcome aboard.");
                         window.location.reload();
                     }
                 }
             } catch (err) {
                 console.error(err);
-                alert("Firebase Error: " + err.message + "\n\nMake sure Firestore is ENABLED in Firebase Console!");
+                alert("Something went wrong. Please check your connection.");
             } finally {
-                submitBtn.textContent = isLogin ? "Login" : "Sign Up";
+                submitBtn.textContent = isLogin ? "Login" : "Get Started";
                 submitBtn.disabled = false;
             }
         });
 
-        // Quick check: if already logged in, go to home
         if(localStorage.getItem('currentUser')) {
             window.location.replace('index.html');
         }
