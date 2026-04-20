@@ -36,9 +36,6 @@ let weeklyChart = null;
 // Initialize the app
 async function init() {
     autoAddMissingDays();
-    if (trackerData.length === 0) {
-        addNewRow();
-    }
     
     // Sync with Firebase if logged in
     await fetchCloudData();
@@ -396,7 +393,6 @@ navItems.forEach(item => {
     });
 });
 
-addRowBtn.addEventListener('click', addNewRow);
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
 tableSearch?.addEventListener('input', renderTable);
