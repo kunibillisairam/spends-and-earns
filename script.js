@@ -235,11 +235,22 @@ function createRowUI(row, index) {
     const tr = document.createElement('tr');
     const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
     const balanceClass = balance >= 0 ? 'positive' : 'negative';
+    const categories = ['-','Food','Shop','Travel','Rent','Bills','Salary','Gift','Other'];
+    
+    let catOptions = categories.map(c => 
+        `<option value="${c}" ${row.category === c ? 'selected' : ''}>${c}</option>`
+    ).join('');
+
     tr.innerHTML = `
         <td><input type="date" value="${row.date || ''}" onchange="updateData(${index}, 'date', this.value)"></td>
         <td><input type="number" placeholder="0" value="${row.earns || ''}" onfocus="this.select()" oninput="updateData(${index}, 'earns', this.value)"></td>
         <td><input type="number" placeholder="0" value="${row.other || ''}" onfocus="this.select()" oninput="updateData(${index}, 'other', this.value)"></td>
         <td><input type="number" placeholder="0" value="${row.spends || ''}" onfocus="this.select()" oninput="updateData(${index}, 'spends', this.value)"></td>
+        <td>
+            <select class="cat-select" onchange="updateData(${index}, 'category', this.value)">
+                ${catOptions}
+            </select>
+        </td>
         <td><span class="balance-cell ${balanceClass}">${balance >= 0 ? '+' : ''}${Math.round(balance)}</span></td>
         <td class="action-col">
             <button class="delete-btn" onclick="deleteRow(${index})" title="Del">
@@ -258,7 +269,7 @@ function addNewRow() {
 }
 
 function updateData(index, field, value) {
-    if (field === 'date') trackerData[index][field] = value;
+    if (field === 'date' || field === 'category') trackerData[index][field] = value;
     else trackerData[index][field] = value === '' ? null : parseFloat(value);
     saveData();
     const activeEl = document.activeElement;

@@ -189,24 +189,38 @@ td {
 }
 
 /* Specific Column Widths */
-th:nth-child(1), td:nth-child(1) { width: 28%; }
-th:nth-child(2), td:nth-child(2) { width: 15%; } /* Earn */
-th:nth-child(3), td:nth-child(3) { width: 14%; } /* Other */
-th:nth-child(4), td:nth-child(4) { width: 15%; color: #dc2626; } /* Spend Red */
-th:nth-child(5), td:nth-child(5) { width: 18%; }
-th:nth-child(6), td:nth-child(6) { width: 10%; }
+th:nth-child(1), td:nth-child(1) { width: 22%; }
+th:nth-child(2), td:nth-child(2) { width: 14%; } /* Earn */
+th:nth-child(3), td:nth-child(3) { width: 13%; } /* Other */
+th:nth-child(4), td:nth-child(4) { width: 14%; color: #dc2626; } /* Spend Red */
+th:nth-child(5), td:nth-child(5) { width: 13%; } /* Cat */
+th:nth-child(6), td:nth-child(6) { width: 16%; } /* Bal */
+th:nth-child(7), td:nth-child(7) { width: 8%; } /* Del */
 
 input {
     width: 100%;
-    padding: 8px 2px;
+    padding: 6px 1px;
     border: none;
     background: transparent;
     text-align: center;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     font-family: inherit;
     outline: none;
     border-radius: 4px;
+}
+
+select.cat-select {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    outline: none;
+    text-align: center;
+    appearance: none;
+    cursor: pointer;
 }
 
 /* Red color for Spend inputs specifically */
