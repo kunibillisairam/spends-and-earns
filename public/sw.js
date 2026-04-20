@@ -1,10 +1,11 @@
-const CACHE_NAME = 'spends-earns-v3';
+const CACHE_NAME = 'spends-earns-v4';
 const ASSETS = [
   './',
   './index.html',
   './analytics.html',
   './settings.html',
   './auth.html',
+  './auth_background_mesh_1776662792547.png',
   './style.css',
   './script.js',
   './manifest.json',

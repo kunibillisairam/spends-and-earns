@@ -415,16 +415,16 @@ const displayPhone = document.getElementById('display-phone');
 
 function initUser() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (user) {
+    if (user && user.username) {
         const initial = user.username.charAt(0).toUpperCase();
-        userInitial.textContent = initial;
-        drawerInitial.textContent = initial;
-        displayName.textContent = user.username;
-        displayPhone.textContent = user.phone;
+        if (userInitial) userInitial.textContent = initial;
+        if (drawerInitial) drawerInitial.textContent = initial;
+        if (displayName) displayName.textContent = user.username;
+        if (displayPhone) displayPhone.textContent = user.phone;
     }
 }
 
-profileTrigger?.addEventListener('click', () => { profileDrawer.style.display = 'block'; });
+profileTrigger?.addEventListener('click', () => { if (profileDrawer) profileDrawer.style.display = 'block'; });
 profileDrawer?.addEventListener('click', (e) => { if (e.target === profileDrawer) profileDrawer.style.display = 'none'; });
 logoutBtn?.addEventListener('click', () => { 
     localStorage.removeItem('currentUser'); 
