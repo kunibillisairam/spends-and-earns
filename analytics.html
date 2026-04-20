@@ -207,8 +207,32 @@
             min-width: 110px;
         }
 
+        .monthly-summary {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .monthly-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .m-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .m-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 5px; }
+        .m-val { font-size: 18px; font-weight: 800; color: #1e293b; }
+        .m-val.earn { color: #10b981; }
+        .m-val.spend { color: #ef4444; }
+
         .main-content {
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
     </style>
 </head>
@@ -277,6 +301,20 @@
             </div>
         </div>
 
+        <div class="monthly-summary">
+            <h2 class="section-title text-muted" id="month-name-summary">Month Summary</h2>
+            <div class="monthly-grid">
+                <div class="m-card">
+                    <div class="m-label">Total Earnings</div>
+                    <div class="m-val earn" id="month-earn-val">₹0</div>
+                </div>
+                <div class="m-card">
+                    <div class="m-label">Total Spends</div>
+                    <div class="m-val spend" id="month-spend-val">₹0</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a href="index.html" class="nav-item">
@@ -341,6 +379,24 @@
             document.getElementById('spend-prog').style.width = (weekSpend/max * 100) + '%';
 
             renderCharts(thisWeekData);
+
+            // Monthly Summary Logic (Always for actual current month)
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('month-name-summary').textContent = `${monthNames[currentMonth]} Summary`;
+
+            const thisMonthData = trackerData.filter(d => {
+                const dObj = new Date(d.date);
+                return dObj.getMonth() === currentMonth && dObj.getFullYear() === currentYear;
+            });
+
+            const monthEarn = thisMonthData.reduce((s, r) => s + (r.earns || 0) + (r.other || 0), 0);
+            const monthSpend = thisMonthData.reduce((s, r) => s + (r.spends || 0), 0);
+
+            document.getElementById('month-earn-val').textContent = `₹${Math.round(monthEarn).toLocaleString()}`;
+            document.getElementById('month-spend-val').textContent = `₹${Math.round(monthSpend).toLocaleString()}`;
         }
 
         document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; initAnalytics(); });
