@@ -274,10 +274,9 @@
 
             data.forEach(r => {
                 const cat = r.category || '-';
-                if (r.earns || r.other) {
-                    const val = (r.earns || 0) + (r.other || 0);
-                    earnMap[cat] = (earnMap[cat] || 0) + val;
-                }
+                if (r.earns) earnMap['Salary'] = (earnMap['Salary'] || 0) + r.earns;
+                if (r.other) earnMap['Other Income'] = (earnMap['Other Income'] || 0) + r.other;
+                
                 if (r.spends) {
                     spendMap[cat] = (spendMap[cat] || 0) + r.spends;
                 }

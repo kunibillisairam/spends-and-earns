@@ -232,7 +232,7 @@ function createRowUI(row, index) {
     const tr = document.createElement('tr');
     const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
     const balanceClass = balance >= 0 ? 'positive' : 'negative';
-    const categories = ['-','Food','Shop','Travel','Rent','Bills','Salary','Gift','Other'];
+    const categories = ['-','Food','Shop','Travel','Rent','Bills','Other'];
     
     let catOptions = categories.map(c => 
         `<option value="${c}" ${row.category === c ? 'selected' : ''}>${c}</option>`
