@@ -154,12 +154,12 @@ function updateChart() {
     const spends = sortedWeeks.map(w => weeklyData[w].spends);
     if (weeklyChart) weeklyChart.destroy();
     weeklyChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: labels,
             datasets: [
-                { label: 'Earn', data: earns, backgroundColor: '#10b381', borderRadius: 4 },
-                { label: 'Spend', data: spends, backgroundColor: '#ef4444', borderRadius: 4 }
+                { label: 'Earn', data: earns, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3, borderWidth: 2, pointBackgroundColor: '#10b981', pointRadius: 4 },
+                { label: 'Spend', data: spends, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3, borderWidth: 2, pointBackgroundColor: '#ef4444', pointRadius: 4 }
             ]
         },
         options: {
