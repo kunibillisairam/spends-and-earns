@@ -261,12 +261,56 @@ function createRowUI(row, index) {
     tableBody.appendChild(tr);
 }
 
-function addNewRow() {
-    const today = getLocalDateString(new Date());
-    trackerData.push({ date: today, earns: null, other: null, spends: null });
+// Add Row Logic (Modal Based)
+const addEntryModal = document.getElementById('add-entry-modal');
+const submitEntryBtn = document.getElementById('submit-new-entry');
+
+addRowBtn.addEventListener('click', () => {
+    // Set default date to today in local timezone
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISODate = new Date(now - offset).toISOString().split('T')[0];
+    document.getElementById('new-date').value = localISODate;
+    
+    // Clear other fields
+    document.getElementById('new-earns').value = '';
+    document.getElementById('new-other').value = '';
+    document.getElementById('new-spends').value = '';
+    document.getElementById('new-category').value = '-';
+    
+    addEntryModal.style.display = 'flex';
+});
+
+submitEntryBtn.addEventListener('click', () => {
+    const date = document.getElementById('new-date').value;
+    const earns = parseFloat(document.getElementById('new-earns').value) || null;
+    const other = parseFloat(document.getElementById('new-other').value) || null;
+    const spends = parseFloat(document.getElementById('new-spends').value) || null;
+    const category = document.getElementById('new-category').value;
+
+    if (!date) return alert("Please select a date.");
+
+    const newRow = {
+        date,
+        earns,
+        other,
+        spends,
+        category
+    };
+
+    trackerData.unshift(newRow); // Add to beginning of list
+    trackerData.sort((a, b) => b.date.localeCompare(a.date)); // Keep sorted
     saveData();
     renderTable();
-}
+    addEntryModal.style.display = 'none';
+});
+
+// Close modal when clicking outside the card
+window.addEventListener('click', (e) => {
+    if (e.target === addEntryModal) {
+        addEntryModal.style.display = 'none';
+    }
+});
 
 function updateData(index, field, value) {
     if (field === 'date' || field === 'category') trackerData[index][field] = value;
