@@ -39,12 +39,59 @@ async function init() {
     
     // Sync with Firebase if logged in
     await fetchCloudData();
+    checkRecoveryEmail(); // Check if old user needs to set recovery email
     
     renderTable();
     updateChart();
     updateBudgetStatus();
     budgetInput.value = weeklyBudget || '';
 }
+
+async function checkRecoveryEmail() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    try {
+        const userRef = doc(db, "users", user.phone);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            // If user exists but has no email, show the mandatory modal
+            if (!userData.email) {
+                const modal = document.getElementById('email-required-modal');
+                const emailInput = document.getElementById('update-email-input');
+                const submitBtn = document.getElementById('submit-update-email');
+                
+                modal.style.display = 'flex';
+
+                submitBtn.onclick = async () => {
+                    const email = emailInput.value.trim();
+                    if (!email || !email.includes('@')) {
+                        return alert("Please enter a valid email address.");
+                    }
+                    
+                    submitBtn.textContent = "Securing Account...";
+                    submitBtn.disabled = true;
+                    
+                    try {
+                        await setDoc(userRef, { email: email }, { merge: true });
+                        alert("Recovery email set successfully! Your account is now secure.");
+                        modal.style.display = 'none';
+                    } catch (err) {
+                        alert("Error saving email. Please try again.");
+                    } finally {
+                        submitBtn.textContent = "Secure My Account";
+                        submitBtn.disabled = false;
+                    }
+                };
+            }
+        }
+    } catch (err) {
+        console.error("Error checking recovery email:", err);
+    }
+}
+
 
 async function fetchCloudData() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
