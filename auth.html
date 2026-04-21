@@ -273,6 +273,15 @@
                     </div>
                 </div>
 
+                <!-- NEW: Email for Recovery -->
+                <div class="form-group signup-only" style="display: none;">
+                    <label>Email Address</label>
+                    <div class="input-wrapper">
+                        <i>📧</i>
+                        <input type="email" id="email" placeholder="john@example.com">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Phone Number</label>
                     <div class="input-wrapper">
@@ -281,7 +290,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="password-group">
                     <label>Password</label>
                     <div class="input-wrapper">
                         <i>🔒</i>
@@ -289,7 +298,7 @@
                     </div>
                     <div class="helper-links login-only">
                         <span></span> <!-- Spacer -->
-                        <span id="forgot-pw">Forgot Password?</span>
+                        <span id="forgot-pw-trigger">Forgot Password?</span>
                     </div>
                 </div>
 
@@ -305,7 +314,49 @@
                 <button type="submit" id="auth-submit-btn" class="submit-btn">Login</button>
             </form>
 
-            <div class="auth-footer">
+            <!-- Forgot Password View (Shared container) -->
+            <div id="forgot-pw-view" style="display: none;">
+                <div id="fp-step-1">
+                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">Enter your registered phone to receive an OTP on your email.</p>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <div class="input-wrapper">
+                            <i>📱</i>
+                            <input type="tel" id="fp-phone" placeholder="9876543210" maxlength="10">
+                        </div>
+                    </div>
+                    <button type="button" id="send-otp-btn" class="submit-btn">Send OTP</button>
+                </div>
+
+                <div id="fp-step-2" style="display: none;">
+                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;" id="otp-status-text">OTP sent to your email. Please check.</p>
+                    <div class="form-group">
+                        <label>Enter 6-Digit OTP</label>
+                        <div class="input-wrapper">
+                            <i>🔢</i>
+                            <input type="text" id="fp-otp" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 5px; font-weight: 800;">
+                        </div>
+                    </div>
+                    <button type="button" id="verify-otp-btn" class="submit-btn">Verify OTP</button>
+                </div>
+
+                <div id="fp-step-3" style="display: none;">
+                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">Identity verified! Set your new password.</p>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="fp-new-password" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="button" id="reset-pw-btn" class="submit-btn">Update Password</button>
+                </div>
+
+                <div class="auth-footer" style="margin-top: 15px;">
+                    <p><span id="back-to-login">Back to Login</span></p>
+                </div>
+            </div>
+
+            <div class="auth-footer" id="main-footer">
                 <p id="toggle-text">New here?<span id="switch-auth">Create Account</span></p>
             </div>
         </div>
@@ -325,48 +376,169 @@
         const authSubtitle = document.getElementById('auth-subtitle');
         const signupFields = document.querySelectorAll('.signup-only');
         const loginOnlyFields = document.querySelectorAll('.login-only');
-        const switchAuth = document.getElementById('switch-auth');
-        const toggleText = document.getElementById('toggle-text');
         const authForm = document.getElementById('auth-form');
         const submitBtn = document.getElementById('auth-submit-btn');
+        const forgotPwView = document.getElementById('forgot-pw-view');
+        const mainFooter = document.getElementById('main-footer');
 
         function toggleMode() {
             isLogin = !isLogin;
             
-            // Add fade animation class
             const card = document.querySelector('.auth-card');
             card.classList.remove('fade-in');
-            void card.offsetWidth; // Trigger reflow
+            void card.offsetWidth; 
             card.classList.add('fade-in');
 
             authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
             authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
             submitBtn.textContent = isLogin ? "Login" : "Get Started";
             
-            toggleText.innerHTML = isLogin ? 
-                'New here? <span id="switch-auth">Create Account</span>' : 
-                'Already joined? <span id="switch-auth">Login Instead</span>';
+            document.getElementById('main-footer').innerHTML = isLogin ? 
+                '<p id="toggle-text">New here? <span id="switch-auth">Create Account</span></p>' : 
+                '<p id="toggle-text">Already joined? <span id="switch-auth">Login Instead</span></p>';
 
             signupFields.forEach(f => f.style.display = isLogin ? 'none' : 'block');
             loginOnlyFields.forEach(f => f.style.display = isLogin ? 'flex' : 'none');
             
-            // Re-bind listeners because we replaced the innerHTML
             document.getElementById('switch-auth').addEventListener('click', toggleMode);
         }
 
-        switchAuth.addEventListener('click', toggleMode);
+        document.getElementById('switch-auth').addEventListener('click', toggleMode);
 
-        document.getElementById('forgot-pw').addEventListener('click', () => {
-            alert("Password recovery is coming soon! For now, please contact support.");
+        // Forgot Password UI Transitions
+        document.getElementById('forgot-pw-trigger').addEventListener('click', () => {
+            authForm.style.display = 'none';
+            forgotPwView.style.display = 'block';
+            mainFooter.style.display = 'none';
+            authTitle.textContent = "Reset Password";
+            authSubtitle.textContent = "Follow the steps to recover your access.";
         });
 
+        document.getElementById('back-to-login').addEventListener('click', () => {
+            authForm.style.display = 'block';
+            forgotPwView.style.display = 'none';
+            mainFooter.style.display = 'block';
+            authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
+            authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
+        });
+
+        // 1. Send OTP Logic
+        document.getElementById('send-otp-btn').addEventListener('click', async () => {
+            const phone = document.getElementById('fp-phone').value;
+            if (phone.length !== 10) return alert("Please enter valid 10-digit phone number");
+
+            const btn = document.getElementById('send-otp-btn');
+            btn.textContent = "Looking up user...";
+            btn.disabled = true;
+
+            try {
+                const userRef = doc(db, "users", phone);
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    alert("No account found with this phone number.");
+                    return;
+                }
+
+                const userData = userSnap.data();
+                if (!userData.email) {
+                    alert("This account doesn't have a recovery email. Please contact support.");
+                    return;
+                }
+
+                // Generate 6-Digit OTP
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                // Store OTP in Firestore temporarily (expires in 10 mins)
+                const otpExpiry = Date.now() + (10 * 60 * 1000);
+                await setDoc(doc(db, "otps", phone), {
+                    otp: otp,
+                    expiry: otpExpiry
+                });
+
+                // Trigger Mail Sending (via our API)
+                // Note: You need to set up the API route I'll create next
+                const response = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userData.email, otp: otp })
+                });
+
+                if (response.ok) {
+                    document.getElementById('fp-step-1').style.display = 'none';
+                    document.getElementById('fp-step-2').style.display = 'block';
+                    const maskedEmail = userData.email.replace(/(.{3})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length));
+                    document.getElementById('otp-status-text').textContent = `Verification code sent to ${maskedEmail}`;
+                } else {
+                    alert("Failed to send email. Redirecting to manual verification...");
+                    // For demo/dev purposes, usually you'd show an error. 
+                    // But here we'll log it for the user to see the OTP in console if they haven't set up the API yet
+                    console.log("DEV ONLY - YOUR OTP IS:", otp);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            } finally {
+                btn.textContent = "Send OTP";
+                btn.disabled = false;
+            }
+        });
+
+        // 2. Verify OTP Logic
+        document.getElementById('verify-otp-btn').addEventListener('click', async () => {
+            const phone = document.getElementById('fp-phone').value;
+            const inputOtp = document.getElementById('fp-otp').value;
+
+            if (inputOtp.length !== 6) return alert("Please enter 6-digit OTP");
+
+            try {
+                const otpSnap = await getDoc(doc(db, "otps", phone));
+                if (!otpSnap.exists()) return alert("OTP expired or invalid. Try again.");
+
+                const { otp, expiry } = otpSnap.data();
+
+                if (Date.now() > expiry) return alert("OTP has expired. Please request a new one.");
+                if (otp !== inputOtp) return alert("Incorrect OTP. Please try again.");
+
+                // Success
+                document.getElementById('fp-step-2').style.display = 'none';
+                document.getElementById('fp-step-3').style.display = 'block';
+            } catch (err) {
+                alert("Verification failed.");
+            }
+        });
+
+        // 3. Reset Password Logic
+        document.getElementById('reset-pw-btn').addEventListener('click', async () => {
+            const phone = document.getElementById('fp-phone').value;
+            const newPassword = document.getElementById('fp-new-password').value;
+
+            if (newPassword.length < 4) return alert("Password must be at least 4 characters.");
+
+            try {
+                const userRef = doc(db, "users", phone);
+                await setDoc(userRef, { password: newPassword }, { merge: true });
+                
+                alert("Password updated successfully! Redirecting to login...");
+                window.location.reload();
+            } catch (err) {
+                alert("Failed to update password.");
+            }
+        });
+
+        // Auth Form Logic (Signup & Login)
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const usernameInput = document.getElementById('username')?.value;
+            const emailInput = document.getElementById('email')?.value;
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password')?.value;
+
+            if (!isLogin && (!emailInput || !emailInput.includes('@'))) {
+                return alert("Please provide a valid email for account recovery!");
+            }
 
             if (!isLogin && password !== confirmPassword) {
                 return alert("Passwords do not match!");
@@ -400,6 +572,7 @@
                     } else {
                         await setDoc(userRef, {
                             username: usernameInput,
+                            email: emailInput, // SAVING EMAIL NOW
                             phone: phone,
                             password: password,
                             createdAt: new Date().toISOString()
