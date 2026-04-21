@@ -196,6 +196,16 @@
                 </div>
             </div>
 
+            <div class="settings-group">
+                <div class="settings-item" id="feedback-btn">
+                    <div class="settings-left">
+                        <span class="settings-icon">💬</span>
+                        <span class="settings-label">Help & Support</span>
+                    </div>
+                    <div class="settings-right"><span>Feedback</span></div>
+                </div>
+            </div>
+
             <div class="settings-group danger-zone">
                 <div class="settings-item" id="logout-btn">
                     <div class="settings-left">
@@ -205,8 +215,34 @@
                 </div>
             </div>
 
-            <div class="version-tag">Spends & Earns v2.2.0 • Built with ❤️</div>
+            <div class="version-tag">Spends & Earns v2.3.0 • Built with ❤️</div>
         </main>
+
+        <!-- Feedback Modal -->
+        <div class="modal" id="feedback-modal">
+            <div class="modal-content">
+                <div class="modal-title">Help & Support</div>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 20px; text-align: center;">Found a bug or have a suggestion? Let us know!</p>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Issue Type</label>
+                    <select id="ticket-type" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit;">
+                        <option value="Bug Report">🪲 Bug Report</option>
+                        <option value="Suggestion">💡 Suggestion</option>
+                        <option value="Payment Issue">💰 Payment Issue</option>
+                        <option value="Other">❓ Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="ticket-message" placeholder="Describe your issue in detail..." style="width: 100%; min-height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; resize: none;"></textarea>
+                </div>
+
+                <button class="primary-btn" id="submit-ticket" style="width: 100%; margin-top: 15px;">Submit Ticket</button>
+                <button class="text-btn" id="close-feedback-modal" style="width: 100%; margin-top: 10px; color: #64748b;">Dismiss</button>
+            </div>
+        </div>
 
         <!-- Edit Profile Modal -->
         <div class="modal" id="edit-modal">
@@ -337,6 +373,7 @@
         const editModal = document.getElementById('edit-modal');
         const securityModal = document.getElementById('security-modal');
         const emailModal = document.getElementById('email-modal');
+        const feedbackModal = document.getElementById('feedback-modal');
         
         document.getElementById('edit-profile-btn').addEventListener('click', () => editModal.style.display = 'flex');
         document.getElementById('close-modal').addEventListener('click', () => editModal.style.display = 'none');
@@ -346,6 +383,9 @@
 
         document.getElementById('edit-email-btn').addEventListener('click', () => emailModal.style.display = 'flex');
         document.getElementById('close-email-modal').addEventListener('click', () => emailModal.style.display = 'none');
+
+        document.getElementById('feedback-btn').addEventListener('click', () => feedbackModal.style.display = 'flex');
+        document.getElementById('close-feedback-modal').addEventListener('click', () => feedbackModal.style.display = 'none');
 
         // --- Profile Logic ---
         document.getElementById('save-profile').addEventListener('click', async () => {
@@ -383,6 +423,42 @@
                     btn.disabled = false;
                 }
             } else { alert("Please enter a valid email."); }
+        });
+
+        // --- Support / Feedback Logic ---
+        import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        document.getElementById('submit-ticket').addEventListener('click', async () => {
+            const type = document.getElementById('ticket-type').value;
+            const message = document.getElementById('ticket-message').value;
+            const btn = document.getElementById('submit-ticket');
+
+            if (!message.trim()) return alert("Please type a message.");
+            if (!user) return alert("You must be logged in.");
+
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "support_tickets"), {
+                    userId: user.phone,
+                    username: user.username,
+                    type: type,
+                    message: message,
+                    status: 'open',
+                    createdAt: serverTimestamp()
+                });
+
+                alert("Thank you! Your ticket has been submitted. Our admin will check it soon.");
+                feedbackModal.style.display = 'none';
+                document.getElementById('ticket-message').value = "";
+            } catch (err) {
+                console.error(err);
+                alert("Failed to send message. Please try again.");
+            } finally {
+                btn.textContent = "Submit Ticket";
+                btn.disabled = false;
+            }
         });
 
         // --- Security PIN Logic ---

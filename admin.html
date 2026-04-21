@@ -135,16 +135,33 @@
         </div>
 
         <div class="broadcast-panel" style="margin-top: 20px; padding: 0; overflow: hidden; border: 1px solid #e2e8f0;">
-            <div style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
-                <h2 style="margin-bottom: 0; font-size: 14px;">User Directory</h2>
-                <span id="directory-count" style="background: #f1f5f9; color: #6366f1; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;">0 Users</span>
+            <div style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h2 style="margin-bottom: 0; font-size: 14px;">User Directory</h2>
+                    <span id="directory-count" style="background: #f1f5f9; color: #6366f1; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;">0 Users</span>
+                </div>
+                
+                <!-- Search and Filter Bar -->
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px; position: relative;">
+                        <input type="text" id="user-search" placeholder="Search by name or phone..." style="padding-left: 30px; font-size: 12px;">
+                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.4;">🔍</span>
+                    </div>
+                    <div class="templates" style="margin-bottom: 0; padding-bottom: 0;">
+                        <button class="filter-btn template-btn active-filter" data-filter="all">All Users</button>
+                        <button class="filter-btn template-btn" data-filter="power">Power Users</button>
+                        <button class="filter-btn template-btn" data-filter="inactive">Inactive (7d+)</button>
+                    </div>
+                </div>
             </div>
+
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="text-align: left; background: #f8fafc; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
                             <th style="padding: 10px 20px; font-weight: 700;">User Details</th>
-                            <th style="padding: 10px 20px; font-weight: 700;">Phone Number</th>
+                            <th style="padding: 10px 20px; font-weight: 700;">Stats</th>
+                            <th style="padding: 10px 20px; font-weight: 700;">Status</th>
                             <th style="padding: 10px 20px; font-weight: 700; text-align: right;">Joined On</th>
                         </tr>
                     </thead>
@@ -158,17 +175,51 @@
                 <p style="margin-top: 8px;">Fetching directory data...</p>
             </div>
         </div>
+        <div class="broadcast-panel" style="margin-top: 20px; padding: 0; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin-bottom: 0; font-size: 14px;">Support Inbox</h2>
+                <span id="ticket-count" style="background: #fee2e2; color: #ef4444; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;">0 Tickets</span>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;" id="ticket-list">
+                <!-- Support tickets will be injected here -->
+                <div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 12px;">Monitoring support channel...</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; padding: 20px; color: #94a3b8; font-size: 11px;">
+            Spends & Earns Admin System • Authorized Access Only
+        </div>
     </div>
 
     <style>
+        .ticket-card { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
+        .ticket-card:last-child { border-bottom: none; }
+        .ticket-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ticket-type { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; color: #64748b; }
+        .ticket-user { font-weight: 700; font-size: 13px; color: #1e293b; }
+        .ticket-msg { font-size: 12px; color: #475569; line-height: 1.5; margin-bottom: 12px; }
+        .ticket-actions { display: flex; gap: 8px; }
+        .resolve-btn { background: #ecfdf5; color: #059669; border: 1px solid #10b981; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+        .reply-btn { background: #f0f9ff; color: #0284c7; border: 1px solid #0ea5e9; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+        
         @keyframes spin { to { transform: rotate(360deg); } }
-        .user-row:hover { background-color: #f8fafc; cursor: pointer; }
+        .user-row:hover { background-color: #f8fafc; }
         .avatar-circle {
             width: 28px; height: 28px; border-radius: 50%;
             background: linear-gradient(135deg, #6366f1, #a855f7);
             color: white; display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 11px; margin-right: 8px;
         }
+        .active-filter { background: #6366f1 !important; color: white !important; border-color: #6366f1 !important; }
+        
+        /* Status Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 18px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(16px); }
+        input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
 
         /* Modal Styles */
         .modal-overlay {
@@ -196,6 +247,24 @@
         .detail-mini-card label { margin-bottom: 2px; opacity: 0.6; font-size: 9px; }
         .detail-mini-card .val { font-size: 15px; font-weight: 800; }
     </style>
+
+    <!-- Reply Modal -->
+    <div id="reply-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 style="margin: 0; font-size: 14px;">Reply to User</h2>
+                <button class="close-modal" onclick="document.getElementById('reply-modal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="replying-to" style="font-size: 12px; color: #64748b; margin-bottom: 15px;">To: Anonymous</p>
+                <div class="form-group">
+                    <label>Internal Message (Sent as Notification)</label>
+                    <textarea id="reply-text" rows="4" placeholder="Your reply message..."></textarea>
+                </div>
+                <button id="send-reply-btn" class="primary-btn send-btn" style="margin-top:10px;">Send Reply</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Details Modal -->
     <div id="user-details-modal" class="modal-overlay">
@@ -249,12 +318,17 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         // Initialize Firebase immediately
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Global State for Search/Filter
+        let allUsers = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
 
         // Admin Auth Logic
         const loginScreen = document.getElementById('admin-login-screen');
@@ -271,7 +345,7 @@
             const user = document.getElementById('admin-username').value;
             const pass = document.getElementById('admin-password').value;
 
-            // Simple Admin check (You can change these values)
+            // Simple Admin check
             if (user === 'admin' && pass === 'admin123') {
                 sessionStorage.setItem('adminAuth', 'true');
                 showDashboard();
@@ -280,12 +354,122 @@
             }
         });
 
-        function showDashboard() {
+        async function showDashboard() {
             loginScreen.style.display = 'none';
             dashboardScreen.style.display = 'block';
             fetchUserCount();
             fetchAllUsers();
+            listenForTickets(); // Start listening for support tickets
         }
+
+        // --- Support Inbox Logic ---
+        let currentReplyUser = null;
+        let currentTicketId = null;
+
+        function listenForTickets() {
+            onSnapshot(query(collection(db, "support_tickets"), orderBy("createdAt", "desc")), (snapshot) => {
+                const ticketList = document.getElementById('ticket-list');
+                const ticketCount = document.getElementById('ticket-count');
+                
+                let openTickets = 0;
+                ticketList.innerHTML = '';
+
+                if (snapshot.empty) {
+                    ticketList.innerHTML = '<div style="text-align: center; padding: 40px; color: #94a3b8; font-size: 12px;">No support tickets found.</div>';
+                    ticketCount.textContent = '0 Tickets';
+                    ticketCount.style.background = '#f1f5f9';
+                    ticketCount.style.color = '#64748b';
+                    return;
+                }
+
+                snapshot.forEach(docSnap => {
+                    const ticket = docSnap.data();
+                    const id = docSnap.id;
+                    if (ticket.status === 'open') openTickets++;
+
+                    const time = ticket.createdAt ? new Date(ticket.createdAt.toMillis()).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : 'Just now';
+
+                    const card = document.createElement('div');
+                    card.className = 'ticket-card';
+                    if (ticket.status === 'resolved') card.style.opacity = '0.5';
+
+                    card.innerHTML = `
+                        <div class="ticket-header">
+                            <div>
+                                <span class="ticket-type">${ticket.type || 'Support'}</span>
+                                <div class="ticket-user">${ticket.username} <span style="font-weight: 400; font-size: 10px; color: #94a3b8;">(${ticket.userId})</span></div>
+                            </div>
+                            <div style="font-size: 10px; color: #94a3b8;">${time}</div>
+                        </div>
+                        <div class="ticket-msg">${ticket.message}</div>
+                        <div class="ticket-actions">
+                            ${ticket.status === 'open' ? `
+                                <button class="reply-btn" onclick="openReplyModal('${ticket.userId}', '${ticket.username}', '${id}')">Reply</button>
+                                <button class="resolve-btn" onclick="resolveTicket('${id}')">Mark Resolved</button>
+                            ` : `<span style="font-size: 10px; font-weight: 800; color: #10b981;">✅ RESOLVED</span>`}
+                        </div>
+                    `;
+                    ticketList.appendChild(card);
+                });
+
+                ticketCount.textContent = `${openTickets} New`;
+                ticketCount.style.background = openTickets > 0 ? '#fee2e2' : '#f1f5f9';
+                ticketCount.style.color = openTickets > 0 ? '#ef4444' : '#64748b';
+            });
+        }
+
+        async function resolveTicket(id) {
+            if (!confirm("Mark this ticket as resolved?")) return;
+            try {
+                await updateDoc(doc(db, "support_tickets", id), { status: 'resolved' });
+            } catch (err) { alert("Failed to resolve ticket."); }
+        }
+
+        function openReplyModal(userId, username, ticketId) {
+            currentReplyUser = userId;
+            currentTicketId = ticketId;
+            document.getElementById('replying-to').textContent = `To: ${username} (${userId})`;
+            document.getElementById('reply-modal').style.display = 'flex';
+            document.getElementById('reply-text').value = '';
+        }
+
+        document.getElementById('send-reply-btn').addEventListener('click', async () => {
+            const msg = document.getElementById('reply-text').value;
+            const btn = document.getElementById('send-reply-btn');
+            
+            if (!msg.trim()) return alert("Enter a message.");
+
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+
+            try {
+                // Send personal notification
+                await setDoc(doc(db, "notifications", currentReplyUser), {
+                    title: "Admin Reply 📩",
+                    message: msg,
+                    active: true,
+                    timestamp: serverTimestamp()
+                });
+
+                // Also auto-resolve the ticket
+                await updateDoc(doc(db, "support_tickets", currentTicketId), { status: 'resolved' });
+
+                alert("Reply sent and ticket resolved!");
+                document.getElementById('reply-modal').style.display = 'none';
+            } catch (err) {
+                console.error(err);
+                alert("Failed to send reply.");
+            } finally {
+                btn.textContent = "Send Reply";
+                btn.disabled = false;
+            }
+        });
+
+        // Expose to window
+        window.openReplyModal = openReplyModal;
+        window.resolveTicket = resolveTicket;
 
         // Fetch Total Users
         async function fetchUserCount() {
@@ -298,82 +482,171 @@
             }
         }
 
-        // Fetch and Display All Users
+        // Fetch and Display All Users with Advanced Stats
         async function fetchAllUsers() {
-            const userList = document.getElementById('user-list');
             const userLoading = document.getElementById('user-loading');
-            const dirCount = document.getElementById('directory-count');
             
             try {
-                const querySnapshot = await getDocs(collection(db, "users"));
+                // Fetch basic user info
+                const usersSnap = await getDocs(collection(db, "users"));
+                const trackerSnap = await getDocs(collection(db, "tracker_data"));
+                
+                const trackerMap = {};
+                trackerSnap.forEach(doc => trackerMap[doc.id] = doc.data());
+
                 let users = [];
-                
-                querySnapshot.forEach((doc) => {
-                    users.push(doc.data());
-                });
-
-                users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-                
-                userList.innerHTML = '';
-                userLoading.style.display = 'none';
-                dirCount.textContent = `${users.length} Users`;
-
-                if (users.length === 0) {
-                    userList.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">No users found in the system.</td></tr>';
-                    return;
-                }
-
-                users.forEach((user) => {
-                    const row = document.createElement('tr');
-                    row.className = 'user-row';
-                    row.style.borderBottom = "1px solid #f1f5f9";
-                    row.style.transition = "background 0.2s";
+                usersSnap.forEach((docSnap) => {
+                    const userData = docSnap.data();
+                    const tracker = trackerMap[userData.phone] || { trackerData: [] };
+                    const logs = tracker.trackerData || [];
                     
-                    // Add click event
-                    row.onclick = () => openDetailsModal(user);
-
-                    const joinedDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    }) : 'N/A';
-
-                    const initial = (user.username || 'A').charAt(0).toUpperCase();
-
-                    row.innerHTML = `
-                        <td style="padding: 10px 20px;">
-                            <div style="display: flex; align-items: center;">
-                                <div class="avatar-circle">${initial}</div>
-                                <div>
-                                    <div style="font-weight: 700; color: #1e293b; font-size: 13px;">${user.username || 'Anonymous'}</div>
-                                    <div style="font-size: 9px; color: #94a3b8; margin-top: 1px;">CLICK FOR DETAILS</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td style="padding: 10px 20px;">
-                            <div style="color: #475569; font-weight: 600; font-family: monospace; font-size: 12px;">${user.phone || 'N/A'}</div>
-                        </td>
-                        <td style="padding: 10px 20px; text-align: right;">
-                            <div style="color: #64748b; font-size: 11px; font-weight: 500;">${joinedDate}</div>
-                        </td>
-                    `;
-                    userList.appendChild(row);
+                    // Add calculated metadata
+                    users.push({
+                        ...userData,
+                        id: docSnap.id,
+                        transactionCount: logs.length,
+                        lastActive: logs.length > 0 ? new Date(logs[0].date) : new Date(userData.createdAt || 0),
+                        isInactive: false // will be set below
+                    });
                 });
+
+                // Calculate inactivity (no transactions in 7 days)
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                
+                users.forEach(u => {
+                    u.isInactive = u.lastActive < sevenDaysAgo;
+                });
+
+                allUsers = users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                
+                userLoading.style.display = 'none';
+                renderUserList();
+
             } catch (err) {
                 console.error("Error fetching user list:", err);
                 userLoading.innerHTML = `<p style="color: #ef4444;">❌ Failed to load users. Please check console.</p>`;
             }
         }
 
+        function renderUserList() {
+            const userList = document.getElementById('user-list');
+            const dirCount = document.getElementById('directory-count');
+            
+            // Apply Filters and Search
+            let filtered = allUsers.filter(u => {
+                const matchesSearch = (u.username || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                     (u.phone || '').includes(searchQuery);
+                
+                if (!matchesSearch) return false;
+
+                if (currentFilter === 'power') return u.transactionCount >= 10; // 10+ transactions is a Power User
+                if (currentFilter === 'inactive') return u.isInactive;
+                return true;
+            });
+
+            userList.innerHTML = '';
+            dirCount.textContent = `${filtered.length} Users`;
+
+            if (filtered.length === 0) {
+                userList.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">No matching users found.</td></tr>';
+                return;
+            }
+
+            filtered.forEach((user) => {
+                const row = document.createElement('tr');
+                row.className = 'user-row';
+                row.style.borderBottom = "1px solid #f1f5f9";
+                
+                const joinedDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
+                    month: 'short', day: 'numeric'
+                }) : 'N/A';
+
+                const initial = (user.username || 'A').charAt(0).toUpperCase();
+                const isSuspended = user.status === 'suspended';
+
+                row.innerHTML = `
+                    <td style="padding: 10px 20px;" onclick="openDetailsModalByData('${user.phone}', '${user.username}')">
+                        <div style="display: flex; align-items: center; cursor: pointer;">
+                            <div class="avatar-circle" style="${isSuspended ? 'filter: grayscale(1); opacity: 0.5;' : ''}">${initial}</div>
+                            <div>
+                                <div style="font-weight: 700; color: #1e293b; font-size: 13px; text-decoration: ${isSuspended ? 'line-through' : 'none'}">${user.username || 'Anonymous'}</div>
+                                <div style="font-size: 9px; color: #94a3b8; margin-top: 1px;">${user.phone || 'No Phone'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 10px 20px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 11px; font-weight: 700; color: #475569;">${user.transactionCount} Trans.</span>
+                            <span style="font-size: 9px; color: ${user.isInactive ? '#ef4444' : '#10b981'}; font-weight: 600;">
+                                ${user.isInactive ? 'Inactive' : 'Active'}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="padding: 10px 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label class="switch">
+                                <input type="checkbox" ${isSuspended ? '' : 'checked'} onchange="toggleUserStatus('${user.phone}', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                            <span style="font-size: 9px; font-weight: 700; color: ${isSuspended ? '#ef4444' : '#10b981'}">
+                                ${isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="padding: 10px 20px; text-align: right;">
+                        <div style="color: #64748b; font-size: 11px; font-weight: 500;">${joinedDate}</div>
+                    </td>
+                `;
+                userList.appendChild(row);
+            });
+        }
+
+        // Search and Filter Events
+        document.getElementById('user-search').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderUserList();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active-filter'));
+                btn.classList.add('active-filter');
+                currentFilter = btn.getAttribute('data-filter');
+                renderUserList();
+            });
+        });
+
+        // Toggle User Status
+        async function toggleUserStatus(phone, isActive) {
+            try {
+                const userRef = doc(db, "users", phone);
+                await updateDoc(userRef, {
+                    status: isActive ? 'active' : 'suspended'
+                });
+                
+                // Update local state
+                const user = allUsers.find(u => u.phone === phone);
+                if (user) user.status = isActive ? 'active' : 'suspended';
+                
+                renderUserList();
+            } catch (err) {
+                console.error("Error toggling status:", err);
+                alert("Failed to update user status");
+                renderUserList(); // reset UI
+            }
+        }
+        window.toggleUserStatus = toggleUserStatus;
+
         // Modal Logic
         const detailsModal = document.getElementById('user-details-modal');
         const modalLoading = document.getElementById('modal-loading');
         const transactionList = document.getElementById('modal-transaction-list');
 
-        async function openDetailsModal(user) {
+        async function openDetailsModalByData(phone, name) {
             detailsModal.style.display = 'flex';
-            document.getElementById('modal-user-name').textContent = user.username || 'Anonymous';
-            document.getElementById('modal-user-phone').textContent = user.phone || 'No Phone';
+            document.getElementById('modal-user-name').textContent = name || 'Anonymous';
+            document.getElementById('modal-user-phone').textContent = phone || 'No Phone';
             
             // Reset fields
             document.getElementById('modal-total-earned').textContent = '₹0';
@@ -383,7 +656,7 @@
             modalLoading.style.display = 'block';
 
             try {
-                const docRef = doc(db, "tracker_data", user.phone);
+                const docRef = doc(db, "tracker_data", phone);
                 const docSnap = await getDoc(docRef);
 
                 modalLoading.style.display = 'none';

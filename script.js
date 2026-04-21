@@ -503,6 +503,36 @@ onSnapshot(doc(db, "notifications", "broadcast"), (snapshot) => {
     }
 });
 
+// Personal Notifications Listener (Admin Replies)
+const user = JSON.parse(localStorage.getItem('currentUser'));
+if (user && user.phone) {
+    onSnapshot(doc(db, "notifications", user.phone), (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+            const msgId = data.timestamp ? data.timestamp.toMillis() : null;
+            const lastRead = localStorage.getItem(`lastReadPersonal_${user.phone}`);
+            
+            if (data.active && data.message && msgId && msgId.toString() !== lastRead) {
+                const title = data.title || "Admin Reply";
+                const message = data.message;
+                
+                if (broadcastModal) { 
+                    bcTitle.textContent = title.toUpperCase(); 
+                    bcMessage.textContent = message; 
+                    broadcastModal.style.display = 'flex'; 
+                }
+                
+                localStorage.setItem(`lastReadPersonal_${user.phone}`, msgId.toString());
+                
+                if (Notification.permission === "granted") {
+                    if ('serviceWorker' in navigator) navigator.serviceWorker.ready.then(reg => reg.showNotification(title, { body: message, icon: "/icon-192.png" }));
+                    else new Notification(title, { body: message, icon: "/icon-192.png" });
+                }
+            }
+        }
+    });
+}
+
 const profileTrigger = document.getElementById('profile-trigger');
 const profileDrawer = document.getElementById('profile-drawer');
 const logoutBtn = document.getElementById('logout-btn');
