@@ -8,64 +8,68 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body { background: #f8fafc; font-size: 14px; }
-        .admin-main { max-width: 900px; margin: 15px auto; padding: 0 12px; }
+        .admin-main { max-width: 900px; margin: 10px auto; padding: 0 10px; }
         
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
-        .admin-header h1 { font-size: 18px; font-weight: 800; color: #1e293b; letter-spacing: -0.05em; }
-        .home-link { text-decoration: none; color: #6366f1; font-weight: 600; font-size: 12px; border: 1px solid #e2e8f0; padding: 5px 12px; border-radius: 8px; background: white; }
+        .admin-header h1 { font-size: 16px; font-weight: 800; color: #1e293b; letter-spacing: -0.05em; }
+        .home-link { text-decoration: none; color: #6366f1; font-weight: 600; font-size: 11px; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; background: white; }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 15px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
         }
         .stat-card {
             background: linear-gradient(135deg, #6366f1, #a855f7);
             color: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.1);
+            padding: 12px 15px;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(99, 102, 241, 0.1);
             position: relative;
             overflow: hidden;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .stat-card h3 { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; }
-        .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 2px; }
-        .stat-card .bg-icon { position: absolute; right: -10px; bottom: -10px; font-size: 50px; opacity: 0.1; }
+        .stat-card h3 { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8; margin-bottom: 2px; }
+        .stat-card .value { font-size: 22px; font-weight: 800; }
+        .stat-card .bg-icon { position: absolute; right: -5px; bottom: -5px; font-size: 35px; opacity: 0.1; }
 
         .broadcast-panel {
             background: white;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 10px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
-        .broadcast-panel h2 { font-size: 14px; font-weight: 800; margin-bottom: 12px; }
+        .broadcast-panel h2 { font-size: 13px; font-weight: 800; margin-bottom: 10px; }
         
-        .templates { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .templates { display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
         .templates::-webkit-scrollbar { display: none; }
         .template-btn { 
-            background: #f1f5f9; border: 1px solid #e2e8f0; padding: 5px 10px; 
-            border-radius: 20px; font-size: 10px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s;
+            background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 10px; 
+            border-radius: 20px; font-size: 9px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s;
         }
         .template-btn:hover { background: #e2e8f0; }
 
-        .form-group { margin-bottom: 10px; }
-        label { display: block; font-weight: 700; margin-bottom: 4px; color: #64748b; font-size: 9px; text-transform: uppercase; }
-        input, textarea { width: 100%; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 12px; }
-        input:focus, textarea:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .form-group { margin-bottom: 8px; }
+        label { display: block; font-weight: 700; margin-bottom: 3px; color: #64748b; font-size: 8px; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-family: inherit; font-size: 11px; }
+        input:focus, textarea:focus { border-color: #6366f1; outline: none; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1); }
         
-        .send-btn { width: 100%; padding: 10px; font-size: 13px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        #status { margin-top: 8px; text-align: center; font-weight: 700; font-size: 11px; height: 16px; }
+        .send-btn { width: 100%; padding: 8px; font-size: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        #status { margin-top: 5px; text-align: center; font-weight: 700; font-size: 10px; height: 14px; }
 
         @media (max-width: 640px) {
-            .admin-main { margin: 10px auto; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .admin-header h1 { font-size: 16px; }
+            .admin-main { margin: 5px auto; }
+            .stat-card .value { font-size: 20px; }
+            .admin-header h1 { font-size: 14px; }
         }
     </style>
 </head>
