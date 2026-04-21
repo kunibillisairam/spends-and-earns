@@ -205,7 +205,7 @@
                 </div>
             </div>
 
-            <div class="version-tag">Spends & Earns v2.1.0 • Built with ❤️</div>
+            <div class="version-tag">Spends & Earns v2.2.0 • Built with ❤️</div>
         </main>
 
         <!-- Edit Profile Modal -->
@@ -305,30 +305,33 @@
         const user = JSON.parse(localStorage.getItem('currentUser'));
         const trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
 
-        if (user) {
-            document.getElementById('p-name').textContent = user.username;
-            document.getElementById('p-phone').textContent = user.phone;
-            document.getElementById('p-avatar').textContent = user.username.charAt(0).toUpperCase();
-            document.getElementById('new-name').value = user.username;
-            
-            // Check for existing email/security
-            const userRef = doc(db, "users", user.phone);
-            try {
-                const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    if (userData.email) {
-                        document.getElementById('p-email').textContent = userData.email;
-                        document.getElementById('p-email').style.color = '#6366f1';
+        async function initSettings() {
+            if (user) {
+                document.getElementById('p-name').textContent = user.username;
+                document.getElementById('p-phone').textContent = user.phone;
+                document.getElementById('p-avatar').textContent = user.username.charAt(0).toUpperCase();
+                document.getElementById('new-name').value = user.username;
+                
+                // Check for existing email/security
+                const userRef = doc(db, "users", user.phone);
+                try {
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        if (userData.email) {
+                            document.getElementById('p-email').textContent = userData.email;
+                            document.getElementById('p-email').style.color = '#6366f1';
+                        }
+                        if (userData.isLockActive) {
+                            document.getElementById('lock-status').textContent = "Active";
+                            document.getElementById('lock-status').style.color = "#10b981";
+                            document.getElementById('lock-toggle').checked = true;
+                        }
                     }
-                    if (userData.isLockActive) {
-                        document.getElementById('lock-status').textContent = "Active";
-                        document.getElementById('lock-status').style.color = "#10b981";
-                        document.getElementById('lock-toggle').checked = true;
-                    }
-                }
-            } catch (e) { console.error(e); }
+                } catch (e) { console.error(e); }
+            }
         }
+        initSettings();
 
         // --- Modals Logic ---
         const editModal = document.getElementById('edit-modal');
