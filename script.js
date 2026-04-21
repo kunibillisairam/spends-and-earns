@@ -565,6 +565,77 @@ exportCsvBtn?.addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
+// --- APP LOCK SECURITY MODULE ---
+async function checkAppLock() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    // Skip if already verified in this session
+    if (sessionStorage.getItem('app_verified') === 'true') return;
+
+    try {
+        const userRef = doc(db, "users", user.phone);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (userData.isLockActive && userData.appPin) {
+                showLockOverlay(userData.appPin);
+            }
+        }
+    } catch (e) { console.error("Lock check error:", e); }
+}
+
+function showLockOverlay(correctPin) {
+    const overlay = document.getElementById('app-lock-overlay');
+    if (!overlay) return;
+
+    overlay.style.display = 'flex';
+    let inputPin = "";
+    const dots = document.querySelectorAll('.pin-dot-lock');
+    const btns = document.querySelectorAll('.lock-pin-btn');
+
+    btns.forEach(btn => {
+        const newBtn = btn.cloneNode(true); // Remove previous listeners
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', () => {
+            const val = newBtn.textContent;
+            if (val === "⌫") {
+                inputPin = inputPin.slice(0, -1);
+            } else if (inputPin.length < 4) {
+                inputPin += val;
+            }
+
+            // Update UI
+            dots.forEach((dot, i) => {
+                if (i < inputPin.length) dot.classList.add('filled');
+                else dot.classList.remove('filled');
+            });
+
+            // Check PIN
+            if (inputPin.length === 4) {
+                if (inputPin === correctPin) {
+                    sessionStorage.setItem('app_verified', 'true');
+                    overlay.style.fadeOut = "0.3s";
+                    setTimeout(() => overlay.style.display = 'none', 300);
+                } else {
+                    alert("Incorrect PIN! Try again.");
+                    inputPin = "";
+                    dots.forEach(dot => dot.classList.remove('filled'));
+                }
+            }
+        });
+    });
+}
+
+// Update init to include lock check
+const oldInit = init;
+init = async function() {
+    await checkAppLock();
+    await oldInit();
+}
+
 init();
 initUser();
 setTimeout(checkNotificationPermission, 8000);
