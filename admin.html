@@ -246,7 +246,43 @@
         .detail-mini-card { padding: 10px; border-radius: 12px; border: 1px solid #f1f5f9; }
         .detail-mini-card label { margin-bottom: 2px; opacity: 0.6; font-size: 9px; }
         .detail-mini-card .val { font-size: 15px; font-weight: 800; }
+
+        /* Success Overlay */
+        .success-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
+            z-index: 3000; padding: 20px;
+        }
+        .success-card {
+            background: white; width: 100%; max-width: 320px; border-radius: 30px;
+            padding: 40px 20px; text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes successPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .success-icon {
+            width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #34d399);
+            border-radius: 50%; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: white;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            animation: iconPulse 2s infinite;
+        }
+        @keyframes iconPulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
     </style>
+
+    <!-- Success Overlay -->
+    <div class="success-overlay" id="success-overlay">
+        <div class="success-card">
+            <div class="success-icon">⚡</div>
+            <h2 id="success-title" style="font-weight: 800; color: #1e293b; margin-bottom: 10px;">Success!</h2>
+            <p id="success-msg" style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 25px;">
+                Action completed successfully.
+            </p>
+            <button class="primary-btn" id="success-close" style="width: 100%; background: #1e293b; padding: 12px; border-radius: 12px; color: white; font-weight: 700; border: none; cursor: pointer;">Awesome</button>
+        </div>
+    </div>
 
     <!-- Reply Modal -->
     <div id="reply-modal" class="modal-overlay">
@@ -424,8 +460,20 @@
             if (!confirm("Mark this ticket as resolved?")) return;
             try {
                 await updateDoc(doc(db, "support_tickets", id), { status: 'resolved' });
+                showSuccess("Ticket Resolved", "This issue has been archived successfully.");
             } catch (err) { alert("Failed to resolve ticket."); }
         }
+
+        // Success Overlay Helper
+        function showSuccess(title, message) {
+            document.getElementById('success-title').textContent = title;
+            document.getElementById('success-msg').textContent = message;
+            document.getElementById('success-overlay').style.display = 'flex';
+        }
+
+        document.getElementById('success-close').addEventListener('click', () => {
+            document.getElementById('success-overlay').style.display = 'none';
+        });
 
         function openReplyModal(userId, username, ticketId) {
             currentReplyUser = userId;
@@ -456,7 +504,7 @@
                 // Also auto-resolve the ticket
                 await updateDoc(doc(db, "support_tickets", currentTicketId), { status: 'resolved' });
 
-                alert("Reply sent and ticket resolved!");
+                showSuccess("Reply Sent!", "Your message has been delivered to the user's feed.");
                 document.getElementById('reply-modal').style.display = 'none';
             } catch (err) {
                 console.error(err);
@@ -753,8 +801,7 @@
                     timestamp: serverTimestamp()
                 });
 
-                statusEl.textContent = "✅ Broadcast Sent Successfully!";
-                statusEl.style.color = "#10b981";
+                showSuccess("Broadcast Sent! 📢", "All users will now see your announcement.");
                 titleInput.value = "";
                 messageInput.value = "";
                 
