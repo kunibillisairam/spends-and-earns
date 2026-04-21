@@ -238,8 +238,12 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
+
+        // Initialize Firebase immediately
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         // Admin Auth Logic
         const loginScreen = document.getElementById('admin-login-screen');
@@ -271,9 +275,6 @@
             fetchUserCount();
             fetchAllUsers();
         }
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
 
         // Fetch Total Users
         async function fetchUserCount() {
