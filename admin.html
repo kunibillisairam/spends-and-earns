@@ -121,11 +121,47 @@
             <button id="send-btn" class="primary-btn send-btn">Send Broadcast Now</button>
             <div id="status"></div>
         </div>
+
+        <div class="broadcast-panel" style="margin-top: 30px; padding: 0; overflow: hidden; border: 1px solid #e2e8f0;">
+            <div style="padding: 25px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                <h2 style="margin-bottom: 0;">User Directory</h2>
+                <span id="directory-count" style="background: #f1f5f9; color: #6366f1; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;">0 Users</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="text-align: left; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <th style="padding: 15px 30px; font-weight: 700;">User Details</th>
+                            <th style="padding: 15px 30px; font-weight: 700;">Phone Number</th>
+                            <th style="padding: 15px 30px; font-weight: 700; text-align: right;">Joined On</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <!-- User rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="user-loading" style="text-align: center; padding: 40px; color: #94a3b8; font-size: 14px;">
+                <div class="spinner" style="display: inline-block; width: 20px; height: 20px; border: 2px solid #e2e8f0; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 10px;">Fetching directory data...</p>
+            </div>
+        </div>
     </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .user-row:hover { background-color: #f8fafc; }
+        .avatar-circle {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 12px; margin-right: 12px;
+        }
+    </style>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDocs, collection, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         // Admin Auth Logic
@@ -156,6 +192,7 @@
             loginScreen.style.display = 'none';
             dashboardScreen.style.display = 'block';
             fetchUserCount();
+            fetchAllUsers();
         }
 
         const app = initializeApp(firebaseConfig);
@@ -169,6 +206,72 @@
             } catch (err) {
                 console.error("Could not fetch users", err);
                 document.getElementById('user-count').textContent = "Error";
+            }
+        }
+
+        // Fetch and Display All Users
+        async function fetchAllUsers() {
+            const userList = document.getElementById('user-list');
+            const userLoading = document.getElementById('user-loading');
+            const dirCount = document.getElementById('directory-count');
+            
+            try {
+                // Fetch all and sort in memory to avoid "Index Exception" unless index is manual created
+                const querySnapshot = await getDocs(collection(db, "users"));
+                let users = [];
+                
+                querySnapshot.forEach((doc) => {
+                    users.push(doc.data());
+                });
+
+                // Sort by date descending
+                users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                
+                userList.innerHTML = '';
+                userLoading.style.display = 'none';
+                dirCount.textContent = `${users.length} Users`;
+
+                if (users.length === 0) {
+                    userList.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: #94a3b8;">No users found in the system.</td></tr>';
+                    return;
+                }
+
+                users.forEach((user) => {
+                    const row = document.createElement('tr');
+                    row.className = 'user-row';
+                    row.style.borderBottom = "1px solid #f1f5f9";
+                    row.style.transition = "background 0.2s";
+                    
+                    const joinedDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    }) : 'N/A';
+
+                    const initial = (user.username || 'A').charAt(0).toUpperCase();
+
+                    row.innerHTML = `
+                        <td style="padding: 15px 30px;">
+                            <div style="display: flex; align-items: center;">
+                                <div class="avatar-circle">${initial}</div>
+                                <div>
+                                    <div style="font-weight: 700; color: #1e293b; font-size: 15px;">${user.username || 'Anonymous'}</div>
+                                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">ACTIVE USER</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 15px 30px;">
+                            <div style="color: #475569; font-weight: 600; font-family: monospace; font-size: 14px;">${user.phone || 'N/A'}</div>
+                        </td>
+                        <td style="padding: 15px 30px; text-align: right;">
+                            <div style="color: #64748b; font-size: 13px; font-weight: 500;">${joinedDate}</div>
+                        </td>
+                    `;
+                    userList.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Error fetching user list:", err);
+                userLoading.innerHTML = `<p style="color: #ef4444;">❌ Failed to load users. Please check console.</p>`;
             }
         }
 
