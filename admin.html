@@ -150,14 +150,91 @@
 
     <style>
         @keyframes spin { to { transform: rotate(360deg); } }
-        .user-row:hover { background-color: #f8fafc; }
+        .user-row:hover { background-color: #f8fafc; cursor: pointer; }
         .avatar-circle {
             width: 32px; height: 32px; border-radius: 50%;
             background: linear-gradient(135deg, #6366f1, #a855f7);
             color: white; display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 12px; margin-right: 12px;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 700px;
+            max-height: 90vh; border-radius: 24px; overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            animation: modalSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlide { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .modal-header { padding: 25px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 30px; overflow-y: auto; flex: 1; }
+        .close-modal { background: #f1f5f9; border: none; cursor: pointer; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .close-modal:hover { background: #e2e8f0; }
+
+        .details-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .detail-mini-card { padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9; }
+        .detail-mini-card label { margin-bottom: 5px; opacity: 0.6; }
+        .detail-mini-card .val { font-size: 20px; font-weight: 800; }
     </style>
+
+    <!-- Details Modal -->
+    <div id="user-details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-user-name" style="margin: 0; font-size: 20px; font-weight: 800;">User Details</h2>
+                    <p id="modal-user-phone" style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;"></p>
+                </div>
+                <button class="close-modal" onclick="closeDetailsModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="details-grid">
+                    <div class="detail-mini-card" style="background: #ecfdf5;">
+                        <label>Total Earned</label>
+                        <div class="val" id="modal-total-earned" style="color: #059669;">₹0</div>
+                    </div>
+                    <div class="detail-mini-card" style="background: #fef2f2;">
+                        <label>Total Spent</label>
+                        <div class="val" id="modal-total-spent" style="color: #dc2626;">₹0</div>
+                    </div>
+                    <div class="detail-mini-card" style="background: #f0f9ff;">
+                        <label>Remaining</label>
+                        <div class="val" id="modal-remaining" style="color: #0284c7;">₹0</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 16px; margin-bottom: 15px;">Recent Transactions</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="text-align: left; background: #f8fafc; color: #64748b; font-size: 11px; text-transform: uppercase;">
+                                <th style="padding: 12px 15px;">Date</th>
+                                <th style="padding: 12px 15px;">Combined Erns</th>
+                                <th style="padding: 12px 15px;">Spends</th>
+                                <th style="padding: 12px 15px; text-align: right;">Net</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-transaction-list">
+                            <!-- Transactions injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="modal-loading" style="text-align: center; padding: 40px; display: none;">
+                    <div class="spinner" style="display: inline-block; width: 25px; height: 25px; border: 3px solid #f1f5f9; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <p style="margin-top: 10px; color: #94a3b8;">Fetching records...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -216,7 +293,6 @@
             const dirCount = document.getElementById('directory-count');
             
             try {
-                // Fetch all and sort in memory to avoid "Index Exception" unless index is manual created
                 const querySnapshot = await getDocs(collection(db, "users"));
                 let users = [];
                 
@@ -224,7 +300,6 @@
                     users.push(doc.data());
                 });
 
-                // Sort by date descending
                 users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 
                 userList.innerHTML = '';
@@ -242,6 +317,9 @@
                     row.style.borderBottom = "1px solid #f1f5f9";
                     row.style.transition = "background 0.2s";
                     
+                    // Add click event
+                    row.onclick = () => openDetailsModal(user);
+
                     const joinedDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
                         year: 'numeric',
                         month: 'short',
@@ -256,7 +334,7 @@
                                 <div class="avatar-circle">${initial}</div>
                                 <div>
                                     <div style="font-weight: 700; color: #1e293b; font-size: 15px;">${user.username || 'Anonymous'}</div>
-                                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">ACTIVE USER</div>
+                                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">CLICK TO VIEW ACTIVITY</div>
                                 </div>
                             </div>
                         </td>
@@ -274,6 +352,85 @@
                 userLoading.innerHTML = `<p style="color: #ef4444;">❌ Failed to load users. Please check console.</p>`;
             }
         }
+
+        // Modal Logic
+        const detailsModal = document.getElementById('user-details-modal');
+        const modalLoading = document.getElementById('modal-loading');
+        const transactionList = document.getElementById('modal-transaction-list');
+
+        async function openDetailsModal(user) {
+            detailsModal.style.display = 'flex';
+            document.getElementById('modal-user-name').textContent = user.username || 'Anonymous';
+            document.getElementById('modal-user-phone').textContent = user.phone || 'No Phone';
+            
+            // Reset fields
+            document.getElementById('modal-total-earned').textContent = '₹0';
+            document.getElementById('modal-total-spent').textContent = '₹0';
+            document.getElementById('modal-remaining').textContent = '₹0';
+            transactionList.innerHTML = '';
+            modalLoading.style.display = 'block';
+
+            try {
+                const docRef = doc(db, "tracker_data", user.phone);
+                const docSnap = await getDoc(docRef);
+
+                modalLoading.style.display = 'none';
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const logs = data.trackerData || [];
+                    
+                    let totalEarned = 0;
+                    let totalSpent = 0;
+
+                    if (logs.length === 0) {
+                        transactionList.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">No transaction history found for this user.</td></tr>';
+                        return;
+                    }
+
+                    // Sort logs by date desc
+                    logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                    logs.forEach(log => {
+                        const earns = (log.earns || 0) + (log.other || 0);
+                        const spends = log.spends || 0;
+                        const net = earns - spends;
+                        
+                        totalEarned += earns;
+                        totalSpent += spends;
+
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = "1px solid #f1f5f9";
+                        tr.innerHTML = `
+                            <td style="padding: 12px 15px; font-size: 13px; color: #475569;">${log.date}</td>
+                            <td style="padding: 12px 15px; font-weight: 600; color: #059669;">+₹${Math.round(earns)}</td>
+                            <td style="padding: 12px 15px; font-weight: 600; color: #dc2626;">-₹${Math.round(spends)}</td>
+                            <td style="padding: 12px 15px; text-align: right; font-weight: 700; color: ${net >= 0 ? '#059669' : '#dc2626'}">
+                                ${net >= 0 ? '+' : ''}₹${Math.round(net)}
+                            </td>
+                        `;
+                        transactionList.appendChild(tr);
+                    });
+
+                    document.getElementById('modal-total-earned').textContent = `₹${Math.round(totalEarned)}`;
+                    document.getElementById('modal-total-spent').textContent = `₹${Math.round(totalSpent)}`;
+                    document.getElementById('modal-remaining').textContent = `₹${Math.round(totalEarned - totalSpent)}`;
+
+                } else {
+                    transactionList.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 30px; color: #94a3b8;">User has not started tracking yet.</td></tr>';
+                }
+            } catch (err) {
+                console.error("Error fetching user data:", err);
+                modalLoading.innerHTML = '<p style="color: #ef4444;">Error loading data.</p>';
+            }
+        }
+
+        function closeDetailsModal() {
+            detailsModal.style.display = 'none';
+        }
+
+        // Export to window
+        window.closeDetailsModal = closeDetailsModal;
 
         // Templates Logic
         const titleInput = document.getElementById('title');
