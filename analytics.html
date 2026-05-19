@@ -250,6 +250,58 @@
             height: 220px;
             width: 100%;
         }
+
+        /* Trophy Room Styles */
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .trophy-card {
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            padding: 12px 5px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        .trophy-card.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+        .trophy-card:not(.locked) {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border-color: #c7d2fe;
+        }
+        .trophy-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .trophy-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+        }
+        .trophy-desc {
+            font-size: 8px;
+            color: #64748b;
+            margin-top: 2px;
+            line-height: 1.2;
+        }
+        
+        body.dark-theme .trophy-card {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+        }
+        body.dark-theme .trophy-card:not(.locked) {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+            border-color: #6366f1;
+        }
     </style>
 </head>
 <body>
@@ -352,6 +404,20 @@
                     <canvas id="monthly-spend-chart"></canvas>
                 </div>
             </div>
+            
+            <!-- TROPHY ROOM -->
+            <div class="monthly-summary" style="margin-top: 25px; border-top: 2px dashed #e2e8f0;">
+                <div class="header-wrap" style="margin-bottom: 15px;">
+                    <h2 style="font-size: 14px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                        🏆 Trophy Room
+                    </h2>
+                    <span style="font-size: 10px; font-weight: 800; color: #6366f1; background: #e0e7ff; padding: 3px 8px; border-radius: 20px;" id="trophy-count">0/3</span>
+                </div>
+                
+                <div class="trophy-grid" id="trophy-room">
+                    <!-- Dynamic Trophies injected here -->
+                </div>
+            </div>
         </div>
 
         <!-- Bottom Navigation -->
@@ -436,11 +502,73 @@
 
             document.getElementById('month-earn-val').textContent = `₹${Math.round(monthEarn).toLocaleString()}`;
             document.getElementById('month-spend-val').textContent = `₹${Math.round(monthSpend).toLocaleString()}`;
+            
+            calculateTrophies();
         }
 
         document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; initAnalytics(); });
         document.getElementById('next-week').addEventListener('click', () => { if(weekOffset < 0) weekOffset++; initAnalytics(); });
 
+        function calculateTrophies() {
+            // Trophies Definition
+            const trophies = [
+                { id: 'first_save', icon: '💰', title: 'First Save', desc: 'Saved first ₹1,000' },
+                { id: 'streak_7', icon: '🔥', title: '7-Day Streak', desc: 'Logged 7 days in a row' },
+                { id: 'big_earner', icon: '👑', title: 'Big Earner', desc: 'Earned ₹10k in a month' }
+            ];
+
+            let unlocked = { first_save: false, streak_7: false, big_earner: false };
+
+            // Calculate 'First Save' (Net savings > 1000 total)
+            const totalEarn = trackerData.reduce((s, r) => s + (r.earns || 0) + (r.other || 0), 0);
+            const totalSpend = trackerData.reduce((s, r) => s + (r.spends || 0), 0);
+            if (totalEarn - totalSpend >= 1000) unlocked.first_save = true;
+
+            // Calculate '7-Day Streak'
+            const uniqueDates = [...new Set(trackerData.map(d => d.date))].sort((a,b) => new Date(a) - new Date(b));
+            let maxStreak = 0, currentStreak = 0;
+            for(let i=0; i<uniqueDates.length; i++) {
+                if(i===0) { currentStreak = 1; }
+                else {
+                    const prev = new Date(uniqueDates[i-1]);
+                    const curr = new Date(uniqueDates[i]);
+                    const diff = (curr - prev) / (1000 * 60 * 60 * 24);
+                    if(diff === 1) currentStreak++;
+                    else currentStreak = 1;
+                }
+                if(currentStreak > maxStreak) maxStreak = currentStreak;
+            }
+            if (maxStreak >= 7) unlocked.streak_7 = true;
+
+            // Calculate 'Big Earner' (Any single month > 10,000)
+            const monthMap = {};
+            trackerData.forEach(d => {
+                const ym = d.date.substring(0, 7); // YYYY-MM
+                if(!monthMap[ym]) monthMap[ym] = 0;
+                monthMap[ym] += (d.earns || 0) + (d.other || 0);
+            });
+            if (Object.values(monthMap).some(v => v >= 10000)) unlocked.big_earner = true;
+
+            // Render Trophies
+            const grid = document.getElementById('trophy-room');
+            grid.innerHTML = '';
+            let count = 0;
+            
+            trophies.forEach(t => {
+                const isUnlocked = unlocked[t.id];
+                if (isUnlocked) count++;
+                
+                grid.innerHTML += `
+                    <div class="trophy-card ${isUnlocked ? '' : 'locked'}">
+                        <div class="trophy-icon">${t.icon}</div>
+                        <div class="trophy-title">${t.title}</div>
+                        <div class="trophy-desc">${t.desc}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('trophy-count').textContent = `${count}/${trophies.length}`;
+        }
 
         function renderCharts(data) {
             const earnMap = {}, spendMap = {};
