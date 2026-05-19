@@ -33,6 +33,35 @@ let weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
 // Chart management
 let weeklyChart = null;
 
+// Confetti Gamification
+function fireConfetti() {
+    if (typeof confetti === 'function') {
+        const duration = 2500;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+}
+
 // Initialize the app
 async function init() {
     autoAddMissingDays();
@@ -347,6 +376,12 @@ submitEntryBtn.addEventListener('click', () => {
     saveData();
     renderTable();
     addEntryModal.style.display = 'none';
+
+    // Gamification Milestone
+    if (((earns || 0) + (other || 0)) > (spends || 0) * 1.5) {
+        // High savings for this transaction
+        fireConfetti();
+    }
 });
 
 // Close modal when clicking outside the card
@@ -421,6 +456,14 @@ function manualSave() {
     const originalText = saveBtn.textContent;
     saveBtn.textContent = 'Saved!';
     saveBtn.style.opacity = '0.7';
+
+    // Milestone Check: Positive Balance
+    let totalEarns = 0, totalSpends = 0;
+    trackerData.forEach(r => { totalEarns += (r.earns || 0) + (r.other || 0); totalSpends += (r.spends || 0); });
+    if (totalEarns > 0 && totalEarns > totalSpends) {
+        fireConfetti();
+    }
+
     setTimeout(() => {
         saveBtn.textContent = originalText;
         saveBtn.style.opacity = '1';
