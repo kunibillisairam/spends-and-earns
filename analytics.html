@@ -327,16 +327,23 @@
 
         <div class="monthly-chart-section" style="margin-top: 25px;">
             <div class="header-wrap" style="margin-bottom: 15px;">
-                <h2 class="section-title text-muted" style="margin:0;">Yearly Earnings</h2>
+                <h2 class="section-title text-muted" style="margin:0;">Yearly Trends</h2>
                 <div class="week-switcher">
                     <button class="week-btn" id="prev-year">‹</button>
                     <div class="week-range" id="year-display">2026</div>
                     <button class="week-btn" id="next-year">›</button>
                 </div>
             </div>
-            <div class="breakdown-card" style="padding: 12px 8px 12px 4px;">
+            <div class="breakdown-card" style="padding: 12px 8px 12px 4px; margin-bottom: 15px;">
+                <h3 style="font-size: 11px; font-weight: 800; color: #1e293b; margin: 0 0 10px 10px;">Earnings</h3>
                 <div class="bar-chart-wrapper">
                     <canvas id="monthly-earn-chart"></canvas>
+                </div>
+            </div>
+            <div class="breakdown-card" style="padding: 12px 8px 12px 4px;">
+                <h3 style="font-size: 11px; font-weight: 800; color: #1e293b; margin: 0 0 10px 10px;">Spends</h3>
+                <div class="bar-chart-wrapper">
+                    <canvas id="monthly-spend-chart"></canvas>
                 </div>
             </div>
         </div>
@@ -485,31 +492,33 @@
 
         initAnalytics();
 
-        // Monthly Earnings Chart Logic
+        // Monthly Trends Chart Logic
         let currentYearForChart = new Date().getFullYear();
-        let monthlyChartInstance = null;
+        let monthlyEarnChartInstance = null;
+        let monthlySpendChartInstance = null;
 
         function initMonthlyChart() {
             document.getElementById('year-display').textContent = currentYearForChart;
             
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const monthlyEarns = new Array(12).fill(0);
+            const monthlySpends = new Array(12).fill(0);
 
             trackerData.forEach(d => {
                 const dDate = new Date(d.date);
                 if (dDate.getFullYear() === currentYearForChart) {
                     const m = dDate.getMonth();
                     monthlyEarns[m] += (d.earns || 0) + (d.other || 0);
+                    monthlySpends[m] += (d.spends || 0);
                 }
             });
 
-            const ctx = document.getElementById('monthly-earn-chart');
-            
-            if (monthlyChartInstance) {
-                monthlyChartInstance.data.datasets[0].data = monthlyEarns;
-                monthlyChartInstance.update();
+            const earnCtx = document.getElementById('monthly-earn-chart');
+            if (monthlyEarnChartInstance) {
+                monthlyEarnChartInstance.data.datasets[0].data = monthlyEarns;
+                monthlyEarnChartInstance.update();
             } else {
-                monthlyChartInstance = new Chart(ctx, {
+                monthlyEarnChartInstance = new Chart(earnCtx, {
                     type: 'bar',
                     data: {
                         labels: monthNames,
@@ -526,26 +535,43 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return ' ₹' + context.parsed.y;
-                                    }
-                                }
-                            }
+                            tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
                         },
                         scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 },
-                                grid: { color: '#f1f5f9' },
-                                border: { display: false }
-                            },
-                            x: {
-                                ticks: { font: { size: 10 }, color: '#64748b' },
-                                grid: { display: false },
-                                border: { display: false }
-                            }
+                            y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
+                            x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            const spendCtx = document.getElementById('monthly-spend-chart');
+            if (monthlySpendChartInstance) {
+                monthlySpendChartInstance.data.datasets[0].data = monthlySpends;
+                monthlySpendChartInstance.update();
+            } else {
+                monthlySpendChartInstance = new Chart(spendCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: monthNames,
+                        datasets: [{
+                            label: 'Spends',
+                            data: monthlySpends,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
+                            x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
                         }
                     }
                 });
