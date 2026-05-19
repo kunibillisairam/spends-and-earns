@@ -725,3 +725,89 @@ input[type="date"] {
 
 .drawer-footer { padding: 20px; border-top: 1px solid var(--border-color); }
 .logout-danger { width: 100%; border-color: #ef4444; color: #ef4444; font-weight: 700; }
+
+/* --- PREMIUM DARK MODE --- */
+.dark-theme {
+    --bg-color: #0f172a; /* Slate 900 */
+    --card-bg: #1e293b; /* Slate 800 */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+}
+
+.dark-theme .table-container,
+.dark-theme .budget-section,
+.dark-theme .chart-section,
+.dark-theme .mini-card,
+.dark-theme .breakdown-card,
+.dark-theme .m-card,
+.dark-theme .add-form-card,
+.dark-theme .modal-content,
+.dark-theme .search-box,
+.dark-theme .drawer-content,
+.dark-theme .settings-group,
+.dark-theme .glass-banner {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme th,
+.dark-theme .total-row td,
+.dark-theme .drawer-header {
+    background-color: #0f172a !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme header h1,
+.dark-theme .modal-header h3,
+.dark-theme .budget-header h2,
+.dark-theme h2.section-title,
+.dark-theme .value,
+.dark-theme .amt,
+.dark-theme .settings-label,
+.dark-theme h3,
+.dark-theme h2,
+.dark-theme .total-row td,
+.dark-theme .drawer-header h2 {
+    color: var(--text-main) !important;
+}
+
+.dark-theme input,
+.dark-theme select,
+.dark-theme .form-group input,
+.dark-theme .form-group select,
+.dark-theme #budget-input,
+.dark-theme .week-switcher,
+.dark-theme .settings-item,
+.dark-theme .drawer-item {
+    background: #0f172a !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme .bottom-nav {
+    background: rgba(30, 41, 59, 0.9) !important;
+    border-top: 1px solid var(--border-color);
+}
+
+.dark-theme .secondary-btn,
+.dark-theme .text-btn,
+.dark-theme .week-btn,
+.dark-theme .filter-btn {
+    background: var(--card-bg) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme .settings-item:hover,
+.dark-theme .user-row:hover,
+.dark-theme .ticket-card:hover {
+    background: #334155 !important;
+}
+
+.dark-theme td:nth-child(4) input {
+    color: #ef4444 !important; /* Keep spend red */
+}

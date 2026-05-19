@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+        }
+    </script>
     <title>Profile Settings - Spends & Earns</title>
     <script>
         if (!localStorage.getItem('currentUser')) {
@@ -204,6 +210,18 @@
             </div>
 
             <div class="settings-group">
+                <div class="settings-item" id="theme-btn" style="cursor: pointer;">
+                    <div class="settings-left">
+                        <span class="settings-icon">🌙</span>
+                        <span class="settings-label">Dark Mode</span>
+                    </div>
+                    <div class="settings-right">
+                        <input type="checkbox" id="theme-toggle" style="width: 20px; height: 20px; cursor: pointer; pointer-events: none;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-group">
                 <div class="settings-item" id="export-csv">
                     <div class="settings-left">
                         <span class="settings-icon">📊</span>
@@ -378,6 +396,30 @@
         const trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
 
         async function initSettings() {
+            // Dark Mode Initialization
+            const themeToggle = document.getElementById('theme-toggle');
+            if (localStorage.getItem('theme') === 'dark') {
+                themeToggle.checked = true;
+                document.documentElement.classList.add('dark-theme');
+            }
+            
+            // Dark Mode Event Listener
+            document.getElementById('theme-btn').addEventListener('click', (e) => {
+                // Prevent double firing if they click the actual checkbox
+                if (e.target !== themeToggle) {
+                    themeToggle.checked = !themeToggle.checked;
+                }
+                
+                if (themeToggle.checked) {
+                    document.documentElement.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // Populate static data
             if (user) {
                 document.getElementById('p-name').textContent = user.username;
                 document.getElementById('p-phone').textContent = user.phone;
