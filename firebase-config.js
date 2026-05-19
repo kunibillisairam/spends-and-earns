@@ -1,11 +1,12 @@
 export const firebaseConfig = {
-  apiKey: "AIzaSyBco9DWpSv0xnsQHwBaX3WYhQGeojUwwMg",
-  authDomain: "spendsearnstracker.firebaseapp.com",
-  projectId: "spendsearnstracker",
-  storageBucket: "spendsearnstracker.firebasestorage.app",
-  messagingSenderId: "245370711942",
-  appId: "1:245370711942:web:b227f5e139b7deee5e0607",
-  measurementId: "G-3V19BSB5MM"
+  apiKey: "AIzaSyBk6CDHw_TKBfkqs_o0CZG2MueSiC9P_IY",
+  authDomain: "spends-and-earns.firebaseapp.com",
+  databaseURL: "https://spends-and-earns-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "spends-and-earns",
+  storageBucket: "spends-and-earns.firebasestorage.app",
+  messagingSenderId: "451945219976",
+  appId: "1:451945219976:web:7d20c72eaa73fa1c9a1c3d",
+  measurementId: "G-4Q12527WJS"
 };
 
-export const vapidKey = "BENk6IzZjlj9BFVu7k3kdJdxAayGyunbVlMV0p03Kh1OzuHaVaBXnUmtmE0Whl_F_49Uaow7AkZOhoorFlj5vCM";
+export const vapidKey = "z8XjVqTN2dWCOH_V5gaReM-mCq_0CscNqDpg-85CSn0";
