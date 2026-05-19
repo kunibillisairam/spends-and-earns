@@ -513,6 +513,27 @@
                 }
             });
 
+            const topLabelsPlugin = {
+                id: 'topLabelsPlugin',
+                afterDatasetsDraw(chart) {
+                    const ctx = chart.ctx;
+                    chart.data.datasets.forEach((dataset, i) => {
+                        const meta = chart.getDatasetMeta(i);
+                        meta.data.forEach((bar, index) => {
+                            const data = dataset.data[index];
+                            if (data > 0) {
+                                ctx.fillStyle = dataset.backgroundColor;
+                                ctx.font = 'bold 9px Inter, sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                let text = data >= 1000 ? (data/1000).toFixed(1).replace('.0','') + 'k' : data;
+                                ctx.fillText('₹' + text, bar.x, bar.y - 3);
+                            }
+                        });
+                    });
+                }
+            };
+
             const earnCtx = document.getElementById('monthly-earn-chart');
             if (monthlyEarnChartInstance) {
                 monthlyEarnChartInstance.data.datasets[0].data = monthlyEarns;
@@ -531,6 +552,7 @@
                         }]
                     },
                     options: {
+                        layout: { padding: { top: 15 } },
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
@@ -541,7 +563,8 @@
                             y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
                             x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
                         }
-                    }
+                    },
+                    plugins: [topLabelsPlugin]
                 });
             }
 
@@ -563,6 +586,7 @@
                         }]
                     },
                     options: {
+                        layout: { padding: { top: 15 } },
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
@@ -573,7 +597,8 @@
                             y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
                             x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
                         }
-                    }
+                    },
+                    plugins: [topLabelsPlugin]
                 });
             }
         }
