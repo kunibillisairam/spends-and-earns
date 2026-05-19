@@ -66,6 +66,9 @@ function fireConfetti() {
 async function init() {
     autoAddMissingDays();
     
+    // Recover user to the new database if they are an old user
+    await recoverUserDocument();
+    
     // Sync with Firebase if logged in
     await fetchCloudData();
     checkRecoveryEmail(); // Check if old user needs to set recovery email
@@ -74,6 +77,31 @@ async function init() {
     updateChart();
     updateBudgetStatus();
     budgetInput.value = weeklyBudget || '';
+}
+
+async function recoverUserDocument() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    try {
+        const userRef = doc(db, "users", user.phone);
+        const userSnap = await getDoc(userRef);
+        
+        // If the user is in localStorage but missing from the new database, recreate them!
+        if (!userSnap.exists()) {
+            await setDoc(userRef, {
+                username: user.username,
+                phone: user.phone,
+                password: "recovered_user", // Placeholder since we don't know their old password
+                createdAt: new Date().toISOString(),
+                status: "active"
+            });
+            // Force sync their local tracker data to the new database
+            await syncToCloud();
+        }
+    } catch (err) {
+        console.error("Error recovering user:", err);
+    }
 }
 
 async function checkRecoveryEmail() {
