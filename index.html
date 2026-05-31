@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -157,8 +157,16 @@
             <div class="ss-item">
                 <span class="ss-icon">💰</span>
                 <div class="ss-text">
-                    <span class="ss-label">Income</span>
+                    <span class="ss-label">Earn</span>
                     <span class="ss-val earn" id="ss-earn">₹0</span>
+                </div>
+            </div>
+            <div class="ss-divider"></div>
+            <div class="ss-item">
+                <span class="ss-icon">🎁</span>
+                <div class="ss-text">
+                    <span class="ss-label">Other</span>
+                    <span class="ss-val earn" id="ss-other">₹0</span>
                 </div>
             </div>
             <div class="ss-divider"></div>
@@ -211,10 +219,6 @@
             <a href="index.html" class="nav-item active" id="nav-tracker">
                 <span class="nav-icon">📋</span>
                 <span class="nav-label">Tracker</span>
-            </a>
-            <a href="index.html#insights" class="nav-item" id="nav-insights">
-                <span class="nav-icon">📈</span>
-                <span class="nav-label">Insights</span>
             </a>
             <a href="analytics.html" class="nav-item" id="nav-analytics">
                 <span class="nav-icon">📊</span>
@@ -476,14 +480,6 @@
             document.getElementById('clear-all-btn')?.click();
         });
 
-        // Nav: insights link
-        document.getElementById('nav-insights')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('nav-insights').classList.add('active');
-            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
-            document.getElementById('insights-view').classList.add('active');
-        });
         document.getElementById('nav-tracker')?.addEventListener('click', (e) => {
             e.preventDefault();
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));

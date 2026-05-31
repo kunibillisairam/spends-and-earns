@@ -578,9 +578,11 @@ function updateGrandTotals(dataToCalculate = trackerData) {
 
     // ── Summary Strip ──
     const ssEarn    = document.getElementById('ss-earn');
+    const ssOther   = document.getElementById('ss-other');
     const ssSpend   = document.getElementById('ss-spend');
     const ssBalance = document.getElementById('ss-balance');
-    if (ssEarn)  ssEarn.textContent  = `₹${Math.round(totalIncome)}`;
+    if (ssEarn)  ssEarn.textContent  = `₹${Math.round(tEarns)}`;
+    if (ssOther) ssOther.textContent = `₹${Math.round(tOther)}`;
     if (ssSpend) ssSpend.textContent = `₹${Math.round(tSpends)}`;
     if (ssBalance) {
         ssBalance.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
