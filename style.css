@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    EXPENSE TRACKER — PREMIUM MOBILE-FIRST CSS
    ============================================= */
 
@@ -290,7 +290,7 @@ header {
 /* Each day row as a card */
 .expense-card {
     background: var(--card-bg);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     overflow: hidden;
@@ -307,14 +307,14 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px 8px;
+    padding: 8px 10px 6px;
     border-bottom: 1px solid #f1f5f9;
 }
 
 .card-date-input {
     border: none;
     outline: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text-main);
     background: transparent;
@@ -327,13 +327,13 @@ header {
 .card-badge {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .card-balance {
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 800;
-    padding: 3px 10px;
+    padding: 2px 8px;
     border-radius: 20px;
 }
 
@@ -341,18 +341,18 @@ header {
 .card-balance.negative { color: #dc2626; background: #fee2e2; }
 
 .card-delete-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     background: #fee2e2;
     border: none;
     color: #ef4444;
-    font-size: 14px;
+    font-size: 11px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 8px;
+    margin-left: 6px;
     flex-shrink: 0;
     transition: background 0.15s;
 }
@@ -366,7 +366,7 @@ header {
 }
 
 .card-field {
-    padding: 8px 12px 10px;
+    padding: 6px 8px;
     border-right: 1px solid #f1f5f9;
     position: relative;
 }
@@ -374,12 +374,12 @@ header {
 .card-field:last-child { border-right: none; }
 
 .card-field-label {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     display: block;
 }
 
@@ -388,7 +388,7 @@ header {
     border: none;
     outline: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text-main);
     font-family: inherit;
@@ -401,7 +401,7 @@ header {
 
 /* Card footer — category select */
 .card-footer {
-    padding: 6px 12px 10px;
+    padding: 6px 8px 8px;
     border-top: 1px solid #f1f5f9;
 }
 
@@ -409,9 +409,9 @@ header {
     width: 100%;
     border: 1px solid var(--border-color);
     background: #f8fafc;
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    font-size: 12px;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-main);
     font-family: inherit;
