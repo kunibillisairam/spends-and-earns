@@ -640,7 +640,7 @@
         pinButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const val = btn.textContent;
-                if (val === "⌫") {
+                if (val === "⌫" || val === "←" || val.trim() === '') {
                     currentPin = currentPin.slice(0, -1);
                 } else if (currentPin.length < 4) {
                     currentPin += val;
