@@ -27,8 +27,18 @@ const budgetPercentEl = document.getElementById('budget-percent');
 const progressFill = document.getElementById('progress-fill');
 
 // State
-let trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
-let weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
+let trackerData = [];
+let weeklyBudget = 0;
+
+// Load user-specific cached data immediately on load if user is logged in
+const initialUser = JSON.parse(localStorage.getItem('currentUser'));
+if (initialUser && initialUser.phone) {
+    trackerData = JSON.parse(localStorage.getItem(`trackerData_${initialUser.phone}`)) || [];
+    weeklyBudget = parseFloat(localStorage.getItem(`weeklyBudget_${initialUser.phone}`)) || 0;
+} else {
+    trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
+    weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
+}
 
 // Chart management
 let weeklyChart = null;
@@ -64,19 +74,23 @@ function fireConfetti() {
 
 // Initialize the app
 async function init() {
+    // 1. Instantly process and display data from the local cache
     autoAddMissingDays();
-    
-    // Recover user to the new database if they are an old user
-    await recoverUserDocument();
-    
-    // Sync with Firebase if logged in
-    await fetchCloudData();
-    checkRecoveryEmail(); // Check if old user needs to set recovery email
-    
     renderTable();
     updateChart();
     updateBudgetStatus();
-    budgetInput.value = weeklyBudget || '';
+    if (budgetInput) {
+        budgetInput.value = weeklyBudget || '';
+    }
+
+    // 2. Perform database checks and synchronization in the background without blocking render
+    recoverUserDocument().then(() => {
+        return fetchCloudData();
+    }).then(() => {
+        checkRecoveryEmail();
+    }).catch(err => {
+        console.error("Background sync error in init:", err);
+    });
 }
 
 async function recoverUserDocument() {
@@ -154,6 +168,17 @@ async function fetchCloudData() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) return;
 
+    // If we have unsynced changes from offline mode, push them instead of overwriting
+    if (localStorage.getItem(`unsynced_${user.phone}`) === 'true') {
+        try {
+            await syncToCloud();
+            return;
+        } catch (e) {
+            console.warn("Could not sync offline data on fetch, keeping offline state.");
+            return;
+        }
+    }
+
     try {
         const docRef = doc(db, "tracker_data", user.phone);
         const docSnap = await getDoc(docRef);
@@ -161,10 +186,20 @@ async function fetchCloudData() {
         if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.trackerData) {
-                trackerData = data.trackerData;
-                weeklyBudget = data.weeklyBudget || 0;
-                saveData(false); // Update local cache
-                renderTable();
+                const localStr = JSON.stringify(trackerData);
+                const remoteStr = JSON.stringify(data.trackerData);
+                const localBudget = weeklyBudget;
+                const remoteBudget = data.weeklyBudget || 0;
+                
+                if (localStr !== remoteStr || localBudget !== remoteBudget) {
+                    trackerData = data.trackerData;
+                    weeklyBudget = remoteBudget;
+                    saveData(false); // Update local cache only
+                    renderTable();
+                    updateChart();
+                    updateBudgetStatus();
+                    if (budgetInput) budgetInput.value = weeklyBudget || '';
+                }
             }
         }
     } catch (err) {
@@ -183,8 +218,10 @@ async function syncToCloud() {
             weeklyBudget,
             updatedAt: new Date().toISOString()
         });
+        localStorage.removeItem(`unsynced_${user.phone}`);
     } catch (err) {
         console.error("Firebase sync failed:", err);
+        throw err; // Propagate error so local cache knows to mark it as unsynced
     }
 }
 
@@ -224,7 +261,7 @@ function updateBudgetStatus() {
 
 budgetInput.addEventListener('input', (e) => {
     weeklyBudget = parseFloat(e.target.value) || 0;
-    localStorage.setItem('weeklyBudget', weeklyBudget);
+    saveData();
     updateBudgetStatus();
 });
 
@@ -536,14 +573,37 @@ function deleteRow(index) {
 function clearAll() {
     if (confirm('This will delete ALL entries. Proceed?')) {
         trackerData = [];
-        localStorage.removeItem('trackerData');
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user && user.phone) {
+            localStorage.removeItem(`trackerData_${user.phone}`);
+            localStorage.removeItem(`weeklyBudget_${user.phone}`);
+            localStorage.setItem(`unsynced_${user.phone}`, 'true');
+        } else {
+            localStorage.removeItem('trackerData');
+            localStorage.removeItem('weeklyBudget');
+        }
         init();
     }
 }
 
 function saveData(cloudSync = true) {
-    localStorage.setItem('trackerData', JSON.stringify(trackerData));
-    if (cloudSync) syncToCloud();
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const cacheKey = user && user.phone ? `trackerData_${user.phone}` : 'trackerData';
+    const budgetKey = user && user.phone ? `weeklyBudget_${user.phone}` : 'weeklyBudget';
+
+    localStorage.setItem(cacheKey, JSON.stringify(trackerData));
+    localStorage.setItem(budgetKey, weeklyBudget.toString());
+
+    if (cloudSync && user && user.phone) {
+        if (navigator.onLine) {
+            syncToCloud().catch(err => {
+                console.warn("Could not sync online, marking cache as unsynced:", err);
+                localStorage.setItem(`unsynced_${user.phone}`, 'true');
+            });
+        } else {
+            localStorage.setItem(`unsynced_${user.phone}`, 'true');
+        }
+    }
 }
 
 function updateGrandTotals(dataToCalculate = trackerData) {
@@ -611,18 +671,7 @@ function manualSave() {
     }, 1000);
 }
 
-const navItems = document.querySelectorAll('.nav-item');
-const appViews = document.querySelectorAll('.app-view');
-navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        const viewId = item.getAttribute('data-view');
-        navItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        appViews.forEach(v => v.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        if (viewId === 'insights-view') updateChart();
-    });
-});
+
 
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
@@ -787,16 +836,28 @@ async function checkAppLock() {
     // Skip if already verified in this session
     if (sessionStorage.getItem('app_verified') === 'true') return;
 
+    // Try loading lock configuration from cache instantly
+    const cacheKey = `userSettings_${user.phone}`;
+    const cachedSettings = JSON.parse(localStorage.getItem(cacheKey));
+    if (cachedSettings && cachedSettings.isLockActive && cachedSettings.appPin) {
+        showLockOverlay(cachedSettings.appPin);
+    }
+
+    // Fetch latest security configurations from Firestore in the background
     try {
         const userRef = doc(db, "users", user.phone);
-        const userSnap = await getDoc(userRef);
-        
-        if (userSnap.exists()) {
-            const userData = userSnap.data();
-            if (userData.isLockActive && userData.appPin) {
-                showLockOverlay(userData.appPin);
+        getDoc(userRef).then(userSnap => {
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                localStorage.setItem(cacheKey, JSON.stringify(userData));
+                // If lock wasn't active in cache, trigger lock instantly
+                if (userData.isLockActive && userData.appPin && (!cachedSettings || !cachedSettings.isLockActive)) {
+                    showLockOverlay(userData.appPin);
+                }
             }
-        }
+        }).catch(err => {
+            console.warn("Background lock check failed:", err);
+        });
     } catch (e) { console.error("Lock check error:", e); }
 }
 
@@ -1317,29 +1378,47 @@ async function initSettings() {
         if (pAvatar) pAvatar.textContent = user.username.charAt(0).toUpperCase();
         if (newName) newName.value = user.username;
         
-        // Fetch Firestore lock and recovery email details
-        const userRef = doc(db, "users", user.phone);
-        try {
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                const pEmail = document.getElementById('p-email');
-                const lockStatus = document.getElementById('lock-status-settings');
-                const lockToggle = document.getElementById('lock-toggle');
-                
-                if (userData.email && pEmail) {
-                    pEmail.textContent = userData.email;
-                    pEmail.style.color = '#6366f1';
-                }
+        const cacheKey = `userSettings_${user.phone}`;
+        const cachedSettings = JSON.parse(localStorage.getItem(cacheKey));
+        
+        const applySettings = (userData) => {
+            const pEmail = document.getElementById('p-email');
+            const lockStatus = document.getElementById('lock-status-settings');
+            const lockToggle = document.getElementById('lock-toggle');
+            
+            if (userData.email && pEmail) {
+                pEmail.textContent = userData.email;
+                pEmail.style.color = '#6366f1';
+            }
+            if (lockStatus) {
                 if (userData.isLockActive) {
-                    if (lockStatus) {
-                        lockStatus.textContent = "Active";
-                        lockStatus.style.color = "#10b981";
-                    }
+                    lockStatus.textContent = "Active";
+                    lockStatus.style.color = "#10b981";
                     if (lockToggle) lockToggle.checked = true;
+                } else {
+                    lockStatus.textContent = "Inactive";
+                    lockStatus.style.color = "var(--text-muted)";
+                    if (lockToggle) lockToggle.checked = false;
                 }
             }
-        } catch (e) { console.error("Firestore settings fetch error:", e); }
+        };
+
+        // Render instantly from local cache if available
+        if (cachedSettings) {
+            applySettings(cachedSettings);
+        }
+
+        // Fetch Firestore in the background non-blockingly
+        const userRef = doc(db, "users", user.phone);
+        getDoc(userRef).then(userSnap => {
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                localStorage.setItem(cacheKey, JSON.stringify(userData));
+                applySettings(userData);
+            }
+        }).catch(err => {
+            console.warn("Background settings update failed:", err);
+        });
     }
 }
 
@@ -1598,6 +1677,19 @@ navItems.forEach(item => {
             initSettings();
         }
     });
+});
+
+// Window online restoration sync event listener
+window.addEventListener('online', () => {
+    console.log("Internet connection restored. Synchronizing offline data...");
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user && user.phone && localStorage.getItem(`unsynced_${user.phone}`) === 'true') {
+        syncToCloud().then(() => {
+            console.log("Offline changes successfully synchronized with the cloud database.");
+        }).catch(err => {
+            console.error("Failed to sync offline changes on reconnection:", err);
+        });
+    }
 });
 
 // Initial boot logic
