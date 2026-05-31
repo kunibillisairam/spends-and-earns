@@ -102,51 +102,51 @@
 
         .modal-content {
             background: white;
-            border-radius: 28px;
-            padding: 25px;
+            border-radius: 20px;
+            padding: 18px;
             width: 100%;
-            max-width: 360px;
+            max-width: 320px;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
         }
 
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; text-align: center; }
+        .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 15px; text-align: center; color: #1e293b; }
         
         .pin-display {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
         .pin-dot {
-            width: 15px;
-            height: 15px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             border: 2px solid #e2e8f0;
             transition: all 0.2s;
         }
-        .pin-dot.filled { background: #6366f1; border-color: #6366f1; transform: scale(1.2); }
+        .pin-dot.filled { background: #6366f1; border-color: #6366f1; transform: scale(1.1); }
 
         .pinpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
         .pin-btn {
             background: #f8fafc;
             border: none;
-            border-radius: 12px;
-            padding: 15px;
-            font-size: 18px;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
             font-weight: 700;
             color: #1e293b;
             cursor: pointer;
             transition: all 0.1s;
         }
-        .pin-btn:active { background: #6366f1; color: white; transform: scale(0.9); }
+        .pin-btn:active { background: #6366f1; color: white; transform: scale(0.92); }
         .pin-btn.back { background: #fee2e2; color: #ef4444; }
 
         .toggle-container {
@@ -154,34 +154,80 @@
             align-items: center;
             justify-content: space-between;
             background: #f8fafc;
-            padding: 15px;
-            border-radius: 16px;
-            margin-bottom: 20px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
         }
 
         /* Success Overlay */
         .success-overlay {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center;
-            z-index: 3000; padding: 20px;
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center;
+            z-index: 3000; padding: 15px;
         }
         .success-card {
-            background: white; width: 100%; max-width: 320px; border-radius: 30px;
-            padding: 40px 20px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: white; width: 100%; max-width: 290px; border-radius: 20px;
+            padding: 25px 15px; text-align: center;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+            animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
         }
-        @keyframes successPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes successPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
         .success-icon {
-            width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #34d399);
-            border-radius: 50%; margin: 0 auto 20px;
+            width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #34d399);
+            border-radius: 50%; margin: 0 auto 15px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 40px; color: white;
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+            font-size: 30px; color: white;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
             animation: iconPulse 2s infinite;
         }
-        @keyframes iconPulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        @keyframes iconPulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        /* Form styling inside settings */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            box-sizing: border-box;
+            color: #1e293b;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #fff;
+        }
+        
+        .modal .primary-btn {
+            padding: 10px;
+            font-size: 13px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        .modal .text-btn {
+            padding: 6px;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -270,23 +316,23 @@
 
         <!-- Refer & Share Modal -->
         <div class="modal" id="refer-modal" style="z-index: 10001;">
-            <div class="modal-content" style="max-width: 380px; text-align: center; border-radius: 20px; padding: 28px 20px;">
-                <div style="font-size: 48px; margin-bottom: 10px;">🎁</div>
-                <h3 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">Refer & Share</h3>
-                <p style="font-size: 13px; color: #64748b; margin-bottom: 22px;">Invite your friends & family to track their finances too.</p>
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                    <input type="text" id="share-url-input-settings" readonly style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 12px; background: #f8fafc; color: #475569;" value="">
-                    <button id="copy-link-btn-settings" class="primary-btn vibrant-shadow" style="padding: 10px 15px; margin: 0; white-space: nowrap; font-size: 12px;">Copy</button>
+            <div class="modal-content" style="max-width: 320px; text-align: center; border-radius: 20px; padding: 18px;">
+                <div style="font-size: 36px; margin-bottom: 8px;">🎁</div>
+                <h3 style="font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">Refer & Share</h3>
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 15px;">Invite your friends & family to track their finances too.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" id="share-url-input-settings" readonly style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 12px; background: #f8fafc; color: #475569;" value="">
+                    <button id="copy-link-btn-settings" class="primary-btn vibrant-shadow" style="padding: 8px 12px; margin: 0; white-space: nowrap; font-size: 12px; border-radius: 8px;">Copy</button>
                 </div>
-                <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: center;">
-                    <button class="primary-btn" id="share-whatsapp-btn-settings" style="background: #25D366; flex: 1; font-size: 12px; padding: 10px; border: none; font-weight: 700;">
+                <div style="margin-top: 12px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="primary-btn" id="share-whatsapp-btn-settings" style="background: #25D366; flex: 1; font-size: 12px; padding: 8px; border: none; font-weight: 700; border-radius: 8px;">
                         <span>WhatsApp</span>
                     </button>
-                    <button class="primary-btn" id="share-native-btn-settings" style="flex: 1; font-size: 12px; padding: 10px; border: none; font-weight: 700;">
+                    <button class="primary-btn" id="share-native-btn-settings" style="flex: 1; font-size: 12px; padding: 8px; border: none; font-weight: 700; border-radius: 8px;">
                         <span>Share</span>
                     </button>
                 </div>
-                <button id="close-refer-modal" style="margin-top: 20px; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; display: block; width: 100%; text-align: center;">Close</button>
+                <button id="close-refer-modal" style="margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; display: block; width: 100%; text-align: center;">Close</button>
             </div>
         </div>
 
