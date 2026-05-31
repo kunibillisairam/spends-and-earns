@@ -682,11 +682,15 @@ const notifAllowBtn = document.getElementById('notif-allow-btn');
 const notifCloseBtn = document.getElementById('notif-close-btn');
 
 async function checkNotificationPermission() {
-    if (Notification.permission === 'default') notifBanner.style.display = 'flex';
+    if (localStorage.getItem('notif_banner_dismissed') === 'true') return;
+    if (Notification.permission === 'default') {
+        if (notifBanner) notifBanner.style.display = 'flex';
+    }
 }
 
 function hideBanner() {
     if (notifBanner) {
+        localStorage.setItem('notif_banner_dismissed', 'true');
         notifBanner.classList.add('hide');
         setTimeout(() => { notifBanner.style.display = 'none'; }, 400);
     }
@@ -694,6 +698,7 @@ function hideBanner() {
 
 if (notifAllowBtn) {
     notifAllowBtn.addEventListener('click', async () => {
+        localStorage.setItem('notif_banner_dismissed', 'true');
         try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
@@ -704,7 +709,12 @@ if (notifAllowBtn) {
         hideBanner();
     });
 }
-if (notifCloseBtn) notifCloseBtn.addEventListener('click', hideBanner);
+if (notifCloseBtn) {
+    notifCloseBtn.addEventListener('click', () => {
+        localStorage.setItem('notif_banner_dismissed', 'true');
+        hideBanner();
+    });
+}
 
 onMessage(messaging, (payload) => {
     if (Notification.permission === "granted") {
