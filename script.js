@@ -319,17 +319,99 @@ function renderTable() {
     });
     const displayData = [...filteredData].sort((a, b) => b.date.localeCompare(a.date));
     
-    tableBody.innerHTML = '';
-    
-    if (displayData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">No records found.</td></tr>';
-    } else {
-        displayData.forEach((row) => {
-            const actualIndex = trackerData.findIndex(d => d.date === row.date);
-            createRowUI(row, actualIndex);
-        });
+    // ── Desktop table ──
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        if (displayData.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">No records found.</td></tr>';
+        } else {
+            displayData.forEach((row) => {
+                const actualIndex = trackerData.findIndex(d => d.date === row.date);
+                createRowUI(row, actualIndex);
+            });
+        }
     }
+
+    // ── Mobile card list ──
+    const cardList = document.getElementById('card-list');
+    if (cardList) {
+        cardList.innerHTML = '';
+        if (displayData.length === 0) {
+            cardList.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px 0;font-weight:600;">No records found.</p>';
+        } else {
+            displayData.forEach((row) => {
+                const actualIndex = trackerData.findIndex(d => d.date === row.date);
+                createCardUI(row, actualIndex, cardList);
+            });
+        }
+    }
+
     updateGrandTotals(filteredData);
+}
+
+function createCardUI(row, index, container) {
+    const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
+    const balanceClass = balance >= 0 ? 'positive' : 'negative';
+    const balanceSign = balance >= 0 ? '+' : '';
+    const catEmojis = { '-': '—', 'Food': '🍔', 'Shop': '🛍️', 'Travel': '🚌', 'Rent': '🏠', 'Bills': '⚡', 'Other': '📦' };
+    const categories = ['-','Food','Shop','Travel','Rent','Bills','Other'];
+    const catOptions = categories.map(c =>
+        `<option value="${c}" ${row.category === c ? 'selected' : ''}>${catEmojis[c] || ''} ${c}</option>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'expense-card';
+    card.dataset.index = index;
+    card.innerHTML = `
+        <div class="card-header">
+            <input type="date" class="card-date-input" value="${row.date || ''}" 
+                onchange="updateData(${index}, 'date', this.value)">
+            <div class="card-badge">
+                <span class="card-balance ${balanceClass}">₹${balanceSign}${Math.round(balance)}</span>
+                <button class="card-delete-btn" onclick="deleteRow(${index})" title="Delete">✕</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="card-field">
+                <span class="card-field-label">💰 Earns</span>
+                <input type="number" class="card-field-input earn-input" 
+                    placeholder="0" value="${row.earns || ''}" inputmode="decimal"
+                    onfocus="this.select()" 
+                    oninput="updateData(${index}, 'earns', this.value); updateCardBalance(this, ${index});">
+            </div>
+            <div class="card-field">
+                <span class="card-field-label">🎁 Other</span>
+                <input type="number" class="card-field-input earn-input" 
+                    placeholder="0" value="${row.other || ''}" inputmode="decimal"
+                    onfocus="this.select()" 
+                    oninput="updateData(${index}, 'other', this.value); updateCardBalance(this, ${index});">
+            </div>
+            <div class="card-field">
+                <span class="card-field-label">💸 Spend</span>
+                <input type="number" class="card-field-input spend-input" 
+                    placeholder="0" value="${row.spends || ''}" inputmode="decimal"
+                    onfocus="this.select()" 
+                    oninput="updateData(${index}, 'spends', this.value); updateCardBalance(this, ${index});">
+            </div>
+        </div>
+        <div class="card-footer">
+            <select class="card-cat-select" onchange="updateData(${index}, 'category', this.value)">
+                ${catOptions}
+            </select>
+        </div>
+    `;
+    container.appendChild(card);
+}
+
+function updateCardBalance(inputEl, index) {
+    const card = inputEl.closest('.expense-card');
+    if (!card) return;
+    const bal = (trackerData[index].earns || 0) + (trackerData[index].other || 0) - (trackerData[index].spends || 0);
+    const balEl = card.querySelector('.card-balance');
+    if (balEl) {
+        balEl.textContent = `₹${bal >= 0 ? '+' : ''}${Math.round(bal)}`;
+        balEl.className = `card-balance ${bal >= 0 ? 'positive' : 'negative'}`;
+    }
 }
 
 function createRowUI(row, index) {
@@ -470,11 +552,40 @@ function updateGrandTotals(dataToCalculate = trackerData) {
         tEarns += (row.earns || 0); tOther += (row.other || 0); tSpends += (row.spends || 0);
     });
     const tBalance = tEarns + tOther - tSpends;
-    grandEarnsEl.textContent = `+${Math.round(tEarns)}`;
-    grandOtherEl.textContent = `+${Math.round(tOther)}`;
-    grandSpendsEl.textContent = `-${Math.round(tSpends)}`;
-    grandBalanceEl.textContent = `${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
-    grandBalanceEl.style.color = tBalance >= 0 ? 'var(--success-color)' : 'var(--error-color)';
+    const totalIncome = tEarns + tOther;
+
+    // ── Desktop table totals ──
+    if (grandEarnsEl)   grandEarnsEl.textContent   = `₹${Math.round(tEarns)}`;
+    if (grandOtherEl)   grandOtherEl.textContent   = `₹${Math.round(tOther)}`;
+    if (grandSpendsEl)  grandSpendsEl.textContent  = `₹${Math.round(tSpends)}`;
+    if (grandBalanceEl) {
+        grandBalanceEl.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        grandBalanceEl.style.color = tBalance >= 0 ? '#059669' : '#dc2626';
+    }
+
+    // ── Mobile totals bar ──
+    const mEarns   = document.getElementById('m-grand-earns');
+    const mOther   = document.getElementById('m-grand-other');
+    const mSpends  = document.getElementById('m-grand-spends');
+    const mBalance = document.getElementById('m-grand-balance');
+    if (mEarns)   mEarns.textContent   = `₹${Math.round(tEarns)}`;
+    if (mOther)   mOther.textContent   = `₹${Math.round(tOther)}`;
+    if (mSpends)  mSpends.textContent  = `₹${Math.round(tSpends)}`;
+    if (mBalance) {
+        mBalance.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        mBalance.style.color = tBalance >= 0 ? '#6366f1' : '#dc2626';
+    }
+
+    // ── Summary Strip ──
+    const ssEarn    = document.getElementById('ss-earn');
+    const ssSpend   = document.getElementById('ss-spend');
+    const ssBalance = document.getElementById('ss-balance');
+    if (ssEarn)  ssEarn.textContent  = `₹${Math.round(totalIncome)}`;
+    if (ssSpend) ssSpend.textContent = `₹${Math.round(tSpends)}`;
+    if (ssBalance) {
+        ssBalance.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        ssBalance.style.color = tBalance >= 0 ? '#059669' : '#dc2626';
+    }
 }
 
 const saveBtn = document.getElementById('save-btn');
@@ -702,7 +813,7 @@ function showLockOverlay(correctPin) {
         
         newBtn.addEventListener('click', () => {
             const val = newBtn.textContent;
-            if (val === "⌫") {
+            if (val === "⌫" || val === "←" || val.trim() === '') {
                 inputPin = inputPin.slice(0, -1);
             } else if (inputPin.length < 4) {
                 inputPin += val;
@@ -743,6 +854,7 @@ setTimeout(checkNotificationPermission, 8000);
 
 window.updateData = updateData;
 window.deleteRow = deleteRow;
+window.updateCardBalance = updateCardBalance;
 
 let deferredPrompt;
 const installBtn = document.getElementById('install-btn');
@@ -765,3 +877,74 @@ if (installBtn) {
         }
     });
 }
+
+// ===== Refer & Share Feature =====
+const shareModal = document.getElementById('share-modal');
+const referShareBtn = document.getElementById('refer-share-btn');
+const shareUrlInput = document.getElementById('share-url-input');
+
+function getAppUrl() {
+    // Use the current page URL (works for hosted/local apps)
+    return window.location.href.split('?')[0].split('#')[0];
+}
+
+if (referShareBtn) {
+    referShareBtn.addEventListener('click', () => {
+        // Close the profile drawer
+        const drawer = document.getElementById('profile-drawer');
+        if (drawer) drawer.style.display = 'none';
+        // Populate and show the share modal
+        if (shareUrlInput) shareUrlInput.value = getAppUrl();
+        if (shareModal) shareModal.style.display = 'flex';
+    });
+}
+
+function copyShareLink() {
+    const url = getAppUrl();
+    navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-link-btn');
+        if (btn) {
+            const original = btn.innerHTML;
+            btn.innerHTML = '&#10003; Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = original;
+                btn.classList.remove('copied');
+            }, 2000);
+        }
+    }).catch(() => {
+        // Fallback for browsers without clipboard API
+        if (shareUrlInput) {
+            shareUrlInput.select();
+            document.execCommand('copy');
+            alert('Link copied!');
+        }
+    });
+}
+
+function shareWhatsApp() {
+    const url = encodeURIComponent(getAppUrl());
+    const text = encodeURIComponent('Hey! I use this awesome Expense Tracker app to manage my daily finances. Check it out: ');
+    window.open(https://wa.me/?text=, '_blank');
+}
+
+function shareNative() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Expense Tracker App',
+            text: 'Hey! Track your daily expenses easily with this app!',
+            url: getAppUrl(),
+        }).catch(() => {});
+    } else {
+        // Fallback: just copy
+        copyShareLink();
+    }
+}
+
+// Close share modal when clicking outside
+if (shareModal) {
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) shareModal.style.display = 'none';
+    });
+}
+

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <script>
         if (localStorage.getItem('theme') === 'dark') {
@@ -16,8 +16,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#6366f1">
-    <!-- Google Fonts for a clean look -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         // AUTH PROTECTION: Immediately check if user is logged in
         if (!localStorage.getItem('currentUser')) {
@@ -28,73 +27,114 @@
 
 <body>
     <div class="container">
+        <!-- ===== HEADER ===== -->
         <header>
             <div class="header-main">
-                <h1>Daily Expense Tracker</h1>
-                <button id="install-btn" class="install-btn">Install App</button>
+                <div class="header-left">
+                    <button id="profile-trigger" class="profile-icon-btn" aria-label="Profile">
+                        <span id="user-initial">U</span>
+                    </button>
+                    <div class="header-titles">
+                        <h1>Expense Tracker</h1>
+                        <p id="header-greeting">Good morning! 👋</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button id="install-btn" class="install-btn" style="display:none;">
+                        ⬇️ Install
+                    </button>
+                </div>
             </div>
-            <p>Track your daily earnings and spends in a simple table format.</p>
         </header>
 
         <main>
-            <!-- View 1: Tracker -->
+            <!-- ===== View 1: Tracker ===== -->
             <section id="tracker-view" class="app-view active">
-                <div class="table-actions">
+
+                <!-- Desktop Action Bar -->
+                <div class="table-actions desktop-only">
                     <button id="add-row-btn" class="primary-btn">+ New</button>
-                    <button id="save-btn" class="primary-btn"
-                        style="background-color: var(--success-gradient);">Save</button>
-                    <button id="clear-all-btn" class="secondary-btn">Clear</button>
+                    <button id="save-btn" class="primary-btn" style="background: var(--success-gradient);">💾 Save</button>
+                    <button id="clear-all-btn" class="secondary-btn">🗑️ Clear</button>
                 </div>
 
+                <!-- Search -->
                 <div class="search-container">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="table-search" placeholder="Search by date (e.g. 2026-04)">
+                        <input type="text" id="table-search" placeholder="Search by date (e.g. 2026-05)">
                     </div>
                 </div>
 
-                <div class="table-container">
+                <!-- ===== MOBILE CARD LIST (hidden on desktop) ===== -->
+                <div id="card-list" class="card-list mobile-only">
+                    <!-- Cards rendered by JS -->
+                </div>
+
+                <!-- ===== DESKTOP TABLE (hidden on mobile) ===== -->
+                <div class="table-container desktop-only">
                     <table id="expense-table">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Earn</th>
-                                <th>Oth</th>
+                                <th>Other</th>
                                 <th>Spend</th>
                                 <th>Cat</th>
-                                <th>Bal</th>
+                                <th>Balance</th>
                                 <th class="action-col"></th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
-                            <!-- Rows will be added here -->
+                            <!-- Rows added by JS -->
                         </tbody>
                         <tfoot>
                             <tr class="total-row">
-                                <td><strong>Tot</strong></td>
+                                <td><strong>Totals</strong></td>
                                 <td id="grand-earns">0</td>
                                 <td id="grand-other">0</td>
                                 <td id="grand-spends">0</td>
-                                <td></td> <!-- Empty cell for Cat column -->
+                                <td></td>
                                 <td id="grand-balance" class="bold">0</td>
-                                <td></td> <!-- Action col -->
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+
+                <!-- Mobile Totals (shown under card list on mobile) -->
+                <div class="mobile-totals mobile-only">
+                    <div class="mt-item">
+                        <span class="mt-label">Earn</span>
+                        <span id="m-grand-earns" class="mt-value earn">₹0</span>
+                    </div>
+                    <div class="mt-item">
+                        <span class="mt-label">Other</span>
+                        <span id="m-grand-other" class="mt-value earn">₹0</span>
+                    </div>
+                    <div class="mt-item">
+                        <span class="mt-label">Spend</span>
+                        <span id="m-grand-spends" class="mt-value spend">₹0</span>
+                    </div>
+                    <div class="mt-item">
+                        <span class="mt-label">Balance</span>
+                        <span id="m-grand-balance" class="mt-value bold">₹0</span>
+                    </div>
+                </div>
+
             </section>
 
-            <!-- View 2: Insights (Graphs) -->
+            <!-- ===== View 2: Insights ===== -->
             <section id="insights-view" class="app-view">
                 <!-- Budget Section -->
                 <div class="budget-section">
                     <div class="budget-header">
-                        <h2>Weekly Budget</h2>
-                        <input type="number" id="budget-input" placeholder="Set Limit">
+                        <h2>📅 Weekly Budget</h2>
+                        <input type="number" id="budget-input" placeholder="Set Limit (₹)">
                     </div>
                     <div class="budget-status">
                         <div class="budget-labels">
-                            <span id="budget-spent">Spent: 0</span>
+                            <span id="budget-spent">Spent: ₹0</span>
                             <span id="budget-percent">0%</span>
                         </div>
                         <div class="progress-bar">
@@ -104,7 +144,7 @@
                 </div>
 
                 <div class="chart-section">
-                    <h2>Daily Trends</h2>
+                    <h2>📈 Daily Trends (Last 14 Days)</h2>
                     <div class="chart-container">
                         <canvas id="weekly-chart"></canvas>
                     </div>
@@ -112,25 +152,52 @@
             </section>
         </main>
 
-        <!-- Update Available Banner -->
-        <div id="update-banner" class="glass-banner" style="bottom: 12px; display: none; background: var(--primary-gradient); color: white;">
+        <!-- ===== STICKY SUMMARY STRIP ===== -->
+        <div class="summary-strip" id="summary-strip">
+            <div class="ss-item">
+                <span class="ss-icon">💰</span>
+                <div class="ss-text">
+                    <span class="ss-label">Income</span>
+                    <span class="ss-val earn" id="ss-earn">₹0</span>
+                </div>
+            </div>
+            <div class="ss-divider"></div>
+            <div class="ss-item">
+                <span class="ss-icon">💸</span>
+                <div class="ss-text">
+                    <span class="ss-label">Spends</span>
+                    <span class="ss-val spend" id="ss-spend">₹0</span>
+                </div>
+            </div>
+            <div class="ss-divider"></div>
+            <div class="ss-item">
+                <span class="ss-icon">📊</span>
+                <div class="ss-text">
+                    <span class="ss-label">Balance</span>
+                    <span class="ss-val" id="ss-balance">₹0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Update Banner ===== -->
+        <div id="update-banner" class="glass-banner" style="bottom: 145px; display: none; background: var(--primary-gradient); color: white;">
             <div class="banner-content">
-                <div class="banner-icon">🚀</div>
+                <div class="banner-icon">🔄</div>
                 <div class="banner-text">
                     <h3 style="color: white;">New Version Available!</h3>
-                    <p style="color: rgba(255,255,255,0.8);">Update now to get the latest features and notifications.</p>
+                    <p style="color: rgba(255,255,255,0.8);">Update now to get the latest features.</p>
                 </div>
             </div>
             <button id="update-btn" class="secondary-btn" style="width: 100%; border: none; font-weight: 800;">Update Now</button>
         </div>
 
-        <!-- Notification Permission Banner (Premium UI) -->
+        <!-- ===== Notification Banner ===== -->
         <div id="notif-banner" class="glass-banner">
             <div class="banner-content">
                 <div class="banner-icon">🔔</div>
                 <div class="banner-text">
                     <h3>Enable Notifications</h3>
-                    <p>Get daily reminders to log your expenses and stay on budget.</p>
+                    <p>Get daily reminders to log your expenses.</p>
                 </div>
             </div>
             <div class="banner-actions">
@@ -139,54 +206,45 @@
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
+        <!-- ===== BOTTOM NAV ===== -->
         <nav class="bottom-nav">
-            <a href="index.html" class="nav-item active">
-                <span class="nav-icon">📊</span>
+            <a href="index.html" class="nav-item active" id="nav-tracker">
+                <span class="nav-icon">📋</span>
                 <span class="nav-label">Tracker</span>
             </a>
-            <a href="analytics.html" class="nav-item">
+            <a href="index.html#insights" class="nav-item" id="nav-insights">
                 <span class="nav-icon">📈</span>
+                <span class="nav-label">Insights</span>
+            </a>
+            <a href="analytics.html" class="nav-item" id="nav-analytics">
+                <span class="nav-icon">📊</span>
                 <span class="nav-label">Analytics</span>
             </a>
-            <a href="settings.html" class="nav-item">
+            <a href="settings.html" class="nav-item" id="nav-settings">
                 <span class="nav-icon">⚙️</span>
                 <span class="nav-label">Settings</span>
             </a>
         </nav>
-    </div>
 
-    <!-- External Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="./script.js" type="module"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    reg.addEventListener('updatefound', () => {
-                        const newWorker = reg.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New update found and installed! Show the update banner.
-                                document.getElementById('update-banner').style.display = 'flex';
-                            }
-                        });
-                    });
-                });
-            });
-        }
+        <!-- ===== FAB Button (Mobile Quick-Add) ===== -->
+        <button class="fab-btn mobile-only" id="fab-add-btn" aria-label="Add Transaction">
+            <span class="fab-icon">+</span>
+        </button>
 
-        document.getElementById('update-btn')?.addEventListener('click', () => {
-            window.location.reload();
-        });
-    </script>
-    <!-- Quick Add Transaction Modal -->
+        <!-- ===== Mobile Action Bar (above bottom nav) ===== -->
+        <div class="mobile-action-bar mobile-only">
+            <button id="save-btn-mobile" class="mab-btn save-mab">💾 Save</button>
+            <button id="clear-all-btn-mobile" class="mab-btn clear-mab">🗑️ Clear All</button>
+        </div>
+
+    </div><!-- end .container -->
+
+    <!-- ===== Quick Add Transaction Modal ===== -->
     <div id="add-entry-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content add-form-card">
             <div class="modal-header">
-                <h3>Add Transaction</h3>
-                <button class="close-icon" onclick="document.getElementById('add-entry-modal').style.display='none'">×</button>
+                <h3>➕ Add Transaction</h3>
+                <button class="close-icon" onclick="document.getElementById('add-entry-modal').style.display='none'">✕</button>
             </div>
             
             <div class="form-body">
@@ -199,49 +257,49 @@
                 
                 <div class="form-row two-col">
                     <div class="form-group">
-                        <label>Earns Amount</label>
-                        <input type="number" id="new-earns" placeholder="₹0">
+                        <label>💰 Earnings</label>
+                        <input type="number" id="new-earns" placeholder="₹0" inputmode="decimal">
                     </div>
                     <div class="form-group">
-                        <label>Other Source</label>
-                        <input type="number" id="new-other" placeholder="₹0">
+                        <label>🎁 Other Income</label>
+                        <input type="number" id="new-other" placeholder="₹0" inputmode="decimal">
                     </div>
                 </div>
 
                 <div class="form-row two-col">
                     <div class="form-group">
-                        <label>Spends Amount</label>
-                        <input type="number" id="new-spends" placeholder="₹0" style="color: #ef4444;">
+                        <label>💸 Spends</label>
+                        <input type="number" id="new-spends" placeholder="₹0" inputmode="decimal" style="color: #ef4444;">
                     </div>
                     <div class="form-group">
-                        <label>Spend Cat</label>
+                        <label>🏷️ Category</label>
                         <select id="new-category">
-                            <option value="-">-</option>
-                            <option value="Food">Food</option>
-                            <option value="Shop">Shopping</option>
-                            <option value="Travel">Travel</option>
-                            <option value="Rent">Rent</option>
-                            <option value="Bills">Bills</option>
-                            <option value="Other">Other</option>
+                            <option value="-">— None —</option>
+                            <option value="Food">🍔 Food</option>
+                            <option value="Shop">🛍️ Shopping</option>
+                            <option value="Travel">🚌 Travel</option>
+                            <option value="Rent">🏠 Rent</option>
+                            <option value="Bills">⚡ Bills</option>
+                            <option value="Other">📦 Other</option>
                         </select>
                     </div>
                 </div>
 
-                <button id="submit-new-entry" class="primary-btn vibrant-shadow" style="width: 100%; margin-top: 15px;">Add to Tracker</button>
+                <button id="submit-new-entry" class="primary-btn vibrant-shadow" style="width: 100%; margin-top: 15px; padding: 15px; font-size: 15px;">
+                    ✅ Add to Tracker
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Broadcast Message Modal (Special Admin Message) -->
+    <!-- ===== Broadcast Modal ===== -->
     <div id="broadcast-modal" class="modal-overlay" style="display:none;">
         <div class="broadcast-card fancy">
-            <!-- Decorative background shapes -->
             <div class="deco-circle c1"></div>
             <div class="deco-circle c2"></div>
-            
             <div class="bc-header vibrant">
-                <div class="bc-floating-icons">✨ 🚀 🔥</div>
-                <div class="bc-icon-main">📢</div>
+                <div class="bc-floating-icons">📢 🎉 ✨</div>
+                <div class="bc-icon-main">📣</div>
                 <h2 id="bc-title">SYSTEM UPDATE</h2>
             </div>
             <div class="bc-body">
@@ -250,12 +308,12 @@
                 <div class="quote-icon right">"</div>
             </div>
             <div class="bc-footer">
-                <button id="bc-close-btn" class="primary-btn bc-btn vibrant-shadow">Sweet, thanks! ✌️</button>
+                <button id="bc-close-btn" class="primary-btn bc-btn vibrant-shadow">Sweet, thanks! 🎉</button>
             </div>
         </div>
     </div>
 
-    <!-- App Lock PIN Overlay -->
+    <!-- ===== App Lock PIN Overlay ===== -->
     <div id="app-lock-overlay" class="modal-overlay" style="display:none; z-index: 10000; background: #fff; flex-direction: column; align-items: center; justify-content: center;">
         <div class="lock-header" style="text-align: center; margin-bottom: 40px;">
             <div style="font-size: 50px; margin-bottom: 10px;">🔒</div>
@@ -295,7 +353,7 @@
         </style>
     </div>
 
-    <!-- User Profile Sidebar (Drawer) -->
+    <!-- ===== User Profile Sidebar Drawer ===== -->
     <div id="profile-drawer" class="drawer-overlay" style="display:none;">
         <div class="drawer-content">
             <div class="drawer-header">
@@ -307,40 +365,132 @@
             </div>
             <div class="drawer-body">
                 <div class="drawer-item" id="export-csv-btn">
-                    <span>Export CSV Report</span>
-                    <span>📊</span>
+                    <span>📥 Export CSV Report</span>
+                    <span>›</span>
+                </div>
+                <div class="drawer-item" onclick="window.location.href='settings.html'">
+                    <span>⚙️ Settings</span>
+                    <span>›</span>
                 </div>
                 <div class="drawer-item">
-                    <span>Account Security</span>
-                    <span>🔒</span>
+                    <span>🔒 Account Security</span>
+                    <span>›</span>
                 </div>
                 <div class="drawer-item">
-                    <span>Help & Support</span>
-                    <span>❓</span>
+                    <span>❓ Help &amp; Support</span>
+                    <span>›</span>
                 </div>
             </div>
-            <div class="drawer-footer">
-                <button id="logout-btn" class="secondary-btn logout-danger">Logout</button>
+            
+                <div class="drawer-item" id="refer-share-btn">
+                    <span>&#127381; Refer &amp; Share</span>
+                    <span>&#8250;</span>
+                </div>
+<div class="drawer-footer">
+                <button id="logout-btn" class="secondary-btn logout-danger">🚪 Logout</button>
             </div>
         </div>
     </div>
 
-    <!-- Email Required Modal (For Old Users) -->
+
+    <!-- ===== Refer & Share Modal ===== -->
+    <div id="share-modal" class="modal-overlay" style="display:none; z-index: 10001;">
+        <div class="modal-content add-form-card" style="max-width: 380px; text-align: center; border-radius: 20px; padding: 28px 20px;">
+            <div style="font-size: 48px; margin-bottom: 10px;">&#127381;</div>
+            <h3 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">Share the App!</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 22px;">Invite your friends &amp; family to track their finances too.</p>
+            <div class="share-url-box">
+                <input type="text" id="share-url-input" readonly>
+                <button id="copy-link-btn" class="primary-btn vibrant-shadow" onclick="copyShareLink()">&#128203; Copy</button>
+            </div>
+            <div class="share-actions" style="margin-top: 16px; display: flex; gap: 10px; justify-content: center;">
+                <button class="share-action-btn" id="share-whatsapp-btn" onclick="shareWhatsApp()">
+                    <span style="font-size: 20px;">&#128242;</span>
+                    <span>WhatsApp</span>
+                </button>
+                <button class="share-action-btn" id="share-native-btn" onclick="shareNative()">
+                    <span style="font-size: 20px;">&#8599;&#65039;</span>
+                    <span>Share</span>
+                </button>
+            </div>
+            <button onclick="document.getElementById('share-modal').style.display='none'" style="margin-top: 20px; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer;">Close</button>
+        </div>
+    </div>
+    <!-- ===== Email Required Modal ===== -->
     <div id="email-required-modal" class="modal-overlay" style="display:none; z-index: 9999;">
         <div class="modal-content add-form-card" style="max-width: 400px; text-align: center;">
             <div class="modal-header" style="justify-content: center;">
-                <h3>Recovery Email Needed 📧</h3>
+                <h3>📧 Recovery Email Needed</h3>
             </div>
             <div class="form-body">
-                <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">To ensure you never lose access to your account, please set a recovery email for the new <strong>Forgot Password</strong> feature.</p>
+                <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">To ensure you never lose access to your account, please set a recovery email for the <strong>Forgot Password</strong> feature.</p>
                 <div class="form-group">
                     <label>Email Address</label>
                     <input type="email" id="update-email-input" placeholder="yourname@gmail.com" style="width: 100%; box-sizing: border-box;">
                 </div>
-                <button id="submit-update-email" class="primary-btn vibrant-shadow" style="width: 100%; margin-top: 15px;">Secure My Account</button>
+                <button id="submit-update-email" class="primary-btn vibrant-shadow" style="width: 100%; margin-top: 15px;">🔐 Secure My Account</button>
             </div>
         </div>
     </div>
-</body>
 
+    <!-- ===== Scripts ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="./script.js" type="module"></script>
+    <script>
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                document.getElementById('update-banner').style.display = 'flex';
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        document.getElementById('update-btn')?.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        // Header greeting
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning! 👋' : hour < 17 ? 'Good afternoon! ☀️' : 'Good evening! 🌙';
+        document.getElementById('header-greeting').textContent = greeting;
+
+        // FAB wires to add-row-btn
+        document.getElementById('fab-add-btn')?.addEventListener('click', () => {
+            document.getElementById('add-row-btn')?.click();
+        });
+
+        // Mobile save/clear buttons
+        document.getElementById('save-btn-mobile')?.addEventListener('click', () => {
+            document.getElementById('save-btn')?.click();
+        });
+        document.getElementById('clear-all-btn-mobile')?.addEventListener('click', () => {
+            document.getElementById('clear-all-btn')?.click();
+        });
+
+        // Nav: insights link
+        document.getElementById('nav-insights')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('nav-insights').classList.add('active');
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('insights-view').classList.add('active');
+        });
+        document.getElementById('nav-tracker')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('nav-tracker').classList.add('active');
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.getElementById('tracker-view').classList.add('active');
+        });
+    </script>
+</body>
 </html>
