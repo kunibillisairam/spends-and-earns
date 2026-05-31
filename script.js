@@ -1668,6 +1668,16 @@ navItems.forEach(item => {
         appViews.forEach(v => v.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
         
+        // Show the summary strip only on the Tracker page
+        const summaryStrip = document.getElementById('summary-strip');
+        if (summaryStrip) {
+            if (viewId === 'tracker-view') {
+                summaryStrip.style.display = 'flex';
+            } else {
+                summaryStrip.style.display = 'none';
+            }
+        }
+        
         if (viewId === 'tracker-view') {
             renderTable();
         } else if (viewId === 'analytics-view') {
