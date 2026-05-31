@@ -925,7 +925,7 @@ function copyShareLink() {
 function shareWhatsApp() {
     const url = encodeURIComponent(getAppUrl());
     const text = encodeURIComponent('Hey! I use this awesome Expense Tracker app to manage my daily finances. Check it out: ');
-    window.open(https://wa.me/?text=, '_blank');
+    window.open(`https://wa.me/?text=${text}${url}`, '_blank');
 }
 
 function shareNative() {

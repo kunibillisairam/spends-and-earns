@@ -246,6 +246,13 @@
                     </div>
                     <div class="settings-right"><span>Feedback</span></div>
                 </div>
+                <div class="settings-item" id="refer-btn">
+                    <div class="settings-left">
+                        <span class="settings-icon">🎁</span>
+                        <span class="settings-label">Refer & Share</span>
+                    </div>
+                    <div class="settings-right"><span>Invite Friends</span></div>
+                </div>
             </div>
 
             <div class="settings-group danger-zone">
@@ -259,6 +266,28 @@
 
             <div class="version-tag">Spends & Earns v2.3.0 • Built with ❤️</div>
         </main>
+
+        <!-- Refer & Share Modal -->
+        <div class="modal" id="refer-modal" style="z-index: 10001;">
+            <div class="modal-content" style="max-width: 380px; text-align: center; border-radius: 20px; padding: 28px 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🎁</div>
+                <h3 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">Refer & Share</h3>
+                <p style="font-size: 13px; color: #64748b; margin-bottom: 22px;">Invite your friends & family to track their finances too.</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <input type="text" id="share-url-input-settings" readonly style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 12px; background: #f8fafc; color: #475569;" value="">
+                    <button id="copy-link-btn-settings" class="primary-btn vibrant-shadow" style="padding: 10px 15px; margin: 0; white-space: nowrap; font-size: 12px;">Copy</button>
+                </div>
+                <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: center;">
+                    <button class="primary-btn" id="share-whatsapp-btn-settings" style="background: #25D366; flex: 1; font-size: 12px; padding: 10px; border: none; font-weight: 700;">
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="primary-btn" id="share-native-btn-settings" style="flex: 1; font-size: 12px; padding: 10px; border: none; font-weight: 700;">
+                        <span>Share</span>
+                    </button>
+                </div>
+                <button id="close-refer-modal" style="margin-top: 20px; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; display: block; width: 100%; text-align: center;">Close</button>
+            </div>
+        </div>
 
         <!-- Feedback Modal -->
         <div class="modal" id="feedback-modal">
@@ -464,6 +493,63 @@
 
         document.getElementById('feedback-btn').addEventListener('click', () => feedbackModal.style.display = 'flex');
         document.getElementById('close-feedback-modal').addEventListener('click', () => feedbackModal.style.display = 'none');
+
+        // --- Refer & Share Logic ---
+        const referModal = document.getElementById('refer-modal');
+        const shareUrlInputSettings = document.getElementById('share-url-input-settings');
+        
+        function getAppUrl() {
+            return window.location.href.split('?')[0].split('#')[0].replace('settings.html', 'index.html');
+        }
+
+        document.getElementById('refer-btn').addEventListener('click', () => {
+            if (shareUrlInputSettings) {
+                shareUrlInputSettings.value = getAppUrl();
+            }
+            referModal.style.display = 'flex';
+        });
+
+        document.getElementById('close-refer-modal').addEventListener('click', () => {
+            referModal.style.display = 'none';
+        });
+
+        referModal.addEventListener('click', (e) => {
+            if (e.target === referModal) referModal.style.display = 'none';
+        });
+
+        document.getElementById('copy-link-btn-settings').addEventListener('click', () => {
+            const url = getAppUrl();
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('copy-link-btn-settings');
+                const original = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = original; }, 2000);
+            }).catch(() => {
+                if (shareUrlInputSettings) {
+                    shareUrlInputSettings.select();
+                    document.execCommand('copy');
+                    alert('Link copied!');
+                }
+            });
+        });
+
+        document.getElementById('share-whatsapp-btn-settings').addEventListener('click', () => {
+            const url = encodeURIComponent(getAppUrl());
+            const text = encodeURIComponent('Hey! I use this awesome Expense Tracker app to manage my daily finances. Check it out: ');
+            window.open(`https://wa.me/?text=${text}${url}`, '_blank');
+        });
+
+        document.getElementById('share-native-btn-settings').addEventListener('click', () => {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Expense Tracker App',
+                    text: 'Hey! Track your daily expenses easily with this app!',
+                    url: getAppUrl(),
+                }).catch(() => {});
+            } else {
+                document.getElementById('copy-link-btn-settings').click();
+            }
+        });
 
         // --- Profile Logic ---
         document.getElementById('save-profile').addEventListener('click', async () => {
