@@ -1257,3 +1257,163 @@ button {
     background: #10b981 !important;
 }
 
+/* ===== SETTINGS MODALS & KEYPADS ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 7000;
+    display: none; /* Controlled by JS flex/none */
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 320px;
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    color: var(--text-main);
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-main);
+    text-align: center;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+}
+
+/* Toggle Container for PIN Lock */
+.toggle-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-color);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.dark-theme .toggle-container {
+    background: #0f172a !important;
+}
+
+/* Pin Display Dots */
+.pin-display {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 15px 0 20px;
+}
+
+.pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    transition: all 0.15s ease;
+}
+
+.pin-dot.filled {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.15);
+}
+
+/* PIN Keypad Grid */
+.pinpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    justify-items: center;
+    margin-bottom: 16px;
+    max-width: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pin-btn {
+    background: var(--bg-color);
+    border: none;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.dark-theme .pin-btn {
+    background: #0f172a !important;
+}
+
+.pin-btn:active {
+    background: var(--primary);
+    color: white;
+    transform: scale(0.9);
+}
+
+.pin-btn.back {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.pin-btn.back:active {
+    background: #ef4444;
+    color: white;
+}
+
+/* Support ticket success overlay */
+.success-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.success-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 320px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+
