@@ -950,3 +950,657 @@ if (shareModal) {
     });
 }
 
+// =============================================
+// CONSOLIDATED SINGLE PAGE APPLICATION (SPA) MODULE
+// =============================================
+
+// --- Analytics & Insights State & DOM Selectors ---
+let weekOffset = 0;
+let currentYearForChart = new Date().getFullYear();
+let monthlyEarnChartInstance = null;
+let monthlySpendChartInstance = null;
+let categoryEarnChartInstance = null;
+let categorySpendChartInstance = null;
+
+function getWeekRange(offset) {
+    const now = new Date();
+    const day = now.getDay();
+    const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+    
+    const monday = new Date(now.setDate(diffToMonday));
+    monday.setDate(monday.getDate() + (offset * 7));
+    monday.setHours(0,0,0,0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(23,59,59,999);
+    
+    return { monday, sunday };
+}
+
+function initAnalytics() {
+    const { monday, sunday } = getWeekRange(weekOffset);
+    
+    const fmt = { month: 'short', day: 'numeric' };
+    const weekDisplay = document.getElementById('week-display');
+    if (weekDisplay) {
+        weekDisplay.textContent = `${monday.toLocaleDateString(undefined, fmt)} - ${sunday.toLocaleDateString(undefined, fmt)}`;
+    }
+
+    const thisWeekData = trackerData.filter(d => {
+        const dDate = new Date(d.date);
+        return dDate >= monday && dDate <= sunday;
+    });
+
+    const weekEarn = thisWeekData.reduce((s, r) => s + (r.earns || 0) + (r.other || 0), 0);
+    const weekSpend = thisWeekData.reduce((s, r) => s + (r.spends || 0), 0);
+
+    const weekEarnVal = document.getElementById('week-earn-val');
+    const weekSpendVal = document.getElementById('week-spend-val');
+    if (weekEarnVal) weekEarnVal.textContent = `₹${Math.round(weekEarn).toLocaleString()}`;
+    if (weekSpendVal) weekSpendVal.textContent = `₹${Math.round(weekSpend).toLocaleString()}`;
+
+    const max = Math.max(weekEarn, weekSpend, 5000);
+    const earnProg = document.getElementById('earn-prog');
+    const spendProg = document.getElementById('spend-prog');
+    if (earnProg) earnProg.style.width = (weekEarn/max * 100) + '%';
+    if (spendProg) spendProg.style.width = (weekSpend/max * 100) + '%';
+
+    renderCategoryCharts(thisWeekData);
+
+    // Monthly Summary Logic
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    const monthNameSummary = document.getElementById('month-name-summary');
+    if (monthNameSummary) monthNameSummary.textContent = `${monthNames[currentMonth]} Summary`;
+
+    const thisMonthData = trackerData.filter(d => {
+        const dObj = new Date(d.date);
+        return dObj.getMonth() === currentMonth && dObj.getFullYear() === currentYear;
+    });
+
+    const monthEarn = thisMonthData.reduce((s, r) => s + (r.earns || 0) + (r.other || 0), 0);
+    const monthSpend = thisMonthData.reduce((s, r) => s + (r.spends || 0), 0);
+
+    const monthEarnVal = document.getElementById('month-earn-val');
+    const monthSpendVal = document.getElementById('month-spend-val');
+    if (monthEarnVal) monthEarnVal.textContent = `₹${Math.round(monthEarn).toLocaleString()}`;
+    if (monthSpendVal) monthSpendVal.textContent = `₹${Math.round(monthSpend).toLocaleString()}`;
+    
+    calculateTrophies();
+    initMonthlyChart();
+}
+
+function calculateTrophies() {
+    const trophies = [
+        { id: 'first_save', icon: '💰', title: 'First Save', desc: 'Saved first ₹1,000' },
+        { id: 'streak_7', icon: '🔥', title: '7-Day Streak', desc: 'Logged 7 days in a row' },
+        { id: 'big_earner', icon: '👑', title: 'Big Earner', desc: 'Earned ₹10k in a month' }
+    ];
+
+    let unlocked = { first_save: false, streak_7: false, big_earner: false };
+
+    const totalEarn = trackerData.reduce((s, r) => s + (r.earns || 0) + (r.other || 0), 0);
+    const totalSpend = trackerData.reduce((s, r) => s + (r.spends || 0), 0);
+    if (totalEarn - totalSpend >= 1000) unlocked.first_save = true;
+
+    const uniqueDates = [...new Set(trackerData.map(d => d.date))].sort((a,b) => new Date(a) - new Date(b));
+    let maxStreak = 0, currentStreak = 0;
+    for(let i=0; i<uniqueDates.length; i++) {
+        if(i===0) { currentStreak = 1; }
+        else {
+            const prev = new Date(uniqueDates[i-1]);
+            const curr = new Date(uniqueDates[i]);
+            const diff = (curr - prev) / (1000 * 60 * 60 * 24);
+            if(diff === 1) currentStreak++;
+            else currentStreak = 1;
+        }
+        if(currentStreak > maxStreak) maxStreak = currentStreak;
+    }
+    if (maxStreak >= 7) unlocked.streak_7 = true;
+
+    const monthMap = {};
+    trackerData.forEach(d => {
+        const ym = d.date.substring(0, 7);
+        if(!monthMap[ym]) monthMap[ym] = 0;
+        monthMap[ym] += (d.earns || 0) + (d.other || 0);
+    });
+    if (Object.values(monthMap).some(v => v >= 10000)) unlocked.big_earner = true;
+
+    const grid = document.getElementById('trophy-room');
+    if (grid) {
+        grid.innerHTML = '';
+        let count = 0;
+        
+        trophies.forEach(t => {
+            const isUnlocked = unlocked[t.id];
+            if (isUnlocked) count++;
+            
+            grid.innerHTML += `
+                <div class="trophy-card ${isUnlocked ? '' : 'locked'}">
+                    <div class="trophy-icon">${t.icon}</div>
+                    <div class="trophy-title">${t.title}</div>
+                    <div class="trophy-desc">${t.desc}</div>
+                </div>
+            `;
+        });
+        
+        const trophyCount = document.getElementById('trophy-count');
+        if (trophyCount) trophyCount.textContent = `${count}/${trophies.length}`;
+    }
+}
+
+function renderCategoryCharts(data) {
+    const earnMap = {}, spendMap = {};
+    const colors = {
+        'Salary': '#10b981', 'Gift': '#34d399', 'Food': '#ef4444', 
+        'Shop': '#f59e0b', 'Travel': '#3b82f6', 'Rent': '#6366f1', 
+        'Bills': '#ec4899', 'Other': '#94a3b8', '-': '#e2e8f0'
+    };
+
+    data.forEach(r => {
+        const cat = r.category || '-';
+        if (r.earns) earnMap['Salary'] = (earnMap['Salary'] || 0) + r.earns;
+        if (r.other) earnMap['Other Income'] = (earnMap['Other Income'] || 0) + r.other;
+        if (r.spends) spendMap[cat] = (spendMap[cat] || 0) + r.spends;
+    });
+
+    const drawDoughnut = (ctxId, map, centerId, chartInstanceVar) => {
+        const canvas = document.getElementById(ctxId);
+        if (!canvas) return { labels: [], values: [], bg: [] };
+        
+        const labels = Object.keys(map);
+        const values = Object.values(map);
+        const bg = labels.map(l => colors[l] || colors['Other']);
+        
+        if (chartInstanceVar === 'earn' && categoryEarnChartInstance) {
+            categoryEarnChartInstance.destroy();
+        } else if (chartInstanceVar === 'spend' && categorySpendChartInstance) {
+            categorySpendChartInstance.destroy();
+        }
+
+        const newChart = new Chart(canvas, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: values, backgroundColor: bg, borderWidth: 0, cutout: '75%' }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        if (chartInstanceVar === 'earn') categoryEarnChartInstance = newChart;
+        else categorySpendChartInstance = newChart;
+
+        const top = labels.reduce((a, b) => map[a] > map[b] ? a : b, '-');
+        const topEl = document.getElementById(centerId);
+        if (topEl) topEl.textContent = top === '-' ? 'None' : top;
+        return { labels, values, bg };
+    };
+
+    const eData = drawDoughnut('earn-chart', earnMap, 'top-earn-name', 'earn');
+    const sData = drawDoughnut('spend-chart', spendMap, 'top-spend-name', 'spend');
+
+    const createLegend = (elId, data) => {
+        const el = document.getElementById(elId);
+        if (el) {
+            el.innerHTML = data.labels.map((l, i) => `
+                <div class="legend-item" style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding: 2px 0;">
+                    <div class="legend-left" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="dot" style="width: 8px; height: 8px; border-radius: 2px; background:${data.bg[i]}"></div>
+                        <span class="name" style="font-weight: 600; color: #475569;">${l}</span>
+                    </div>
+                    <span class="amt" style="font-weight: 700; color: #1e293b;">₹${Math.round(data.values[i])}</span>
+                </div>
+            `).join('');
+        }
+    };
+
+    createLegend('earn-legend', eData);
+    createLegend('spend-legend', sData);
+}
+
+function initMonthlyChart() {
+    const yearDisplay = document.getElementById('year-display');
+    if (yearDisplay) yearDisplay.textContent = currentYearForChart;
+    
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyEarns = new Array(12).fill(0);
+    const monthlySpends = new Array(12).fill(0);
+
+    trackerData.forEach(d => {
+        const dDate = new Date(d.date);
+        if (dDate.getFullYear() === currentYearForChart) {
+            const m = dDate.getMonth();
+            monthlyEarns[m] += (d.earns || 0) + (d.other || 0);
+            monthlySpends[m] += (d.spends || 0);
+        }
+    });
+
+    const topLabelsPlugin = {
+        id: 'topLabelsPlugin',
+        afterDatasetsDraw(chart) {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const data = dataset.data[index];
+                    if (data > 0) {
+                        ctx.fillStyle = dataset.backgroundColor;
+                        ctx.font = 'bold 9px Inter, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        let text = data >= 1000 ? (data/1000).toFixed(1).replace('.0','') + 'k' : data;
+                        ctx.fillText('₹' + text, bar.x, bar.y - 3);
+                    }
+                });
+            });
+        }
+    };
+
+    const earnCtx = document.getElementById('monthly-earn-chart');
+    if (earnCtx) {
+        if (monthlyEarnChartInstance) {
+            monthlyEarnChartInstance.data.datasets[0].data = monthlyEarns;
+            monthlyEarnChartInstance.update();
+        } else {
+            monthlyEarnChartInstance = new Chart(earnCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Earnings',
+                        data: monthlyEarns,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    layout: { padding: { top: 15 } },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
+                        x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
+                    }
+                },
+                plugins: [topLabelsPlugin]
+            });
+        }
+    }
+
+    const spendCtx = document.getElementById('monthly-spend-chart');
+    if (spendCtx) {
+        if (monthlySpendChartInstance) {
+            monthlySpendChartInstance.data.datasets[0].data = monthlySpends;
+            monthlySpendChartInstance.update();
+        } else {
+            monthlySpendChartInstance = new Chart(spendCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: 'Spends',
+                        data: monthlySpends,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    layout: { padding: { top: 15 } },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
+                        x: { ticks: { font: { size: 10 }, color: '#64748b' }, grid: { display: false }, border: { display: false } }
+                    }
+                },
+                plugins: [topLabelsPlugin]
+            });
+        }
+    }
+}
+
+// Wire up Analytics button events
+document.getElementById('prev-week')?.addEventListener('click', () => { weekOffset--; initAnalytics(); });
+document.getElementById('next-week')?.addEventListener('click', () => { if(weekOffset < 0) weekOffset++; initAnalytics(); });
+document.getElementById('prev-year')?.addEventListener('click', () => { currentYearForChart--; initMonthlyChart(); });
+document.getElementById('next-year')?.addEventListener('click', () => { currentYearForChart++; initMonthlyChart(); });
+
+
+// --- Settings Logic & Modals ---
+async function initSettings() {
+    // Dark Mode Initialization
+    const themeToggle = document.getElementById('theme-toggle-settings');
+    if (themeToggle) {
+        if (localStorage.getItem('theme') === 'dark') {
+            themeToggle.checked = true;
+            document.documentElement.classList.add('dark-theme');
+        }
+        
+        // Dark Mode Event Listener
+        const themeBtn = document.getElementById('theme-btn-settings');
+        if (themeBtn) {
+            themeBtn.onclick = (e) => {
+                if (e.target !== themeToggle) {
+                    themeToggle.checked = !themeToggle.checked;
+                }
+                
+                if (themeToggle.checked) {
+                    document.documentElement.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                    localStorage.setItem('theme', 'light');
+                }
+            };
+        }
+    }
+
+    // Populate static profile details
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        const pName = document.getElementById('p-name');
+        const pPhone = document.getElementById('p-phone');
+        const pAvatar = document.getElementById('p-avatar');
+        const newName = document.getElementById('new-name');
+        if (pName) pName.textContent = user.username;
+        if (pPhone) pPhone.textContent = user.phone;
+        if (pAvatar) pAvatar.textContent = user.username.charAt(0).toUpperCase();
+        if (newName) newName.value = user.username;
+        
+        // Fetch Firestore lock and recovery email details
+        const userRef = doc(db, "users", user.phone);
+        try {
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                const pEmail = document.getElementById('p-email');
+                const lockStatus = document.getElementById('lock-status-settings');
+                const lockToggle = document.getElementById('lock-toggle');
+                
+                if (userData.email && pEmail) {
+                    pEmail.textContent = userData.email;
+                    pEmail.style.color = '#6366f1';
+                }
+                if (userData.isLockActive) {
+                    if (lockStatus) {
+                        lockStatus.textContent = "Active";
+                        lockStatus.style.color = "#10b981";
+                    }
+                    if (lockToggle) lockToggle.checked = true;
+                }
+            }
+        } catch (e) { console.error("Firestore settings fetch error:", e); }
+    }
+}
+
+// --- Modals Logic Wires ---
+const editModal = document.getElementById('edit-modal');
+const securityModal = document.getElementById('security-modal');
+const emailModal = document.getElementById('email-modal');
+const feedbackModal = document.getElementById('feedback-modal');
+const referModal = document.getElementById('refer-modal');
+
+document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
+document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
+
+document.getElementById('security-btn-settings')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'flex'; });
+document.getElementById('close-security-modal')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'none'; });
+
+document.getElementById('edit-email-btn')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'flex'; });
+document.getElementById('close-email-modal')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'none'; });
+
+document.getElementById('feedback-btn-settings')?.addEventListener('click', () => { if (feedbackModal) feedbackModal.style.display = 'flex'; });
+document.getElementById('close-feedback-modal')?.addEventListener('click', () => { if (feedbackModal) feedbackModal.style.display = 'none'; });
+
+document.getElementById('refer-btn-settings')?.addEventListener('click', () => {
+    if (referModal) {
+        const shareInput = document.getElementById('share-url-input-settings');
+        if (shareInput) shareInput.value = window.location.origin;
+        referModal.style.display = 'flex';
+    }
+});
+document.getElementById('close-refer-modal')?.addEventListener('click', () => { if (referModal) referModal.style.display = 'none'; });
+
+// Copy link in settings
+document.getElementById('copy-link-btn-settings')?.addEventListener('click', () => {
+    const shareInput = document.getElementById('share-url-input-settings');
+    if (shareInput) {
+        navigator.clipboard.writeText(shareInput.value).then(() => {
+            const btn = document.getElementById('copy-link-btn-settings');
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = original; }, 2000);
+        });
+    }
+});
+
+document.getElementById('share-whatsapp-btn-settings')?.addEventListener('click', () => {
+    const url = encodeURIComponent(window.location.origin);
+    const text = encodeURIComponent('Hey! Check out this premium Expense Tracker: ');
+    window.open(`https://wa.me/?text=${text}${url}`, '_blank');
+});
+
+document.getElementById('share-native-btn-settings')?.addEventListener('click', () => {
+    if (navigator.share) {
+        navigator.share({ title: 'Expense Tracker', url: window.location.origin }).catch(() => {});
+    }
+});
+
+// --- Profile Update ---
+document.getElementById('save-profile')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-profile');
+    const newName = document.getElementById('new-name')?.value;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (newName && user) {
+        btn.textContent = "Syncing...";
+        btn.disabled = true;
+        try {
+            await updateDoc(doc(db, "users", user.phone), { username: newName });
+            user.username = newName;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            if (editModal) editModal.style.display = 'none';
+            initSettings();
+            initUser();
+        } catch (err) {
+            alert("Sync failed.");
+        } finally {
+            btn.textContent = "Save Changes";
+            btn.disabled = false;
+        }
+    }
+});
+
+// --- Recovery Email Update ---
+document.getElementById('save-email')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-email');
+    const newEmail = document.getElementById('recovery-email-input')?.value;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (newEmail && newEmail.includes('@') && user) {
+        btn.textContent = "Updating...";
+        btn.disabled = true;
+        try {
+            await updateDoc(doc(db, "users", user.phone), { email: newEmail });
+            alert("Recovery email updated!");
+            if (emailModal) emailModal.style.display = 'none';
+            initSettings();
+        } catch (err) {
+            alert("Update failed.");
+        } finally {
+            btn.textContent = "Update Email";
+            btn.disabled = false;
+        }
+    } else { alert("Please enter a valid email."); }
+});
+
+// --- Support ticket submission ---
+import { collection, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+document.getElementById('submit-ticket')?.addEventListener('click', async () => {
+    const type = document.getElementById('ticket-type').value;
+    const message = document.getElementById('ticket-message').value;
+    const btn = document.getElementById('submit-ticket');
+    const successOverlay = document.getElementById('success-overlay-settings');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!message.trim()) return alert("Please type a message.");
+    if (!user) return alert("You must be logged in.");
+
+    btn.textContent = "Sending...";
+    btn.disabled = true;
+
+    try {
+        await addDoc(collection(db, "support_tickets"), {
+            userId: user.phone,
+            username: user.username,
+            type: type,
+            message: message,
+            status: 'open',
+            createdAt: serverTimestamp()
+        });
+
+        if (feedbackModal) feedbackModal.style.display = 'none';
+        document.getElementById('ticket-message').value = "";
+        
+        if (successOverlay) successOverlay.style.display = 'flex';
+    } catch (err) {
+        console.error(err);
+        alert("Failed to send message. Please try again.");
+    } finally {
+        btn.textContent = "Submit Ticket";
+        btn.disabled = false;
+    }
+});
+
+document.getElementById('success-close-settings')?.addEventListener('click', () => {
+    const overlay = document.getElementById('success-overlay-settings');
+    if (overlay) overlay.style.display = 'none';
+});
+
+// --- Security PIN Logic ---
+let settingsPin = "";
+const settingsPinDots = document.querySelectorAll('#security-modal .pin-dot');
+const settingsPinButtons = document.querySelectorAll('#security-modal .pin-btn');
+
+settingsPinButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const val = btn.textContent;
+        if (val === "⌫" || val === "←" || val.trim() === '') {
+            settingsPin = settingsPin.slice(0, -1);
+        } else if (settingsPin.length < 4) {
+            settingsPin += val;
+        }
+        updateSettingsPinUI();
+    });
+});
+
+function updateSettingsPinUI() {
+    settingsPinDots.forEach((dot, i) => {
+        if (i < settingsPin.length) dot.classList.add('filled');
+        else dot.classList.remove('filled');
+    });
+}
+
+document.getElementById('save-security')?.addEventListener('click', async () => {
+    const isLockActive = document.getElementById('lock-toggle').checked;
+    const btn = document.getElementById('save-security');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (isLockActive && settingsPin.length !== 4) {
+        return alert("Please set a 4-digit PIN to enable App Lock.");
+    }
+
+    btn.textContent = "Updating...";
+    btn.disabled = true;
+
+    try {
+        const userRef = doc(db, "users", user.phone);
+        const updates = { isLockActive: isLockActive };
+        if (settingsPin.length === 4) updates.appPin = settingsPin;
+
+        await updateDoc(userRef, updates);
+        alert("Security settings updated successfully!");
+        if (securityModal) securityModal.style.display = 'none';
+        initSettings();
+    } catch (err) {
+        alert("Failed to update security.");
+    } finally {
+        btn.textContent = "Save Security Rules";
+        btn.disabled = false;
+    }
+});
+
+// Logout in settings
+document.getElementById('logout-btn-settings')?.addEventListener('click', () => {
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('trackerData');
+        localStorage.removeItem('weeklyBudget');
+        window.location.replace('auth.html');
+    }
+});
+
+// Export CSV in settings
+document.getElementById('export-csv-settings')?.addEventListener('click', () => {
+    if (trackerData.length === 0) return alert("No data to export!");
+    const headers = ["Date", "Earn", "Other", "Spend", "Balance"];
+    const csv = [
+        headers.join(","),
+        ...trackerData.map(r => [
+            r.date, 
+            r.earns || 0, 
+            r.other || 0, 
+            r.spends || 0, 
+            (r.earns || 0) + (r.other || 0) - (r.spends || 0)
+        ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+});
+
+
+// =============================================
+// NAV ROUTING & DYNAMIC VIEWS INTEGRATION
+// =============================================
+const navItems = document.querySelectorAll('.nav-item');
+const appViews = document.querySelectorAll('.app-view');
+navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const viewId = item.getAttribute('data-view');
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        appViews.forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        
+        if (viewId === 'tracker-view') {
+            renderTable();
+        } else if (viewId === 'analytics-view') {
+            updateChart();
+            initAnalytics();
+        } else if (viewId === 'settings-view') {
+            initSettings();
+        }
+    });
+});
+
+// Initial boot logic
+initUser();
+initSettings();
+
