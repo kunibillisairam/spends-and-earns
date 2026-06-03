@@ -87,7 +87,10 @@ async function init() {
         budgetInput.value = weeklyBudget || '';
     }
 
-    // 2. Perform database checks and synchronization in the background without blocking render
+    // 2. Show reminder popup & send notification for upcoming subscriptions
+    setTimeout(() => checkAndShowReminders(), 2000);
+
+    // 3. Perform database checks and synchronization in the background without blocking render
     recoverUserDocument().then(() => {
         return fetchCloudData();
     }).then(() => {
@@ -1756,6 +1759,29 @@ initSettings();
 // ===== BILLS & SUBSCRIPTION CALENDAR LOGIC =====
 let calendarDate = new Date(); // tracks current month viewed in calendar
 
+// ─── Send notification via Service Worker (works on mobile PWA) ───
+function sendLocalNotification(title, body, tag) {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title,
+            body,
+            tag: tag || 'sub-reminder-' + Date.now()
+        });
+    } else if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: '/icon-192.png' });
+    }
+}
+
+// ─── Request notification permission properly ───
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const result = await Notification.requestPermission();
+    return result === 'granted';
+}
+
 function checkAutoLogSubscriptions() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) return;
@@ -1772,11 +1798,9 @@ function checkAutoLogSubscriptions() {
         let today = new Date();
         today.setHours(0,0,0,0);
         
-        // Loop to log missed billing cycles (e.g. if offline for a week or month)
+        // Loop to log missed billing cycles
         while (nextBill <= today) {
             const loggedDate = getLocalDateString(nextBill);
-            
-            // Add automatic spend row to trackerData
             trackerData.unshift({
                 date: loggedDate,
                 earns: null,
@@ -1785,51 +1809,17 @@ function checkAutoLogSubscriptions() {
                 category: sub.category || 'Bills'
             });
             
-            // Increment next billing date depending on subscription cycle
             if (sub.cycle === 'weekly') {
                 nextBill.setDate(nextBill.getDate() + 7);
             } else if (sub.cycle === 'yearly') {
                 nextBill.setFullYear(nextBill.getFullYear() + 1);
-            } else { // monthly
+            } else {
                 nextBill.setMonth(nextBill.getMonth() + 1);
             }
-            
             dateChanged = true;
-            
-            // Alert/Notify the user of auto-logged subscription
-            setTimeout(() => {
-                alert(`📅 Auto-logged recurring bill: ${sub.name} (₹${sub.price}) for ${loggedDate}`);
-            }, 1500);
         }
         
         sub.nextBillingDate = getLocalDateString(nextBill);
-        
-        // --- 2 Days Prior Renewal Reminder Alert ---
-        const billingDate = new Date(sub.nextBillingDate);
-        billingDate.setHours(0,0,0,0);
-        const diffTime = billingDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (diffDays === 2 && sub.lastReminderSentDate !== todayStr) {
-            sub.lastReminderSentDate = todayStr;
-            dateChanged = true;
-            
-            setTimeout(() => {
-                const title = "Subscription Reminder 🗓️";
-                const body = `${sub.name} renewal of ₹${sub.price} is due in 2 days (on ${sub.nextBillingDate}).`;
-                if (Notification.permission === "granted") {
-                    if ('serviceWorker' in navigator) {
-                        navigator.serviceWorker.ready.then(reg => {
-                            reg.showNotification(title, { body, icon: "/icon-192.png" });
-                        });
-                    } else {
-                        new Notification(title, { body, icon: "/icon-192.png" });
-                    }
-                } else {
-                    alert(`🔔 REMINDER: ${body}`);
-                }
-            }, 2000);
-        }
     });
     
     if (dateChanged) {
@@ -1840,6 +1830,89 @@ function checkAutoLogSubscriptions() {
         updateBudgetStatus();
     }
 }
+
+// ─── Check and show in-app popup + send daily notification ───
+function checkAndShowReminders() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user || subscriptions.length === 0) return;
+
+    const todayStr = getLocalDateString(new Date());
+    const lastReminderDay = localStorage.getItem(`lastReminderDay_${user.phone}`);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Find subscriptions due in 1 or 2 days
+    const upcomingSubs = subscriptions.filter(sub => {
+        if (!sub.nextBillingDate) return false;
+        const billingDate = new Date(sub.nextBillingDate);
+        billingDate.setHours(0,0,0,0);
+        const diffDays = Math.round((billingDate - today) / (1000 * 60 * 60 * 24));
+        return diffDays === 1 || diffDays === 2;
+    });
+
+    if (upcomingSubs.length === 0) return;
+
+    // ── Show in-app popup (always on app open if there are reminders) ──
+    const container = document.getElementById('reminder-list-container');
+    const modal = document.getElementById('sub-reminder-modal');
+    if (container && modal) {
+        container.innerHTML = '';
+        upcomingSubs.forEach(sub => {
+            const billingDate = new Date(sub.nextBillingDate);
+            billingDate.setHours(0,0,0,0);
+            const diffDays = Math.round((billingDate - today) / (1000 * 60 * 60 * 24));
+            const urgencyColor = diffDays === 1 ? '#ef4444' : '#f59e0b';
+            const urgencyText = diffDays === 1 ? 'Tomorrow!' : 'In 2 days';
+            const catEmojis = { 'Bills': '⚡', 'Food': '🍔', 'Shop': '🛍️', 'Travel': '🚌', 'Rent': '🏠', 'Other': '📦' };
+            const emoji = catEmojis[sub.category] || '📅';
+
+            const item = document.createElement('div');
+            item.style.cssText = `display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;`;
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="font-size:22px;">${emoji}</div>
+                    <div>
+                        <div style="font-size:12px; font-weight:800; color:#1e293b;">${sub.name}</div>
+                        <div style="font-size:10px; color:#64748b; font-weight:600;">Due: ${sub.nextBillingDate}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:13px; font-weight:800; color:#ef4444;">₹${sub.price}</div>
+                    <div style="font-size:9px; font-weight:800; color:${urgencyColor}; background:${urgencyColor}22; padding:2px 6px; border-radius:8px;">${urgencyText}</div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+
+        // Show popup with a slight delay so app feels ready
+        setTimeout(() => { modal.style.display = 'flex'; }, 1500);
+    }
+
+    // ── Send push notification once per day ──
+    if (lastReminderDay === todayStr) return; // Already sent today
+    localStorage.setItem(`lastReminderDay_${user.phone}`, todayStr);
+
+    // Request permission if not yet granted, then notify
+    requestNotificationPermission().then(granted => {
+        if (!granted) return;
+        upcomingSubs.forEach((sub, i) => {
+            const billingDate = new Date(sub.nextBillingDate);
+            billingDate.setHours(0,0,0,0);
+            const diffDays = Math.round((billingDate - today) / (1000 * 60 * 60 * 24));
+            const dueText = diffDays === 1 ? 'tomorrow' : 'in 2 days';
+            setTimeout(() => {
+                sendLocalNotification(
+                    `💳 ${sub.name} renews ${dueText}!`,
+                    `₹${sub.price} will be charged on ${sub.nextBillingDate}. Be prepared!`,
+                    `sub-reminder-${sub.id || sub.name}`
+                );
+            }, i * 1500); // stagger notifications
+        });
+    });
+}
+
+
 
 function initBillsView() {
     renderCalendar();
@@ -2083,5 +2156,6 @@ window.deleteSubscription = function(idx) {
 };
 
 window.checkAutoLogSubscriptions = checkAutoLogSubscriptions;
+window.checkAndShowReminders = checkAndShowReminders;
 window.initBillsView = initBillsView;
 
