@@ -1688,6 +1688,37 @@ button {
     transform: scale(0.9);
 }
 
-
-
-
+/* Suggestions Dropdown Styles */
+.suggestions-dropdown {
+    scrollbar-width: thin;
+}
+.dark-theme .suggestions-dropdown {
+    background: #1e293b !important;
+    border-color: var(--border-color) !important;
+}
+.suggestion-item {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-main);
+    transition: background 0.15s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+.suggestion-item:hover {
+    background: #f1f5f9;
+}
+.dark-theme .suggestion-item:hover {
+    background: #334155;
+}
+.suggestion-item-price {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 800;
+}

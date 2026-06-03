@@ -1825,6 +1825,72 @@ function initBillsView() {
         const offset = now.getTimezoneOffset() * 60000;
         defaultDateInput.value = new Date(now - offset).toISOString().split('T')[0];
     }
+
+    // --- Subscription Autocomplete Recommendations ---
+    const subNameInput = document.getElementById('sub-name');
+    const suggestionsBox = document.getElementById('sub-name-suggestions');
+    
+    const subRecommendations = [
+        { name: "Netflix", price: 199, cycle: "monthly", category: "Bills" },
+        { name: "Spotify", price: 119, cycle: "monthly", category: "Bills" },
+        { name: "YouTube Premium", price: 149, cycle: "monthly", category: "Bills" },
+        { name: "Mobile Recharge", price: 299, cycle: "monthly", category: "Bills" },
+        { name: "Gym Membership", price: 1000, cycle: "monthly", category: "Other" },
+        { name: "Amazon Prime", price: 179, cycle: "monthly", category: "Shop" },
+        { name: "Disney+ Hotstar", price: 299, cycle: "monthly", category: "Bills" },
+        { name: "iCloud Storage", price: 75, cycle: "monthly", category: "Bills" },
+        { name: "Rent", price: 10000, cycle: "monthly", category: "Rent" },
+        { name: "Broadband / WiFi", price: 799, cycle: "monthly", category: "Bills" },
+        { name: "GitHub Copilot", price: 900, cycle: "monthly", category: "Other" },
+        { name: "Microsoft 365", price: 489, cycle: "monthly", category: "Bills" },
+        { name: "Zomato Gold", price: 150, cycle: "monthly", category: "Food" },
+        { name: "Swiggy One", price: 150, cycle: "monthly", category: "Food" }
+    ];
+
+    if (subNameInput && suggestionsBox) {
+        subNameInput.addEventListener('input', () => {
+            const val = subNameInput.value.trim().toLowerCase();
+            if (!val) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            const matches = subRecommendations.filter(item => 
+                item.name.toLowerCase().includes(val)
+            );
+
+            if (matches.length === 0) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            suggestionsBox.innerHTML = '';
+            matches.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerHTML = `
+                    <span>${item.name}</span>
+                    <span class="suggestion-item-price">₹${item.price} • ${item.cycle}</span>
+                `;
+                div.addEventListener('click', () => {
+                    subNameInput.value = item.name;
+                    document.getElementById('sub-price').value = item.price;
+                    document.getElementById('sub-cycle').value = item.cycle;
+                    document.getElementById('sub-category').value = item.category;
+                    suggestionsBox.style.display = 'none';
+                });
+                suggestionsBox.appendChild(div);
+            });
+            suggestionsBox.style.display = 'block';
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target !== subNameInput && e.target !== suggestionsBox && !suggestionsBox.contains(e.target)) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    }
     
     // Wire up Add Subscription button
     const addSubBtn = document.getElementById('add-sub-btn');
@@ -1859,6 +1925,7 @@ function initBillsView() {
             // Clear inputs
             document.getElementById('sub-name').value = '';
             document.getElementById('sub-price').value = '';
+            if (suggestionsBox) suggestionsBox.style.display = 'none';
         });
     }
     
