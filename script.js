@@ -1803,6 +1803,33 @@ function checkAutoLogSubscriptions() {
         }
         
         sub.nextBillingDate = getLocalDateString(nextBill);
+        
+        // --- 2 Days Prior Renewal Reminder Alert ---
+        const billingDate = new Date(sub.nextBillingDate);
+        billingDate.setHours(0,0,0,0);
+        const diffTime = billingDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 2 && sub.lastReminderSentDate !== todayStr) {
+            sub.lastReminderSentDate = todayStr;
+            dateChanged = true;
+            
+            setTimeout(() => {
+                const title = "Subscription Reminder 🗓️";
+                const body = `${sub.name} renewal of ₹${sub.price} is due in 2 days (on ${sub.nextBillingDate}).`;
+                if (Notification.permission === "granted") {
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification(title, { body, icon: "/icon-192.png" });
+                        });
+                    } else {
+                        new Notification(title, { body, icon: "/icon-192.png" });
+                    }
+                } else {
+                    alert(`🔔 REMINDER: ${body}`);
+                }
+            }, 2000);
+        }
     });
     
     if (dateChanged) {
