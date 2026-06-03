@@ -1687,6 +1687,16 @@ navItems.forEach(item => {
                 summaryStrip.style.display = 'none';
             }
         }
+
+        // Show the floating quick-add button only on the Tracker page
+        const fabBtn = document.getElementById('fab-add-btn');
+        if (fabBtn) {
+            if (viewId === 'tracker-view') {
+                fabBtn.style.display = 'flex';
+            } else {
+                fabBtn.style.display = 'none';
+            }
+        }
         
         if (viewId === 'tracker-view') {
             renderTable();
