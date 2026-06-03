@@ -29,15 +29,18 @@ const progressFill = document.getElementById('progress-fill');
 // State
 let trackerData = [];
 let weeklyBudget = 0;
+let subscriptions = [];
 
 // Load user-specific cached data immediately on load if user is logged in
 const initialUser = JSON.parse(localStorage.getItem('currentUser'));
 if (initialUser && initialUser.phone) {
     trackerData = JSON.parse(localStorage.getItem(`trackerData_${initialUser.phone}`)) || [];
     weeklyBudget = parseFloat(localStorage.getItem(`weeklyBudget_${initialUser.phone}`)) || 0;
+    subscriptions = JSON.parse(localStorage.getItem(`subscriptions_${initialUser.phone}`)) || [];
 } else {
     trackerData = JSON.parse(localStorage.getItem('trackerData')) || [];
     weeklyBudget = parseFloat(localStorage.getItem('weeklyBudget')) || 0;
+    subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
 }
 
 // Chart management
@@ -76,6 +79,7 @@ function fireConfetti() {
 async function init() {
     // 1. Instantly process and display data from the local cache
     autoAddMissingDays();
+    checkAutoLogSubscriptions(); // Process due subscription bills on startup
     renderTable();
     updateChart();
     updateBudgetStatus();
@@ -185,6 +189,8 @@ async function fetchCloudData() {
         
         if (docSnap.exists()) {
             const data = docSnap.data();
+            let hasChanges = false;
+            
             if (data.trackerData) {
                 const localStr = JSON.stringify(trackerData);
                 const remoteStr = JSON.stringify(data.trackerData);
@@ -194,12 +200,25 @@ async function fetchCloudData() {
                 if (localStr !== remoteStr || localBudget !== remoteBudget) {
                     trackerData = data.trackerData;
                     weeklyBudget = remoteBudget;
-                    saveData(false); // Update local cache only
-                    renderTable();
-                    updateChart();
-                    updateBudgetStatus();
-                    if (budgetInput) budgetInput.value = weeklyBudget || '';
+                    hasChanges = true;
                 }
+            }
+
+            if (data.subscriptions) {
+                const localSubsStr = JSON.stringify(subscriptions);
+                const remoteSubsStr = JSON.stringify(data.subscriptions);
+                if (localSubsStr !== remoteSubsStr) {
+                    subscriptions = data.subscriptions;
+                    hasChanges = true;
+                }
+            }
+            
+            if (hasChanges) {
+                saveData(false); // Update local cache only
+                renderTable();
+                updateChart();
+                updateBudgetStatus();
+                if (budgetInput) budgetInput.value = weeklyBudget || '';
             }
         }
     } catch (err) {
@@ -216,6 +235,7 @@ async function syncToCloud() {
         await setDoc(docRef, {
             trackerData,
             weeklyBudget,
+            subscriptions,
             updatedAt: new Date().toISOString()
         });
         localStorage.removeItem(`unsynced_${user.phone}`);
@@ -573,14 +593,17 @@ function deleteRow(index) {
 function clearAll() {
     if (confirm('This will delete ALL entries. Proceed?')) {
         trackerData = [];
+        subscriptions = [];
         const user = JSON.parse(localStorage.getItem('currentUser'));
         if (user && user.phone) {
             localStorage.removeItem(`trackerData_${user.phone}`);
             localStorage.removeItem(`weeklyBudget_${user.phone}`);
+            localStorage.removeItem(`subscriptions_${user.phone}`);
             localStorage.setItem(`unsynced_${user.phone}`, 'true');
         } else {
             localStorage.removeItem('trackerData');
             localStorage.removeItem('weeklyBudget');
+            localStorage.removeItem('subscriptions');
         }
         init();
     }
@@ -590,9 +613,11 @@ function saveData(cloudSync = true) {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     const cacheKey = user && user.phone ? `trackerData_${user.phone}` : 'trackerData';
     const budgetKey = user && user.phone ? `weeklyBudget_${user.phone}` : 'weeklyBudget';
+    const subKey = user && user.phone ? `subscriptions_${user.phone}` : 'subscriptions';
 
     localStorage.setItem(cacheKey, JSON.stringify(trackerData));
     localStorage.setItem(budgetKey, weeklyBudget.toString());
+    localStorage.setItem(subKey, JSON.stringify(subscriptions));
 
     if (cloudSync && user && user.phone) {
         if (navigator.onLine) {
@@ -1703,6 +1728,8 @@ navItems.forEach(item => {
         } else if (viewId === 'analytics-view') {
             updateChart();
             initAnalytics();
+        } else if (viewId === 'bills-view') {
+            initBillsView();
         } else if (viewId === 'settings-view') {
             initSettings();
         }
@@ -1725,4 +1752,242 @@ window.addEventListener('online', () => {
 // Initial boot logic
 initUser();
 initSettings();
+
+// ===== BILLS & SUBSCRIPTION CALENDAR LOGIC =====
+let calendarDate = new Date(); // tracks current month viewed in calendar
+
+function checkAutoLogSubscriptions() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+    
+    let dateChanged = false;
+    const todayStr = getLocalDateString(new Date());
+    
+    subscriptions.forEach(sub => {
+        if (!sub.nextBillingDate) return;
+        
+        let nextBill = new Date(sub.nextBillingDate);
+        nextBill.setHours(0,0,0,0);
+        
+        let today = new Date();
+        today.setHours(0,0,0,0);
+        
+        // Loop to log missed billing cycles (e.g. if offline for a week or month)
+        while (nextBill <= today) {
+            const loggedDate = getLocalDateString(nextBill);
+            
+            // Add automatic spend row to trackerData
+            trackerData.unshift({
+                date: loggedDate,
+                earns: null,
+                other: null,
+                spends: sub.price,
+                category: sub.category || 'Bills'
+            });
+            
+            // Increment next billing date depending on subscription cycle
+            if (sub.cycle === 'weekly') {
+                nextBill.setDate(nextBill.getDate() + 7);
+            } else if (sub.cycle === 'yearly') {
+                nextBill.setFullYear(nextBill.getFullYear() + 1);
+            } else { // monthly
+                nextBill.setMonth(nextBill.getMonth() + 1);
+            }
+            
+            dateChanged = true;
+            
+            // Alert/Notify the user of auto-logged subscription
+            setTimeout(() => {
+                alert(`📅 Auto-logged recurring bill: ${sub.name} (₹${sub.price}) for ${loggedDate}`);
+            }, 1500);
+        }
+        
+        sub.nextBillingDate = getLocalDateString(nextBill);
+    });
+    
+    if (dateChanged) {
+        trackerData.sort((a, b) => b.date.localeCompare(a.date));
+        saveData();
+        renderTable();
+        updateChart();
+        updateBudgetStatus();
+    }
+}
+
+function initBillsView() {
+    renderCalendar();
+    renderSubscriptionsList();
+    
+    // Set default date input value to today in local timezone
+    const defaultDateInput = document.getElementById('sub-billing-date');
+    if (defaultDateInput && !defaultDateInput.value) {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        defaultDateInput.value = new Date(now - offset).toISOString().split('T')[0];
+    }
+    
+    // Wire up Add Subscription button
+    const addSubBtn = document.getElementById('add-sub-btn');
+    if (addSubBtn) {
+        const newAddBtn = addSubBtn.cloneNode(true);
+        addSubBtn.parentNode.replaceChild(newAddBtn, addSubBtn);
+        
+        newAddBtn.addEventListener('click', () => {
+            const name = document.getElementById('sub-name').value.trim();
+            const price = parseFloat(document.getElementById('sub-price').value) || 0;
+            const cycle = document.getElementById('sub-cycle').value;
+            const dateStr = document.getElementById('sub-billing-date').value;
+            const category = document.getElementById('sub-category').value;
+            
+            if (!name || price <= 0 || !dateStr) {
+                return alert("Please fill all subscription fields with valid values.");
+            }
+            
+            subscriptions.push({
+                id: Date.now().toString(),
+                name,
+                price,
+                cycle,
+                nextBillingDate: dateStr,
+                category
+            });
+            
+            saveData();
+            renderCalendar();
+            renderSubscriptionsList();
+            
+            // Clear inputs
+            document.getElementById('sub-name').value = '';
+            document.getElementById('sub-price').value = '';
+        });
+    }
+    
+    // Wire up Calendar navigation month controls
+    const prevMonthBtn = document.getElementById('prev-month-btn');
+    const nextMonthBtn = document.getElementById('next-month-btn');
+    if (prevMonthBtn) {
+        prevMonthBtn.onclick = () => {
+            calendarDate.setMonth(calendarDate.getMonth() - 1);
+            renderCalendar();
+        };
+    }
+    if (nextMonthBtn) {
+        nextMonthBtn.onclick = () => {
+            calendarDate.setMonth(calendarDate.getMonth() + 1);
+            renderCalendar();
+        };
+    }
+}
+
+function renderCalendar() {
+    const daysGrid = document.getElementById('calendar-days-grid');
+    const titleEl = document.getElementById('calendar-title');
+    if (!daysGrid || !titleEl) return;
+    
+    daysGrid.innerHTML = '';
+    
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    titleEl.textContent = `${monthNames[month]} ${year}`;
+    
+    // Align starting day of the week with Monday as 0 index
+    const firstDay = new Date(year, month, 1);
+    let startDayIndex = firstDay.getDay(); // 0 = Sunday, 1 = Monday
+    startDayIndex = startDayIndex === 0 ? 6 : startDayIndex - 1;
+    
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    
+    // Render blank spacing offsets
+    for (let i = 0; i < startDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-day empty';
+        daysGrid.appendChild(emptyCell);
+    }
+    
+    const today = new Date();
+    
+    // Render monthly calendar days
+    for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.textContent = day;
+        
+        const cellDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        // Highlight active today cell
+        if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day) {
+            dayCell.classList.add('today');
+        }
+        
+        // Check if there are active subscriptions due on this calendar cell
+        const dueSubs = subscriptions.filter(sub => sub.nextBillingDate === cellDateStr);
+        
+        if (dueSubs.length > 0) {
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'calendar-day-dots';
+            
+            dueSubs.slice(0, 3).forEach(sub => {
+                const dot = document.createElement('div');
+                dot.className = `calendar-dot ${sub.category.toLowerCase()}`;
+                dotsContainer.appendChild(dot);
+            });
+            
+            dayCell.appendChild(dotsContainer);
+            
+            // Add dynamic tap descriptions for subscriptions
+            dayCell.addEventListener('click', () => {
+                const subNames = dueSubs.map(s => `• ${s.name} (₹${s.price})`).join('\n');
+                alert(`📅 Subscriptions due on ${cellDateStr}:\n${subNames}`);
+            });
+        }
+        
+        daysGrid.appendChild(dayCell);
+    }
+}
+
+function renderSubscriptionsList() {
+    const container = document.getElementById('subs-list-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    if (subscriptions.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 11px; padding: 15px 0;">No active subscriptions tracked.</p>';
+        return;
+    }
+    
+    const catEmojis = { 'Bills': '⚡', 'Food': '🍔', 'Shop': '🛍️', 'Travel': '🚌', 'Rent': '🏠', 'Other': '📦' };
+    
+    subscriptions.forEach((sub, idx) => {
+        const card = document.createElement('div');
+        card.className = 'sub-item-card';
+        card.innerHTML = `
+            <div class="sub-item-left">
+                <div class="sub-item-icon">${catEmojis[sub.category] || '📅'}</div>
+                <div class="sub-item-details">
+                    <span class="sub-item-name">${sub.name}</span>
+                    <span class="sub-item-meta">${sub.cycle.toUpperCase()} • Next: ${sub.nextBillingDate}</span>
+                </div>
+            </div>
+            <div class="sub-item-right">
+                <span class="sub-item-price">₹${sub.price}</span>
+                <button class="sub-delete-btn" onclick="deleteSubscription(${idx})">✕</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+window.deleteSubscription = function(idx) {
+    if (confirm(`Stop tracking ${subscriptions[idx].name}?`)) {
+        subscriptions.splice(idx, 1);
+        saveData();
+        renderCalendar();
+        renderSubscriptionsList();
+    }
+};
+
+window.checkAutoLogSubscriptions = checkAutoLogSubscriptions;
+window.initBillsView = initBillsView;
 

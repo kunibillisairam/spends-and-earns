@@ -1505,5 +1505,189 @@ button {
     color: var(--text-muted);
 }
 
+/* ===== BILLS & SUBSCRIPTION CALENDAR STYLES ===== */
+.calendar-card, .add-sub-card, .subs-list-card {
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.dark-theme .calendar-card,
+.dark-theme .add-sub-card,
+.dark-theme .subs-list-card {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+.dark-theme .calendar-header button,
+.dark-theme .calendar-day.empty {
+    background: #0f172a !important;
+    color: var(--text-muted) !important;
+}
+
+.calendar-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-color);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    color: var(--text-main);
+}
+
+.dark-theme .calendar-day {
+    background: #0f172a;
+}
+
+.calendar-day:hover {
+    background: #e0e7ff;
+    color: var(--primary);
+}
+
+.dark-theme .calendar-day:hover {
+    background: #334155;
+    color: white;
+}
+
+.calendar-day.today {
+    background: var(--primary);
+    color: white !important;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.35);
+}
+
+.calendar-day.selected {
+    border: 2px solid var(--primary);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Dots under calendar day numbers */
+.calendar-day-dots {
+    display: flex;
+    gap: 3px;
+    margin-top: 2px;
+    justify-content: center;
+    width: 100%;
+}
+
+.calendar-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #6366f1; /* default primary dot */
+}
+
+/* Category or state colors for calendar dots */
+.calendar-dot.bills   { background: #ef4444; } /* red for bills */
+.calendar-dot.food    { background: #f59e0b; } /* yellow */
+.calendar-dot.shop    { background: #3b82f6; } /* blue */
+.calendar-dot.travel  { background: #10b981; } /* green */
+.calendar-dot.rent    { background: #a855f7; } /* purple */
+.calendar-dot.other   { background: #94a3b8; } /* grey */
+
+/* Tracked subscription row card style */
+.sub-item-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg-color);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.dark-theme .sub-item-card {
+    background: #0f172a;
+    border-color: var(--border-color);
+}
+
+.sub-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.sub-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sub-item-icon {
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+}
+
+.dark-theme .sub-item-icon {
+    background: #1e293b;
+}
+
+.sub-item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sub-item-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.sub-item-meta {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.sub-item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sub-item-price {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ef4444;
+}
+
+.sub-delete-btn {
+    border: none;
+    background: #fee2e2;
+    color: #ef4444;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.sub-delete-btn:active {
+    background: #fca5a5;
+    transform: scale(0.9);
+}
+
+
 
 
