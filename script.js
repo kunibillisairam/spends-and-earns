@@ -730,8 +730,13 @@ if (notifAllowBtn) {
         try {
             const permission = await Notification.requestPermission();
             if (permission === 'granted') {
-                const token = await getToken(messaging, { vapidKey: vapidKey });
+                const registration = await navigator.serviceWorker.ready;
+                const token = await getToken(messaging, { 
+                    vapidKey: vapidKey,
+                    serviceWorkerRegistration: registration
+                });
                 if (token) console.log('FCM Token generated');
+                checkAndShowReminders();
             }
         } catch (err) { console.error("Permission/Token error:", err); }
         hideBanner();
@@ -746,8 +751,30 @@ if (notifCloseBtn) {
 
 onMessage(messaging, (payload) => {
     if (Notification.permission === "granted") {
-        new Notification(payload.notification.title, { body: payload.notification.body, icon: "/icon-192.png" });
-    } else alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: "/icon-192.png"
+                });
+            }).catch(err => {
+                console.error("onMessage showNotification error:", err);
+                try {
+                    new Notification(payload.notification.title, { body: payload.notification.body, icon: "/icon-192.png" });
+                } catch (e) {
+                    alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+                }
+            });
+        } else {
+            try {
+                new Notification(payload.notification.title, { body: payload.notification.body, icon: "/icon-192.png" });
+            } catch (e) {
+                alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+            }
+        }
+    } else {
+        alert(`${payload.notification.title}\n\n${payload.notification.body}`);
+    }
 });
 
 const broadcastModal = document.getElementById('broadcast-modal');
@@ -1761,15 +1788,35 @@ let calendarDate = new Date(); // tracks current month viewed in calendar
 
 // ─── Send notification via Service Worker (works on mobile PWA) ───
 function sendLocalNotification(title, body, tag) {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-            type: 'SHOW_NOTIFICATION',
-            title,
-            body,
-            tag: tag || 'sub-reminder-' + Date.now()
+    if (Notification.permission !== 'granted') {
+        console.warn("sendLocalNotification called, but permission is not granted. Current permission:", Notification.permission);
+        return;
+    }
+    
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, {
+                body,
+                icon: '/icon-192.png',
+                badge: '/icon-192.png',
+                tag: tag || 'sub-reminder-' + Date.now(),
+                vibrate: [200, 100, 200],
+                data: { url: '/' }
+            });
+        }).catch(err => {
+            console.error("Failed to show notification via service worker ready:", err);
+            try {
+                new Notification(title, { body, icon: '/icon-192.png' });
+            } catch (e) {
+                console.error("Fallback notification constructor failed:", e);
+            }
         });
-    } else if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: '/icon-192.png' });
+    } else {
+        try {
+            new Notification(title, { body, icon: '/icon-192.png' });
+        } catch (e) {
+            console.error("Fallback notification constructor failed:", e);
+        }
     }
 }
 
