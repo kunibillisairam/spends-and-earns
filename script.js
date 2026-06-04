@@ -30,6 +30,21 @@ const progressFill = document.getElementById('progress-fill');
 let trackerData = [];
 let weeklyBudget = 0;
 let subscriptions = [];
+let hasChangesSinceLastSave = false;
+
+function setHasChangesSinceLastSave(val) {
+    hasChangesSinceLastSave = val;
+    const saveBtn = document.getElementById('save-btn');
+    if (saveBtn) {
+        if (val) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 Save';
+        } else {
+            saveBtn.disabled = true;
+            saveBtn.textContent = '✓ Saved';
+        }
+    }
+}
 
 // Load user-specific cached data immediately on load if user is logged in
 const initialUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -46,32 +61,42 @@ if (initialUser && initialUser.phone) {
 // Chart management
 let weeklyChart = null;
 
-// Confetti Gamification
+// Confetti Gamification - Premium Dual-Cannon Burst
 function fireConfetti() {
     if (typeof confetti === 'function') {
-        const duration = 2500;
-        const end = Date.now() + duration;
-
-        (function frame() {
+        // First burst
+        confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.9 },
+            colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
+        });
+        confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.9 },
+            colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
+        });
+        
+        // Second quick burst for a layered effect
+        setTimeout(() => {
             confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
+                particleCount: 30,
+                angle: 65,
+                spread: 50,
+                origin: { x: 0, y: 0.9 },
                 colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
             });
             confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
+                particleCount: 30,
+                angle: 115,
+                spread: 50,
+                origin: { x: 1, y: 0.9 },
                 colors: ['#10b981', '#3b82f6', '#f59e0b', '#a855f7']
             });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
-        }());
+        }, 150);
     }
 }
 
@@ -98,6 +123,8 @@ async function init() {
     }).catch(err => {
         console.error("Background sync error in init:", err);
     });
+
+    setHasChangesSinceLastSave(false);
 }
 
 async function recoverUserDocument() {
@@ -286,6 +313,7 @@ budgetInput.addEventListener('input', (e) => {
     weeklyBudget = parseFloat(e.target.value) || 0;
     saveData();
     updateBudgetStatus();
+    setHasChangesSinceLastSave(true);
 });
 
 function getLocalDateString(date) {
@@ -546,6 +574,7 @@ submitEntryBtn.addEventListener('click', () => {
     saveData();
     renderTable();
     addEntryModal.style.display = 'none';
+    setHasChangesSinceLastSave(true);
 
     // Gamification Milestone
     if (((earns || 0) + (other || 0)) > (spends || 0) * 1.5) {
@@ -565,6 +594,7 @@ function updateData(index, field, value) {
     if (field === 'date' || field === 'category') trackerData[index][field] = value;
     else trackerData[index][field] = value === '' ? null : parseFloat(value);
     saveData();
+    setHasChangesSinceLastSave(true);
     const activeEl = document.activeElement;
     const tr = activeEl ? activeEl.closest('tr') : null;
     if (tr) {
@@ -590,6 +620,7 @@ function deleteRow(index) {
         renderTable();
         updateChart();
         updateBudgetStatus();
+        setHasChangesSinceLastSave(true);
     }
 }
 
@@ -680,11 +711,15 @@ function updateGrandTotals(dataToCalculate = trackerData) {
 
 const saveBtn = document.getElementById('save-btn');
 function manualSave() {
+    if (!hasChangesSinceLastSave) return;
+
     saveData();
     updateChart();
-    const originalText = saveBtn.textContent;
-    saveBtn.textContent = 'Saved!';
-    saveBtn.style.opacity = '0.7';
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saved! 💾';
+    }
 
     // Milestone Check: Positive Balance
     let totalEarns = 0, totalSpends = 0;
@@ -694,8 +729,7 @@ function manualSave() {
     }
 
     setTimeout(() => {
-        saveBtn.textContent = originalText;
-        saveBtn.style.opacity = '1';
+        setHasChangesSinceLastSave(false);
     }, 1000);
 }
 
@@ -2119,6 +2153,7 @@ function initBillsView() {
             saveData();
             renderCalendar();
             renderSubscriptionsList();
+            setHasChangesSinceLastSave(true);
             
             // Clear inputs
             document.getElementById('sub-name').value = '';
@@ -2250,6 +2285,7 @@ window.deleteSubscription = function(idx) {
         saveData();
         renderCalendar();
         renderSubscriptionsList();
+        setHasChangesSinceLastSave(true);
     }
 };
 

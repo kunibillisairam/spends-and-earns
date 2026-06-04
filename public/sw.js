@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spends-earns-v6';
+const CACHE_NAME = 'spends-earns-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -26,9 +26,48 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
-  );
+  // Only handle GET requests for caching
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  const url = new URL(event.request.url);
+  
+  // 1. Network-First for HTML/navigation requests (ensures we get latest index.html with new CSS/JS hashes)
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+  } else {
+    // 2. Cache-First for other assets (CSS, JS, fonts, images, etc.)
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        
+        return fetch(event.request).then((networkResponse) => {
+          // Dynamically cache local assets (excluding API calls)
+          if (networkResponse.status === 200 && url.origin === self.location.origin && !url.pathname.includes('/api/')) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        }).catch(() => {
+          // Fail silently for network issues on assets
+        });
+      })
+    );
+  }
 });
 
 // Listen for messages from the main app to show notifications
