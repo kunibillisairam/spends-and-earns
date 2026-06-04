@@ -1841,3 +1841,38 @@ button {
 @keyframes fill-check {
     100% { box-shadow: inset 0px 0px 0px 40px rgba(16, 185, 129, 0.1); }
 }
+
+.export-fmt-btn {
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+.export-fmt-btn:hover {
+    border-color: #cbd5e1;
+}
+.export-fmt-btn.active {
+    border-color: #6366f1;
+    background: #f5f7ff;
+    color: #6366f1;
+}
+.dark-theme .export-fmt-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+.dark-theme .export-fmt-btn.active {
+    background: #1e1b4b;
+    border-color: #6366f1;
+    color: #e0e7ff;
+}

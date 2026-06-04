@@ -726,6 +726,18 @@
                         </div>
                     </div>
                 </div>
+                <!-- Export Format Selection -->
+                <div style="margin-top: 15px; margin-bottom: 20px; text-align: left;">
+                    <label style="font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 6px; display: block; text-transform: uppercase;">Export Format</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button id="export-fmt-csv" class="export-fmt-btn active" type="button">
+                            <span>📄</span> CSV Sheet
+                        </button>
+                        <button id="export-fmt-pdf" class="export-fmt-btn" type="button">
+                            <span>📕</span> PDF Statement
+                        </button>
+                    </div>
+                </div>
 
                 <button id="export-btn-prepare" class="primary-btn vibrant-shadow" style="width: 100%; padding: 14px; font-size: 14px; font-weight: 700; border-radius: 12px;">Prepare Report 🚀</button>
             </div>
@@ -741,7 +753,7 @@
                     </div>
                 </div>
 
-                <p style="font-size: 14px; color: #334155; line-height: 1.5; margin-bottom: 24px; font-weight: 600;">
+                <p id="export-confirm-msg-1" style="font-size: 14px; color: #334155; line-height: 1.5; margin-bottom: 24px; font-weight: 600;">
                     Are you sure you want to generate this financial CSV export?
                 </p>
 
@@ -755,7 +767,7 @@
             <div id="export-step-3" style="display: none;">
                 <div style="font-size: 50px; margin-bottom: 12px; animation: pulse 1s infinite alternate;">⚠️</div>
                 <h4 style="font-size: 16px; font-weight: 800; color: #dc2626; margin: 0 0 8px;">Final Confirmation</h4>
-                <p style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 24px; font-weight: 600;">
+                <p id="export-confirm-msg-2" style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 24px; font-weight: 600;">
                     Please confirm once more. Do you really want to download this CSV file now?
                 </p>
 
