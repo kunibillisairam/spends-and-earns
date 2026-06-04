@@ -1876,3 +1876,58 @@ button {
     border-color: #6366f1;
     color: #e0e7ff;
 }
+
+/* Avatar Customizer Styles */
+.avatar-emoji-item {
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+.avatar-emoji-item:hover {
+    transform: scale(1.15);
+    background: #f1f5f9;
+}
+.avatar-emoji-item.active {
+    border-color: #6366f1;
+    background: #e0e7ff;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.15);
+}
+
+.avatar-bg-item {
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+.avatar-bg-item:hover {
+    transform: scale(1.08);
+}
+.avatar-bg-item.active {
+    border-color: #0f172a;
+    box-shadow: 0 0 0 2px white inset, 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Dark theme overrides for avatar items */
+.dark-theme .avatar-emoji-item {
+    background: #1e293b;
+}
+.dark-theme .avatar-emoji-item:hover {
+    background: #334155;
+}
+.dark-theme .avatar-emoji-item.active {
+    background: #1e1b4b;
+    border-color: #6366f1;
+}
+.dark-theme .avatar-bg-item.active {
+    border-color: white;
+    box-shadow: 0 0 0 2px #0f172a inset, 0 4px 10px rgba(255,255,255,0.15);
+}
+

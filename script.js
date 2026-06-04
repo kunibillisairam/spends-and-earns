@@ -877,8 +877,26 @@ function initUser() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (user && user.username) {
         const initial = user.username.charAt(0).toUpperCase();
-        if (userInitial) userInitial.textContent = initial;
-        if (drawerInitial) drawerInitial.textContent = initial;
+        const customIcon = user.profileIcon;
+        const customBg = user.profileBg;
+
+        if (userInitial) {
+            userInitial.textContent = customIcon || initial;
+            userInitial.style.fontSize = customIcon ? '18px' : '';
+        }
+        const profileTriggerBtn = document.getElementById('profile-trigger');
+        if (profileTriggerBtn) {
+            profileTriggerBtn.style.background = customBg || '';
+        }
+
+        if (drawerInitial) {
+            drawerInitial.textContent = customIcon || initial;
+            drawerInitial.style.fontSize = customIcon ? '28px' : '';
+            const largeAvatarEl = document.querySelector('.large-avatar');
+            if (largeAvatarEl) {
+                largeAvatarEl.style.background = customBg || '';
+            }
+        }
         if (displayName) displayName.textContent = user.username;
         if (displayPhone) displayPhone.textContent = user.phone;
     }
@@ -1949,7 +1967,11 @@ async function initSettings() {
         const newName = document.getElementById('new-name');
         if (pName) pName.textContent = user.username;
         if (pPhone) pPhone.textContent = user.phone;
-        if (pAvatar) pAvatar.textContent = user.username.charAt(0).toUpperCase();
+        if (pAvatar) {
+            pAvatar.textContent = user.profileIcon || user.username.charAt(0).toUpperCase();
+            pAvatar.style.fontSize = user.profileIcon ? '24px' : '';
+            pAvatar.style.background = user.profileBg || '';
+        }
         if (newName) newName.value = user.username;
         
         const cacheKey = `userSettings_${user.phone}`;
@@ -2002,9 +2024,126 @@ const securityModal = document.getElementById('security-modal');
 const emailModal = document.getElementById('email-modal');
 const feedbackModal = document.getElementById('feedback-modal');
 const referModal = document.getElementById('refer-modal');
+const avatarModal = document.getElementById('avatar-modal');
 
 document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
 document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
+
+// --- Change Profile Icon Modal ---
+const emojiOptions = ["🦊", "🐱", "🦁", "🐼", "🐨", "🦄", "🚀", "💎", "💰", "💸", "📈", "💳", "⚡", "🕶️", "🎨", "🌟", "🍕", "☕", "🎮", "🦉", "🎯", "👑", "🔥", "⚽"];
+const bgOptions = [
+    'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', // Indigo-Purple (Default)
+    'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', // Teal-Green
+    'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)', // Rose-Orange
+    'linear-gradient(135deg, #f59e0b 0%, #eab308 100%)', // Gold-Amber
+    'linear-gradient(135deg, #475569 0%, #1e293b 100%)'  // Slate-Dark
+];
+
+let selectedEmoji = "";
+let selectedBg = "";
+
+function openAvatarModal() {
+    if (!avatarModal) return;
+
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    selectedEmoji = user.profileIcon || "";
+    selectedBg = user.profileBg || "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)";
+
+    // Setup preview
+    const previewEl = document.getElementById('avatar-preview');
+    if (previewEl) {
+        previewEl.textContent = selectedEmoji || user.username.charAt(0).toUpperCase();
+        previewEl.style.background = selectedBg;
+        previewEl.style.fontSize = selectedEmoji ? '28px' : '';
+    }
+
+    // Build emoji grid
+    const emojiGrid = document.getElementById('avatar-emoji-grid');
+    if (emojiGrid) {
+        emojiGrid.innerHTML = '';
+        emojiOptions.forEach(emoji => {
+            const item = document.createElement('div');
+            item.className = `avatar-emoji-item ${selectedEmoji === emoji ? 'active' : ''}`;
+            item.textContent = emoji;
+            item.addEventListener('click', () => {
+                if (selectedEmoji === emoji) {
+                    item.classList.remove('active');
+                    selectedEmoji = "";
+                    if (previewEl) {
+                        previewEl.textContent = user.username.charAt(0).toUpperCase();
+                        previewEl.style.fontSize = '';
+                    }
+                } else {
+                    document.querySelectorAll('.avatar-emoji-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                    selectedEmoji = emoji;
+                    if (previewEl) {
+                        previewEl.textContent = emoji;
+                        previewEl.style.fontSize = '28px';
+                    }
+                }
+            });
+            emojiGrid.appendChild(item);
+        });
+    }
+
+    // Build bg grid
+    const bgGrid = document.getElementById('avatar-bg-grid');
+    if (bgGrid) {
+        bgGrid.innerHTML = '';
+        bgOptions.forEach(bg => {
+            const item = document.createElement('div');
+            item.className = `avatar-bg-item ${selectedBg === bg ? 'active' : ''}`;
+            item.style.background = bg;
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-bg-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                selectedBg = bg;
+                if (previewEl) {
+                    previewEl.style.background = bg;
+                }
+            });
+            bgGrid.appendChild(item);
+        });
+    }
+
+    avatarModal.style.display = 'flex';
+}
+
+document.getElementById('change-avatar-btn')?.addEventListener('click', openAvatarModal);
+document.getElementById('p-avatar')?.addEventListener('click', openAvatarModal);
+document.getElementById('close-avatar-modal')?.addEventListener('click', () => {
+    if (avatarModal) avatarModal.style.display = 'none';
+});
+
+document.getElementById('save-avatar')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-avatar');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        btn.textContent = "Syncing...";
+        btn.disabled = true;
+        try {
+            await updateDoc(doc(db, "users", user.phone), { 
+                profileIcon: selectedEmoji, 
+                profileBg: selectedBg 
+            });
+            user.profileIcon = selectedEmoji;
+            user.profileBg = selectedBg;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            if (avatarModal) avatarModal.style.display = 'none';
+            initUser();
+            initSettings();
+        } catch (err) {
+            console.error(err);
+            alert("Sync failed.");
+        } finally {
+            btn.textContent = "Save Icon";
+            btn.disabled = false;
+        }
+    }
+});
 
 document.getElementById('close-security-modal')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'none'; });
 

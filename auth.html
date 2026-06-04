@@ -612,7 +612,9 @@
                         if (userData.password === password) {
                             localStorage.setItem('currentUser', JSON.stringify({
                                 username: userData.username,
-                                phone: userData.phone
+                                phone: userData.phone,
+                                profileIcon: userData.profileIcon || '',
+                                profileBg: userData.profileBg || ''
                             }));
                             window.location.replace('index.html');
                         } else {
