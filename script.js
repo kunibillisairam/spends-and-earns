@@ -1077,7 +1077,7 @@ btnPrepare?.addEventListener('click', () => {
     
     const fmtLabelName = selectedExportFormat === 'pdf' ? 'PDF bank statement' : 'CSV spreadsheet';
     const fmtFileName = selectedExportFormat === 'pdf' ? 'PDF statement' : 'CSV file';
-    const btnActionLabel = selectedExportFormat === 'pdf' ? 'Yes, Open Print! 🖨️' : 'Yes, Download! 📥';
+    const btnActionLabel = 'Yes, Download! 📥';
     
     if (confirmMsg1) {
         confirmMsg1.textContent = `Are you sure you want to generate this financial ${fmtLabelName}?`;
@@ -1124,7 +1124,7 @@ btnConfirm2?.addEventListener('click', () => {
     }
     if (successDesc) {
         successDesc.textContent = selectedExportFormat === 'pdf' 
-            ? 'The printer dialog will open shortly.' 
+            ? 'Your PDF statement download has started.' 
             : 'Your CSV file download has started.';
     }
     
@@ -1195,8 +1195,8 @@ function downloadCSVData(data) {
     URL.revokeObjectURL(encodedUri);
 }
 
-// PDF Bank Statement Generator
-function downloadPDFData(data, dateRangeLabel) {
+// PDF Bank Statement Generator (Direct Download via html2pdf)
+async function downloadPDFData(data, dateRangeLabel) {
     const user = JSON.parse(localStorage.getItem('currentUser')) || { username: 'Valued User', phone: 'N/A' };
     const username = user.username || 'Valued User';
     const phone = user.phone || 'N/A';
@@ -1217,232 +1217,125 @@ function downloadPDFData(data, dateRangeLabel) {
         
         return `
             <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-family: monospace; border-bottom: 1px solid #e2e8f0;">${row.date}</td>
-                <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${row.category || '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${earns > 0 ? '#10b981' : '#64748b'}; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${earns > 0 ? '₹' + earns.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${other > 0 ? '#10b981' : '#64748b'}; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${other > 0 ? '₹' + other.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${spends > 0 ? '#ef4444' : '#64748b'}; font-weight: 600; border-bottom: 1px solid #e2e8f0;">${spends > 0 ? '₹' + spends.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${balance >= 0 ? '#059669' : '#dc2626'}; font-weight: 700; border-bottom: 1px solid #e2e8f0;">₹${balance.toLocaleString()}</td>
+                <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-family: monospace;">${row.date}</td>
+                <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-weight: 600;">${row.category || '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${earns > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${earns > 0 ? '₹' + earns.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${other > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${other > 0 ? '₹' + other.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${spends > 0 ? '#ef4444' : '#64748b'}; font-weight: 600;">${spends > 0 ? '₹' + spends.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${balance >= 0 ? '#059669' : '#dc2626'}; font-weight: 700;">₹${balance.toLocaleString()}</td>
             </tr>
         `;
     }).join('');
 
     const overallIncome = totalEarns + totalOther;
     const netBalance = overallIncome - totalSpends;
+
+    const docTitle = `Financial_Statement_${dateRangeLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+    // Create a temporary container for html2pdf
+    const element = document.createElement('div');
+    element.style.position = 'absolute';
+    element.style.left = '-9999px';
+    element.style.top = '0';
+    element.style.width = '750px'; // standard width for standard A4 scale
+    element.style.padding = '24px';
+    element.style.fontFamily = "'Inter', -apple-system, sans-serif";
+    element.style.color = '#1e293b';
+    element.style.background = '#ffffff';
     
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert("Pop-up blocker is enabled! Please allow popups to download the PDF Statement.");
-        return;
+    element.innerHTML = `
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px;">
+            <div>
+                <h1 style="margin: 0 0 4px; font-size: 22px; font-weight: 800; color: #6366f1; letter-spacing: -0.5px;">SPENDS & EARNS</h1>
+                <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">Personal Finance Ledger</p>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="margin: 0 0 6px; font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: 0.5px;">FINANCIAL STATEMENT</h2>
+                <p style="margin: 2px 0; font-size: 11px; color: #64748b; font-weight: 500;"><strong>Period:</strong> ${dateRangeLabel}</p>
+                <p style="margin: 2px 0; font-size: 11px; color: #64748b; font-weight: 500;"><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+            <h3 style="margin: 0 0 6px; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Account Holder Info</h3>
+            <p style="margin: 4px 0; font-size: 12px; font-weight: 600;">Name: <span style="color:#0f172a;">${username}</span></p>
+            <p style="margin: 4px 0; font-size: 12px; font-weight: 600;">Phone: <span style="color:#0f172a;">${phone}</span></p>
+        </div>
+        
+        <div style="display: flex; gap: 16px; margin-bottom: 24px; width: 100%;">
+            <div style="flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-sizing: border-box;">
+                <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Income</div>
+                <div style="font-size: 18px; font-weight: 800; color: #10b981;">₹${overallIncome.toLocaleString()}</div>
+            </div>
+            <div style="flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-sizing: border-box;">
+                <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Spends</div>
+                <div style="font-size: 18px; font-weight: 800; color: #ef4444;">₹${totalSpends.toLocaleString()}</div>
+            </div>
+            <div style="flex: 1; background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px; box-sizing: border-box;">
+                <div style="font-size: 10px; font-weight: 700; color: #4f46e5; text-transform: uppercase; margin-bottom: 4px;">Net Balance</div>
+                <div style="font-size: 18px; font-weight: 800; color: #4f46e5;">₹${netBalance.toLocaleString()}</div>
+            </div>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+            <thead>
+                <tr>
+                    <th style="width: 15%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: left; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Date</th>
+                    <th style="width: 20%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: left; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Category</th>
+                    <th style="width: 15%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: right; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Earnings</th>
+                    <th style="width: 15%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: right; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Other Inc.</th>
+                    <th style="width: 15%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: right; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Spends</th>
+                    <th style="width: 20%; background-color: #f1f5f9; color: #475569; font-weight: 700; font-size: 10px; text-transform: uppercase; text-align: right; padding: 10px 12px; border-bottom: 2px solid #cbd5e1;">Running Bal.</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+        </table>
+        
+        <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+            This is a computer-generated financial statement of your expenses and earnings registered in the Spends & Earns application.
+        </div>
+    `;
+
+    document.body.appendChild(element);
+    
+    // Load library dynamically and perform direct PDF Blob download
+    try {
+        const html2pdfLib = await loadHtml2Pdf();
+        const opt = {
+            margin:       12,
+            filename:     `${docTitle}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        const blob = await html2pdfLib().set(opt).from(element).outputPdf('blob');
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `${docTitle}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+        console.error("PDF download failed:", err);
+        alert("Failed to download PDF Statement directly. Please check your internet connection.");
+    } finally {
+        document.body.removeChild(element);
     }
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Financial_Statement_${dateRangeLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}</title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 15mm;
-                }
-                body {
-                    font-family: 'Inter', -apple-system, sans-serif;
-                    color: #1e293b;
-                    margin: 0;
-                    padding: 0;
-                    line-height: 1.5;
-                }
-                .statement-header {
-                    display: flex;
-                    justify-content: space-between;
-                    border-bottom: 2px solid #e2e8f0;
-                    padding-bottom: 16px;
-                    margin-bottom: 24px;
-                }
-                .logo-section h1 {
-                    margin: 0 0 4px;
-                    font-size: 22px;
-                    font-weight: 800;
-                    color: #6366f1;
-                    letter-spacing: -0.5px;
-                }
-                .logo-section p {
-                    margin: 0;
-                    font-size: 11px;
-                    color: #64748b;
-                    font-weight: 600;
-                    letter-spacing: 0.5px;
-                    text-transform: uppercase;
-                }
-                .meta-section {
-                    text-align: right;
-                }
-                .meta-section h2 {
-                    margin: 0 0 6px;
-                    font-size: 16px;
-                    font-weight: 800;
-                    color: #0f172a;
-                    letter-spacing: 0.5px;
-                }
-                .meta-section p {
-                    margin: 2px 0;
-                    font-size: 11px;
-                    color: #64748b;
-                    font-weight: 500;
-                }
-                .customer-card {
-                    background: #f8fafc;
-                    border-radius: 10px;
-                    padding: 14px;
-                    margin-bottom: 24px;
-                    border: 1px solid #e2e8f0;
-                }
-                .customer-card h3 {
-                    margin: 0 0 6px;
-                    font-size: 10px;
-                    color: #64748b;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-                .customer-card p {
-                    margin: 4px 0;
-                    font-size: 12px;
-                    font-weight: 600;
-                }
-                .summary-grid {
-                    display: flex;
-                    gap: 16px;
-                    margin-bottom: 24px;
-                }
-                .summary-card {
-                    flex: 1;
-                    background: #fff;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 10px;
-                    padding: 14px;
-                }
-                .summary-card.balance {
-                    background: #e0e7ff;
-                    border-color: #c7d2fe;
-                }
-                .summary-label {
-                    font-size: 10px;
-                    font-weight: 700;
-                    color: #64748b;
-                    text-transform: uppercase;
-                    margin-bottom: 4px;
-                }
-                .summary-val {
-                    font-size: 18px;
-                    font-weight: 800;
-                }
-                .summary-val.earn { color: #10b981; }
-                .summary-val.spend { color: #ef4444; }
-                .summary-val.balance { color: #4f46e5; }
-                
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 40px;
-                }
-                th {
-                    background-color: #f1f5f9;
-                    color: #475569;
-                    font-weight: 700;
-                    font-size: 10px;
-                    text-transform: uppercase;
-                    text-align: left;
-                    padding: 10px 12px;
-                    border-bottom: 2px solid #cbd5e1;
-                }
-                .footer {
-                    margin-top: 40px;
-                    text-align: center;
-                    font-size: 10px;
-                    color: #94a3b8;
-                    border-top: 1px solid #e2e8f0;
-                    padding-top: 12px;
-                }
-                @media print {
-                    body {
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    .summary-card {
-                        border: 1px solid #cbd5e1 !important;
-                    }
-                    .summary-card.balance {
-                        background-color: #e0e7ff !important;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="statement-header">
-                <div class="logo-section">
-                    <h1>SPENDS & EARNS</h1>
-                    <p>Personal Finance Ledger</p>
-                </div>
-                <div class="meta-section">
-                    <h2>FINANCIAL STATEMENT</h2>
-                    <p><strong>Period:</strong> ${dateRangeLabel}</p>
-                    <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
-                </div>
-            </div>
-            
-            <div class="customer-card">
-                <h3>Account Holder Info</h3>
-                <p>Name: <span style="color:#0f172a;">${username}</span></p>
-                <p>Phone: <span style="color:#0f172a;">${phone}</span></p>
-            </div>
-            
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <div class="summary-label">Total Income</div>
-                    <div class="summary-val earn">₹${overallIncome.toLocaleString()}</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-label">Total Spends</div>
-                    <div class="summary-val spend">₹${totalSpends.toLocaleString()}</div>
-                </div>
-                <div class="summary-card balance">
-                    <div class="summary-label" style="color: #4f46e5;">Net Balance</div>
-                    <div class="summary-val balance">₹${netBalance.toLocaleString()}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 15%;">Date</th>
-                        <th style="width: 20%;">Category</th>
-                        <th style="width: 15%; text-align: right;">Earnings</th>
-                        <th style="width: 15%; text-align: right;">Other Inc.</th>
-                        <th style="width: 15%; text-align: right;">Spends</th>
-                        <th style="width: 20%; text-align: right;">Running Bal.</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rowsHtml}
-                </tbody>
-            </table>
-            
-            <div class="footer">
-                This is a computer-generated financial statement of your expenses and earnings registered in the Spends & Earns application.
-            </div>
-            
-            <script>
-                window.onload = function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 500);
-                }
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
+}
+
+function loadHtml2Pdf() {
+    return new Promise((resolve, reject) => {
+        if (window.html2pdf) return resolve(window.html2pdf);
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = () => resolve(window.html2pdf);
+        script.onerror = () => reject(new Error('Failed to load html2pdf library'));
+        document.head.appendChild(script);
+    });
 }
 
 // Profile Drawer Item Navigation & Actions
