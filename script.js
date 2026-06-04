@@ -1085,17 +1085,39 @@ btnConfirm2?.addEventListener('click', () => {
 // CSV Generator
 function downloadCSVData(data) {
     const headers = ["Date", "Earnings (₹)", "Other Income (₹)", "Spends (₹)", "Balance (₹)", "Category"];
+    
+    let totalEarns = 0;
+    let totalOther = 0;
+    let totalSpends = 0;
+    
     const rows = data.map(row => {
-        const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
+        const earns = row.earns || 0;
+        const other = row.other || 0;
+        const spends = row.spends || 0;
+        
+        totalEarns += earns;
+        totalOther += other;
+        totalSpends += spends;
+        
+        const balance = earns + other - spends;
         return [
             row.date,
-            row.earns || 0,
-            row.other || 0,
-            row.spends || 0,
+            earns,
+            other,
+            spends,
             balance,
             row.category || "-"
         ];
     });
+
+    const overallIncome = totalEarns + totalOther;
+    const netBalance = overallIncome - totalSpends;
+
+    // Append bank statement style summary rows
+    rows.push(["", "", "", "", "", ""]); // Empty spacer row
+    rows.push(["", "", "", "Total Income (₹)", overallIncome, ""]);
+    rows.push(["", "", "", "Total Spends (₹)", totalSpends, ""]);
+    rows.push(["", "", "", "Net Balance (₹)", netBalance, ""]);
 
     let csvContent = "\ufeff" + headers.join(",") + "\n"
         + rows.map(e => e.map(val => `"${val}"`).join(",")).join("\n");
