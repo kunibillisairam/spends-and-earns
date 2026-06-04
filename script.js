@@ -893,39 +893,225 @@ logoutBtn?.addEventListener('click', () => {
     window.location.replace('auth.html'); 
 });
 
-// CSV Export Logic
+// ===== Advanced CSV Export Logic with Double Confirmation =====
 const exportCsvBtn = document.getElementById('export-csv-btn');
+const exportModal = document.getElementById('export-modal');
+const exportCloseBtn = document.getElementById('close-export-modal');
+const exportOptionCards = document.querySelectorAll('.export-option-card');
+const exportCustomDates = document.getElementById('export-custom-dates');
+const exportFromInput = document.getElementById('export-from-date');
+const exportToInput = document.getElementById('export-to-date');
+
+const exportStep1 = document.getElementById('export-step-1');
+const exportStep2 = document.getElementById('export-step-2');
+const exportStep3 = document.getElementById('export-step-3');
+const exportStepSuccess = document.getElementById('export-step-success');
+
+const btnPrepare = document.getElementById('export-btn-prepare');
+const btnBack1 = document.getElementById('export-btn-back-1');
+const btnConfirm1 = document.getElementById('export-btn-confirm-1');
+const btnCancel = document.getElementById('export-btn-cancel');
+const btnConfirm2 = document.getElementById('export-btn-confirm-2');
+
+const summaryRangeText = document.getElementById('export-summary-range');
+const summaryCountText = document.getElementById('export-summary-count');
+
+let filteredExportData = [];
+let selectedExportRange = "full";
+
+function resetExportModal() {
+    exportStep1.style.display = "block";
+    exportStep2.style.display = "none";
+    exportStep3.style.display = "none";
+    exportStepSuccess.style.display = "none";
+    
+    // Reset cards to default (full)
+    exportOptionCards.forEach(card => card.classList.remove('active'));
+    const defaultCard = document.querySelector('.export-option-card[data-range="full"]');
+    if (defaultCard) defaultCard.classList.add('active');
+    selectedExportRange = "full";
+    if (exportCustomDates) exportCustomDates.style.display = "none";
+    if (exportFromInput) exportFromInput.value = "";
+    if (exportToInput) exportToInput.value = "";
+    filteredExportData = [];
+}
+
+// Open modal
 exportCsvBtn?.addEventListener('click', () => {
+    // Close the profile drawer
+    const drawer = document.getElementById('profile-drawer');
+    if (drawer) drawer.style.display = 'none';
+    
     if (trackerData.length === 0) {
         alert("No data to export!");
         return;
     }
+    
+    resetExportModal();
+    if (exportModal) exportModal.style.display = 'flex';
+});
 
-    const headers = ["Date", "Earnings", "Other Income", "Spends", "Balance"];
-    const rows = trackerData.map(row => {
+// Close modal when clicking Close button
+exportCloseBtn?.addEventListener('click', () => {
+    if (exportModal) exportModal.style.display = 'none';
+});
+
+// Close modal when clicking outside contents
+exportModal?.addEventListener('click', (e) => {
+    if (e.target === exportModal) {
+        exportModal.style.display = 'none';
+    }
+});
+
+// Option card switching
+exportOptionCards.forEach(card => {
+    card.addEventListener('click', () => {
+        exportOptionCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const range = card.getAttribute('data-range');
+        selectedExportRange = range;
+        
+        if (range === 'custom') {
+            if (exportCustomDates) exportCustomDates.style.display = 'block';
+        } else {
+            if (exportCustomDates) exportCustomDates.style.display = 'none';
+        }
+    });
+});
+
+// Step 1: Prepare Report
+btnPrepare?.addEventListener('click', () => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    
+    let summaryText = "";
+    
+    if (selectedExportRange === 'full') {
+        filteredExportData = [...trackerData];
+        summaryText = "All Time Report";
+    } else if (selectedExportRange === 'week') {
+        const boundary = new Date();
+        boundary.setDate(today.getDate() - 7);
+        boundary.setHours(0, 0, 0, 0);
+        
+        filteredExportData = trackerData.filter(row => {
+            const rDate = new Date(row.date);
+            return rDate >= boundary && rDate <= today;
+        });
+        summaryText = "Last 7 Days";
+    } else if (selectedExportRange === 'month') {
+        const boundary = new Date();
+        boundary.setDate(today.getDate() - 30);
+        boundary.setHours(0, 0, 0, 0);
+        
+        filteredExportData = trackerData.filter(row => {
+            const rDate = new Date(row.date);
+            return rDate >= boundary && rDate <= today;
+        });
+        summaryText = "Last 30 Days";
+    } else if (selectedExportRange === 'custom') {
+        const fromVal = exportFromInput.value;
+        const toVal = exportToInput.value;
+        if (!fromVal || !toVal) {
+            alert("Please choose both start and end dates.");
+            return;
+        }
+        
+        const fromDate = new Date(fromVal);
+        fromDate.setHours(0, 0, 0, 0);
+        const toDate = new Date(toVal);
+        toDate.setHours(23, 59, 59, 999);
+        
+        if (fromDate > toDate) {
+            alert("From Date cannot be after To Date.");
+            return;
+        }
+        
+        filteredExportData = trackerData.filter(row => {
+            const rDate = new Date(row.date);
+            return rDate >= fromDate && rDate <= toDate;
+        });
+        
+        const fmt = { month: 'short', day: 'numeric', year: 'numeric' };
+        summaryText = `${fromDate.toLocaleDateString(undefined, fmt)} - ${toDate.toLocaleDateString(undefined, fmt)}`;
+    }
+    
+    if (filteredExportData.length === 0) {
+        alert("No transaction records found for the selected period.");
+        return;
+    }
+    
+    // Sort chronologically by date
+    filteredExportData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Go to step 2
+    if (summaryRangeText) summaryRangeText.textContent = summaryText;
+    if (summaryCountText) summaryCountText.textContent = `${filteredExportData.length} records`;
+    
+    exportStep1.style.display = "none";
+    exportStep2.style.display = "block";
+});
+
+// Step 2 controls
+btnBack1?.addEventListener('click', () => {
+    exportStep2.style.display = "none";
+    exportStep1.style.display = "block";
+});
+
+btnConfirm1?.addEventListener('click', () => {
+    exportStep2.style.display = "none";
+    exportStep3.style.display = "block";
+});
+
+// Step 3 controls
+btnCancel?.addEventListener('click', () => {
+    resetExportModal();
+});
+
+btnConfirm2?.addEventListener('click', () => {
+    exportStep3.style.display = "none";
+    exportStepSuccess.style.display = "block";
+    
+    // Fire CSV download
+    downloadCSVData(filteredExportData);
+    
+    // Auto close after 1.5s
+    setTimeout(() => {
+        if (exportModal) exportModal.style.display = 'none';
+        resetExportModal();
+    }, 1500);
+});
+
+// CSV Generator
+function downloadCSVData(data) {
+    const headers = ["Date", "Earnings (₹)", "Other Income (₹)", "Spends (₹)", "Balance (₹)", "Category"];
+    const rows = data.map(row => {
         const balance = (row.earns || 0) + (row.other || 0) - (row.spends || 0);
         return [
             row.date,
             row.earns || 0,
             row.other || 0,
             row.spends || 0,
-            balance
+            balance,
+            row.category || "-"
         ];
     });
 
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + headers.join(",") + "\n"
-        + rows.map(e => e.join(",")).join("\n");
+    let csvContent = "\ufeff" + headers.join(",") + "\n"
+        + rows.map(e => e.map(val => `"${val}"`).join(",")).join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUri = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    const fileName = `Expense_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const fileName = `Expense_Report_${dateStr}.csv`;
     link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-});
+    URL.revokeObjectURL(encodedUri);
+}
 
 // Profile Drawer Item Navigation & Actions
 const drawerSettingsBtn = document.getElementById('drawer-settings-btn');

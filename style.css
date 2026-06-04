@@ -1739,3 +1739,105 @@ button {
     color: var(--text-muted);
     font-weight: 800;
 }
+
+/* =============================================
+   ADVANCED CSV EXPORT MODAL STYLES
+   ============================================= */
+.export-option-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+    position: relative;
+}
+.export-option-card:hover {
+    border-color: #6366f1;
+    background: #f1f5f9;
+}
+.export-option-card.active {
+    border-color: #6366f1;
+    background: #f5f7ff;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+.export-check-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: block;
+    position: relative;
+    transition: all 0.2s ease;
+}
+.export-option-card.active .export-check-dot {
+    border-color: #6366f1;
+    background: #6366f1;
+}
+.export-option-card.active .export-check-dot::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+/* Dark theme overrides */
+.dark-theme .export-option-card {
+    background: #1e293b;
+    border-color: #334155;
+}
+.dark-theme .export-option-card:hover {
+    background: #334155;
+    border-color: #4f46e5;
+}
+.dark-theme .export-option-card.active {
+    background: #1e1b4b;
+    border-color: #6366f1;
+}
+.dark-theme .export-option-card.active .export-check-dot {
+    border-color: #6366f1;
+}
+
+/* Success Checkmark Animation */
+.checkmark-svg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #10b981;
+    stroke-miterlimit: 10;
+    box-shadow: inset 0px 0px 0px #10b981;
+    animation: fill-check .4s ease-in-out .4s forwards, scale-check .3s ease-in-out 0s both;
+}
+.checkmark-circle {
+    stroke-width: 2;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-miterlimit: 10;
+    stroke: #10b981;
+    fill: none;
+    animation: stroke-check .6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+.checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: stroke-check .3s cubic-bezier(0.65, 0, 0.45, 1) .8s forwards;
+}
+@keyframes stroke-check {
+    100% { stroke-dashoffset: 0; }
+}
+@keyframes scale-check {
+    0%, 100% { transform: none; }
+    50% { transform: scale3d(1.1, 1.1, 1); }
+}
+@keyframes fill-check {
+    100% { box-shadow: inset 0px 0px 0px 40px rgba(16, 185, 129, 0.1); }
+}
