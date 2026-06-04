@@ -893,6 +893,57 @@ exportCsvBtn?.addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
+// Profile Drawer Item Navigation & Actions
+const drawerSettingsBtn = document.getElementById('drawer-settings-btn');
+if (drawerSettingsBtn) {
+    drawerSettingsBtn.addEventListener('click', () => {
+        if (profileDrawer) profileDrawer.style.display = 'none';
+
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(i => i.classList.remove('active'));
+
+        const appViews = document.querySelectorAll('.app-view');
+        appViews.forEach(v => v.classList.remove('active'));
+        
+        const settingsView = document.getElementById('settings-view');
+        if (settingsView) settingsView.classList.add('active');
+
+        const summaryStrip = document.getElementById('summary-strip');
+        if (summaryStrip) summaryStrip.style.display = 'none';
+
+        const fabBtn = document.getElementById('fab-add-btn');
+        if (fabBtn) fabBtn.style.display = 'none';
+
+        initSettings();
+    });
+}
+
+const drawerSecurityBtn = document.getElementById('drawer-security-btn');
+if (drawerSecurityBtn) {
+    drawerSecurityBtn.addEventListener('click', () => {
+        if (drawerSettingsBtn) {
+            drawerSettingsBtn.click();
+            setTimeout(() => {
+                const securityBtnSettings = document.getElementById('security-btn-settings');
+                if (securityBtnSettings) securityBtnSettings.click();
+            }, 150);
+        }
+    });
+}
+
+const drawerHelpBtn = document.getElementById('drawer-help-btn');
+if (drawerHelpBtn) {
+    drawerHelpBtn.addEventListener('click', () => {
+        if (drawerSettingsBtn) {
+            drawerSettingsBtn.click();
+            setTimeout(() => {
+                const feedbackBtnSettings = document.getElementById('feedback-btn-settings');
+                if (feedbackBtnSettings) feedbackBtnSettings.click();
+            }, 150);
+        }
+    });
+}
+
 // --- APP LOCK SECURITY MODULE ---
 async function checkAppLock() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
