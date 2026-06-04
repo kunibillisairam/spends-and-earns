@@ -851,7 +851,10 @@
 
             <!-- Emojis Grid -->
             <div style="font-weight: 700; font-size: 11px; margin-bottom: 8px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px;">Select Icon</div>
-            <div id="avatar-emoji-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; max-height: 120px; overflow-y: auto; padding: 2px;">
+            <div id="avatar-categories" style="display: flex; gap: 4px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none;">
+                <!-- Category buttons will be injected dynamically -->
+            </div>
+            <div id="avatar-emoji-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; max-height: 220px; overflow-y: auto; padding: 2px; scroll-behavior: smooth;">
                 <!-- Emojis will be injected dynamically -->
             </div>
 

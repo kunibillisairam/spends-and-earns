@@ -32,6 +32,47 @@ let weeklyBudget = 0;
 let subscriptions = [];
 let hasChangesSinceLastSave = false;
 
+// ── Global Currency System ──
+const SUPPORTED_CURRENCIES = {
+    'INR': { symbol: '₹', name: 'Indian Rupee', flag: '🇮🇳' },
+    'USD': { symbol: '$', name: 'US Dollar', flag: '🇺🇸' },
+    'EUR': { symbol: '€', name: 'Euro', flag: '🇪🇺' },
+    'GBP': { symbol: '£', name: 'British Pound', flag: '🇬🇧' },
+    'AED': { symbol: 'د.إ', name: 'UAE Dirham', flag: '🇦🇪' }
+};
+let selectedCurrency = localStorage.getItem('selectedCurrency') || 'INR';
+
+// Currency Symbol shortcut - used everywhere in the app
+function CS() {
+    return SUPPORTED_CURRENCIES[selectedCurrency]?.symbol || '₹';
+}
+
+function setCurrency(code) {
+    if (!SUPPORTED_CURRENCIES[code]) return;
+    selectedCurrency = code;
+    localStorage.setItem('selectedCurrency', code);
+    
+    // Re-render everything with the new currency symbol
+    renderTable();
+    updateGrandTotals();
+    updateChart();
+    updateBudgetStatus();
+    
+    // Update currency display label in settings
+    const currLabel = document.getElementById('currency-current-label');
+    if (currLabel) {
+        currLabel.textContent = `${SUPPORTED_CURRENCIES[code].flag} ${SUPPORTED_CURRENCIES[code].symbol} ${code}`;
+    }
+    
+    // Sync to Firebase
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user && user.phone) {
+        import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js").then(({ updateDoc, doc: fbDoc }) => {
+            updateDoc(fbDoc(db, "users", user.phone), { currency: code }).catch(e => console.warn("Currency sync failed:", e));
+        });
+    }
+}
+
 function setHasChangesSinceLastSave(val) {
     hasChangesSinceLastSave = val;
     const saveBtn = document.getElementById('save-btn');
@@ -455,7 +496,7 @@ function createCardUI(row, index, container) {
             <input type="date" class="card-date-input" value="${row.date || ''}" 
                 onchange="updateData(${index}, 'date', this.value)">
             <div class="card-badge">
-                <span class="card-balance ${balanceClass}">₹${balanceSign}${Math.round(balance)}</span>
+                <span class="card-balance ${balanceClass}">${CS()}${balanceSign}${Math.round(balance)}</span>
                 <button class="card-delete-btn" onclick="deleteRow(${index})" title="Delete">✕</button>
             </div>
         </div>
@@ -497,7 +538,7 @@ function updateCardBalance(inputEl, index) {
     const bal = (trackerData[index].earns || 0) + (trackerData[index].other || 0) - (trackerData[index].spends || 0);
     const balEl = card.querySelector('.card-balance');
     if (balEl) {
-        balEl.textContent = `₹${bal >= 0 ? '+' : ''}${Math.round(bal)}`;
+        balEl.textContent = `${CS()}${bal >= 0 ? '+' : ''}${Math.round(bal)}`;
         balEl.className = `card-balance ${bal >= 0 ? 'positive' : 'negative'}`;
     }
 }
@@ -674,11 +715,11 @@ function updateGrandTotals(dataToCalculate = trackerData) {
     const totalIncome = tEarns + tOther;
 
     // ── Desktop table totals ──
-    if (grandEarnsEl)   grandEarnsEl.textContent   = `₹${Math.round(tEarns)}`;
-    if (grandOtherEl)   grandOtherEl.textContent   = `₹${Math.round(tOther)}`;
-    if (grandSpendsEl)  grandSpendsEl.textContent  = `₹${Math.round(tSpends)}`;
+    if (grandEarnsEl)   grandEarnsEl.textContent   = `${CS()}${Math.round(tEarns)}`;
+    if (grandOtherEl)   grandOtherEl.textContent   = `${CS()}${Math.round(tOther)}`;
+    if (grandSpendsEl)  grandSpendsEl.textContent  = `${CS()}${Math.round(tSpends)}`;
     if (grandBalanceEl) {
-        grandBalanceEl.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        grandBalanceEl.textContent = `${CS()}${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
         grandBalanceEl.style.color = tBalance >= 0 ? '#059669' : '#dc2626';
     }
 
@@ -687,11 +728,11 @@ function updateGrandTotals(dataToCalculate = trackerData) {
     const mOther   = document.getElementById('m-grand-other');
     const mSpends  = document.getElementById('m-grand-spends');
     const mBalance = document.getElementById('m-grand-balance');
-    if (mEarns)   mEarns.textContent   = `₹${Math.round(tEarns)}`;
-    if (mOther)   mOther.textContent   = `₹${Math.round(tOther)}`;
-    if (mSpends)  mSpends.textContent  = `₹${Math.round(tSpends)}`;
+    if (mEarns)   mEarns.textContent   = `${CS()}${Math.round(tEarns)}`;
+    if (mOther)   mOther.textContent   = `${CS()}${Math.round(tOther)}`;
+    if (mSpends)  mSpends.textContent  = `${CS()}${Math.round(tSpends)}`;
     if (mBalance) {
-        mBalance.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        mBalance.textContent = `${CS()}${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
         mBalance.style.color = tBalance >= 0 ? '#6366f1' : '#dc2626';
     }
 
@@ -700,11 +741,11 @@ function updateGrandTotals(dataToCalculate = trackerData) {
     const ssOther   = document.getElementById('ss-other');
     const ssSpend   = document.getElementById('ss-spend');
     const ssBalance = document.getElementById('ss-balance');
-    if (ssEarn)  ssEarn.textContent  = `₹${Math.round(tEarns)}`;
-    if (ssOther) ssOther.textContent = `₹${Math.round(tOther)}`;
-    if (ssSpend) ssSpend.textContent = `₹${Math.round(tSpends)}`;
+    if (ssEarn)  ssEarn.textContent  = `${CS()}${Math.round(tEarns)}`;
+    if (ssOther) ssOther.textContent = `${CS()}${Math.round(tOther)}`;
+    if (ssSpend) ssSpend.textContent = `${CS()}${Math.round(tSpends)}`;
     if (ssBalance) {
-        ssBalance.textContent = `₹${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
+        ssBalance.textContent = `${CS()}${tBalance >= 0 ? '+' : ''}${Math.round(tBalance)}`;
         ssBalance.style.color = tBalance >= 0 ? '#059669' : '#dc2626';
     }
 }
@@ -1162,7 +1203,7 @@ btnConfirm2?.addEventListener('click', () => {
 
 // CSV Generator
 function downloadCSVData(data) {
-    const headers = ["Date", "Earnings (₹)", "Other Income (₹)", "Spends (₹)", "Balance (₹)", "Category"];
+    const headers = [`Date`, `Earnings (${CS()})`, `Other Income (${CS()})`, `Spends (${CS()})`, `Balance (${CS()})`, `Category`];
     
     let totalEarns = 0;
     let totalOther = 0;
@@ -1193,9 +1234,9 @@ function downloadCSVData(data) {
 
     // Append bank statement style summary rows
     rows.push(["", "", "", "", "", ""]); // Empty spacer row
-    rows.push(["", "", "", "Total Income (₹)", overallIncome, ""]);
-    rows.push(["", "", "", "Total Spends (₹)", totalSpends, ""]);
-    rows.push(["", "", "", "Net Balance (₹)", netBalance, ""]);
+    rows.push(["", "", "", `Total Income (${CS()})`, overallIncome, ""]);
+    rows.push(["", "", "", `Total Spends (${CS()})`, totalSpends, ""]);
+    rows.push(["", "", "", `Net Balance (${CS()})`, netBalance, ""]);
 
     let csvContent = "\ufeff" + headers.join(",") + "\n"
         + rows.map(e => e.map(val => `"${val}"`).join(",")).join("\n");
@@ -1237,10 +1278,10 @@ async function downloadPDFData(data, dateRangeLabel) {
             <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
                 <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-family: monospace;">${row.date}</td>
                 <td style="padding: 10px 12px; font-size: 11px; color: #334155; font-weight: 600;">${row.category || '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${earns > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${earns > 0 ? '₹' + earns.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${other > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${other > 0 ? '₹' + other.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${spends > 0 ? '#ef4444' : '#64748b'}; font-weight: 600;">${spends > 0 ? '₹' + spends.toLocaleString() : '-'}</td>
-                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${balance >= 0 ? '#059669' : '#dc2626'}; font-weight: 700;">₹${balance.toLocaleString()}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${earns > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${earns > 0 ? CS() + earns.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${other > 0 ? '#10b981' : '#64748b'}; font-weight: 600;">${other > 0 ? CS() + other.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${spends > 0 ? '#ef4444' : '#64748b'}; font-weight: 600;">${spends > 0 ? CS() + spends.toLocaleString() : '-'}</td>
+                <td style="padding: 10px 12px; font-size: 11px; text-align: right; color: ${balance >= 0 ? '#059669' : '#dc2626'}; font-weight: 700;">${CS()}${balance.toLocaleString()}</td>
             </tr>
         `;
     }).join('');
@@ -1283,15 +1324,15 @@ async function downloadPDFData(data, dateRangeLabel) {
         <div style="display: flex; gap: 16px; margin-bottom: 24px; width: 100%;">
             <div style="flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-sizing: border-box;">
                 <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Income</div>
-                <div style="font-size: 18px; font-weight: 800; color: #10b981;">₹${overallIncome.toLocaleString()}</div>
+                <div style="font-size: 18px; font-weight: 800; color: #10b981;">${CS()}${overallIncome.toLocaleString()}</div>
             </div>
             <div style="flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-sizing: border-box;">
                 <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Spends</div>
-                <div style="font-size: 18px; font-weight: 800; color: #ef4444;">₹${totalSpends.toLocaleString()}</div>
+                <div style="font-size: 18px; font-weight: 800; color: #ef4444;">${CS()}${totalSpends.toLocaleString()}</div>
             </div>
             <div style="flex: 1; background: #e0e7ff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 14px; box-sizing: border-box;">
                 <div style="font-size: 10px; font-weight: 700; color: #4f46e5; text-transform: uppercase; margin-bottom: 4px;">Net Balance</div>
-                <div style="font-size: 18px; font-weight: 800; color: #4f46e5;">₹${netBalance.toLocaleString()}</div>
+                <div style="font-size: 18px; font-weight: 800; color: #4f46e5;">${CS()}${netBalance.toLocaleString()}</div>
             </div>
         </div>
         
@@ -1650,8 +1691,8 @@ function initAnalytics() {
 
     const weekEarnVal = document.getElementById('week-earn-val');
     const weekSpendVal = document.getElementById('week-spend-val');
-    if (weekEarnVal) weekEarnVal.textContent = `₹${Math.round(weekEarn).toLocaleString()}`;
-    if (weekSpendVal) weekSpendVal.textContent = `₹${Math.round(weekSpend).toLocaleString()}`;
+    if (weekEarnVal) weekEarnVal.textContent = `${CS()}${Math.round(weekEarn).toLocaleString()}`;
+    if (weekSpendVal) weekSpendVal.textContent = `${CS()}${Math.round(weekSpend).toLocaleString()}`;
 
     const max = Math.max(weekEarn, weekSpend, 5000);
     const earnProg = document.getElementById('earn-prog');
@@ -1679,8 +1720,8 @@ function initAnalytics() {
 
     const monthEarnVal = document.getElementById('month-earn-val');
     const monthSpendVal = document.getElementById('month-spend-val');
-    if (monthEarnVal) monthEarnVal.textContent = `₹${Math.round(monthEarn).toLocaleString()}`;
-    if (monthSpendVal) monthSpendVal.textContent = `₹${Math.round(monthSpend).toLocaleString()}`;
+    if (monthEarnVal) monthEarnVal.textContent = `${CS()}${Math.round(monthEarn).toLocaleString()}`;
+    if (monthSpendVal) monthSpendVal.textContent = `${CS()}${Math.round(monthSpend).toLocaleString()}`;
     
     calculateTrophies();
     initMonthlyChart();
@@ -1688,9 +1729,9 @@ function initAnalytics() {
 
 function calculateTrophies() {
     const trophies = [
-        { id: 'first_save', icon: '💰', title: 'First Save', desc: 'Saved first ₹1,000' },
+        { id: 'first_save', icon: '💰', title: 'First Save', desc: `Saved first ${CS()}1,000` },
         { id: 'streak_7', icon: '🔥', title: '7-Day Streak', desc: 'Logged 7 days in a row' },
-        { id: 'big_earner', icon: '👑', title: 'Big Earner', desc: 'Earned ₹10k in a month' }
+        { id: 'big_earner', icon: '👑', title: 'Big Earner', desc: `Earned ${CS()}10k in a month` }
     ];
 
     let unlocked = { first_save: false, streak_7: false, big_earner: false };
@@ -1801,7 +1842,7 @@ function renderCategoryCharts(data) {
                         <div class="dot" style="width: 8px; height: 8px; border-radius: 2px; background:${data.bg[i]}"></div>
                         <span class="name" style="font-weight: 600; color: #475569;">${l}</span>
                     </div>
-                    <span class="amt" style="font-weight: 700; color: #1e293b;">₹${Math.round(data.values[i])}</span>
+                    <span class="amt" style="font-weight: 700; color: #1e293b;">${CS()}${Math.round(data.values[i])}</span>
                 </div>
             `).join('');
         }
@@ -1842,7 +1883,7 @@ function initMonthlyChart() {
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'bottom';
                         let text = data >= 1000 ? (data/1000).toFixed(1).replace('.0','') + 'k' : data;
-                        ctx.fillText('₹' + text, bar.x, bar.y - 3);
+                        ctx.fillText(CS() + text, bar.x, bar.y - 3);
                     }
                 });
             });
@@ -1873,7 +1914,7 @@ function initMonthlyChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
+                        tooltip: { callbacks: { label: function(context) { return ' ' + CS() + context.parsed.y; } } }
                     },
                     scales: {
                         y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
@@ -1909,7 +1950,7 @@ function initMonthlyChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y; } } }
+                        tooltip: { callbacks: { label: function(context) { return ' ' + CS() + context.parsed.y; } } }
                     },
                     scales: {
                         y: { beginAtZero: true, ticks: { font: { size: 10 }, color: '#64748b', maxTicksLimit: 6 }, grid: { color: '#f1f5f9' }, border: { display: false } },
@@ -2030,12 +2071,24 @@ document.getElementById('edit-profile-btn')?.addEventListener('click', () => { i
 document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
 
 // --- Change Profile Icon Modal ---
-const emojiOptions = ["🦊", "🐱", "🦁", "🐼", "🐨", "🦄", "🚀", "💎", "💰", "💸", "📈", "💳", "⚡", "🕶️", "🎨", "🌟", "🍕", "☕", "🎮", "🦉", "🎯", "👑", "🔥", "⚽"];
+const emojiCategories = {
+    "Boy": ["👦", "👦🏻", "👦🏼", "👦🏽", "👦🏾", "👦🏿", "👱‍♂️", "👨‍🦰", "👨‍🦱", "👨‍🦳", "👨‍🦲", "🧑‍🦰", "🧑‍🦱", "🧑‍🦳", "🧑‍🦲"],
+    "Girl": ["👧", "👧🏻", "👧🏼", "👧🏽", "👧🏾", "👧🏿", "👱‍♀️", "👩‍🦰", "👩‍🦱", "👩‍🦳", "👩‍🦲", "🧒", "🧒🏻", "🧒🏼", "🧒🏽", "🧒🏾", "🧒🏿"],
+    "Uncle": ["👨", "👨🏻", "👨🏼", "👨🏽", "👨🏾", "👨🏿", "👴", "👴🏻", "👴🏼", "👴🏽", "👴🏾", "👴🏿", "🧔", "🧔‍♂️", "👮‍♂️", "🕵️‍♂️"],
+    "Aunty": ["👩", "👩🏻", "👩🏼", "👩🏽", "👩🏾", "👩🏿", "👵", "👵🏻", "👵🏼", "👵🏽", "👵🏾", "👵🏿", "🧕", "👮‍♀️", "🕵️‍♀️"],
+    "Fun & Pets": ["🦊", "🐱", "🦁", "🐼", "🐨", "🦄", "🦉", "🚀", "💎", "💰", "💸", "💳", "⚡", "👑", "🔥", "⚽", "🎮", "🌟", "🍕", "☕"]
+};
+
 const bgOptions = [
     'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', // Indigo-Purple (Default)
     'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)', // Teal-Green
     'linear-gradient(135deg, #f43f5e 0%, #f97316 100%)', // Rose-Orange
     'linear-gradient(135deg, #f59e0b 0%, #eab308 100%)', // Gold-Amber
+    'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', // Blue-Indigo
+    'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)', // Pink-Rose
+    'linear-gradient(135deg, #84cc16 0%, #10b981 100%)', // Lime-Teal
+    'linear-gradient(135deg, #7928ca 0%, #ff0080 100%)', // Purple-Pink Neon
+    'linear-gradient(135deg, #ff4e50 0%, #f9d423 100%)', // Coral-Yellow Sunshine
     'linear-gradient(135deg, #475569 0%, #1e293b 100%)'  // Slate-Dark
 ];
 
@@ -2059,11 +2112,42 @@ function openAvatarModal() {
         previewEl.style.fontSize = selectedEmoji ? '28px' : '';
     }
 
-    // Build emoji grid
-    const emojiGrid = document.getElementById('avatar-emoji-grid');
-    if (emojiGrid) {
+    // Determine default tab based on selected emoji
+    let currentTab = "Boy";
+    if (selectedEmoji) {
+        for (const [catName, emojis] of Object.entries(emojiCategories)) {
+            if (emojis.includes(selectedEmoji)) {
+                currentTab = catName;
+                break;
+            }
+        }
+    }
+
+    // Build Category Tabs
+    const catContainer = document.getElementById('avatar-categories');
+    if (catContainer) {
+        catContainer.innerHTML = '';
+        Object.keys(emojiCategories).forEach(catName => {
+            const tabBtn = document.createElement('button');
+            tabBtn.className = `avatar-tab-btn ${currentTab === catName ? 'active' : ''}`;
+            tabBtn.textContent = catName;
+            tabBtn.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-tab-btn').forEach(btn => btn.classList.remove('active'));
+                tabBtn.classList.add('active');
+                currentTab = catName;
+                renderEmojiGrid(catName, previewEl, user);
+            });
+            catContainer.appendChild(tabBtn);
+        });
+    }
+
+    // Function to render emojis for selected category
+    function renderEmojiGrid(category, previewEl, user) {
+        const emojiGrid = document.getElementById('avatar-emoji-grid');
+        if (!emojiGrid) return;
         emojiGrid.innerHTML = '';
-        emojiOptions.forEach(emoji => {
+        const emojis = emojiCategories[category] || [];
+        emojis.forEach(emoji => {
             const item = document.createElement('div');
             item.className = `avatar-emoji-item ${selectedEmoji === emoji ? 'active' : ''}`;
             item.textContent = emoji;
@@ -2088,6 +2172,9 @@ function openAvatarModal() {
             emojiGrid.appendChild(item);
         });
     }
+
+    // Render initial emoji grid
+    renderEmojiGrid(currentTab, previewEl, user);
 
     // Build bg grid
     const bgGrid = document.getElementById('avatar-bg-grid');
@@ -2518,7 +2605,7 @@ function checkAndShowReminders() {
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:13px; font-weight:800; color:#ef4444;">₹${sub.price}</div>
+                    <div style="font-size:13px; font-weight:800; color:#ef4444;">${CS()}${sub.price}</div>
                     <div style="font-size:9px; font-weight:800; color:${urgencyColor}; background:${urgencyColor}22; padding:2px 6px; border-radius:8px;">${urgencyText}</div>
                 </div>
             `;
@@ -2544,7 +2631,7 @@ function checkAndShowReminders() {
             setTimeout(() => {
                 sendLocalNotification(
                     `💳 ${sub.name} renews ${dueText}!`,
-                    `₹${sub.price} will be charged on ${sub.nextBillingDate}. Be prepared!`,
+                    `${CS()}${sub.price} will be charged on ${sub.nextBillingDate}. Be prepared!`,
                     `sub-reminder-${sub.id || sub.name}`
                 );
             }, i * 1500); // stagger notifications
@@ -2610,7 +2697,7 @@ function initBillsView() {
                 div.className = 'suggestion-item';
                 div.innerHTML = `
                     <span>${item.name}</span>
-                    <span class="suggestion-item-price">₹${item.price} • ${item.cycle}</span>
+                    <span class="suggestion-item-price">${CS()}${item.price} • ${item.cycle}</span>
                 `;
                 div.addEventListener('click', () => {
                     subNameInput.value = item.name;
@@ -2746,7 +2833,7 @@ function renderCalendar() {
             
             // Add dynamic tap descriptions for subscriptions
             dayCell.addEventListener('click', () => {
-                const subNames = dueSubs.map(s => `• ${s.name} (₹${s.price})`).join('\n');
+                const subNames = dueSubs.map(s => `• ${s.name} (${CS()}${s.price})`).join('\n');
                 alert(`📅 Subscriptions due on ${cellDateStr}:\n${subNames}`);
             });
         }
@@ -2779,7 +2866,7 @@ function renderSubscriptionsList() {
                 </div>
             </div>
             <div class="sub-item-right">
-                <span class="sub-item-price">₹${sub.price}</span>
+                <span class="sub-item-price">${CS()}${sub.price}</span>
                 <button class="sub-delete-btn" onclick="deleteSubscription(${idx})">✕</button>
             </div>
         `;
