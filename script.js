@@ -1241,7 +1241,7 @@ function downloadPDFData(data, dateRangeLabel) {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Bank Statement - ${dateRangeLabel}</title>
+            <title>Financial_Statement_${dateRangeLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}</title>
             <style>
                 @page {
                     size: A4;
@@ -1386,7 +1386,7 @@ function downloadPDFData(data, dateRangeLabel) {
                     <p>Personal Finance Ledger</p>
                 </div>
                 <div class="meta-section">
-                    <h2>BANK STATEMENT</h2>
+                    <h2>FINANCIAL STATEMENT</h2>
                     <p><strong>Period:</strong> ${dateRangeLabel}</p>
                     <p><strong>Generated on:</strong> ${new Date().toLocaleDateString()}</p>
                 </div>
@@ -1430,7 +1430,7 @@ function downloadPDFData(data, dateRangeLabel) {
             </table>
             
             <div class="footer">
-                This is a computer-generated bank statement of your expenses and earnings registered in the Spends & Earns application.
+                This is a computer-generated financial statement of your expenses and earnings registered in the Spends & Earns application.
             </div>
             
             <script>
