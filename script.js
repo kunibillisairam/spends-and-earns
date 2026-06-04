@@ -948,6 +948,13 @@ if (drawerSettingsBtn) {
         const fabBtn = document.getElementById('fab-add-btn');
         if (fabBtn) fabBtn.style.display = 'none';
 
+        // Toggle header back button visibility
+        const backBtn = document.getElementById('settings-back-btn');
+        if (backBtn && profileTrigger) {
+            backBtn.style.display = 'flex';
+            profileTrigger.style.display = 'none';
+        }
+
         initSettings();
     });
 }
@@ -974,6 +981,20 @@ if (drawerHelpBtn) {
                 const feedbackBtnSettings = document.getElementById('feedback-btn-settings');
                 if (feedbackBtnSettings) feedbackBtnSettings.click();
             }, 150);
+        }
+    });
+}
+
+// Settings Back Button Action (Go back to tracker and open profile drawer)
+const settingsBackBtn = document.getElementById('settings-back-btn');
+if (settingsBackBtn) {
+    settingsBackBtn.addEventListener('click', () => {
+        const trackerTab = document.getElementById('nav-tracker');
+        if (trackerTab) {
+            trackerTab.click();
+        }
+        if (profileDrawer) {
+            profileDrawer.style.display = 'block';
         }
     });
 }
@@ -1817,6 +1838,11 @@ navItems.forEach(item => {
         item.classList.add('active');
         appViews.forEach(v => v.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
+        
+        // Hide settings back button and show profile trigger when returning to bottom nav tabs
+        const backBtn = document.getElementById('settings-back-btn');
+        if (backBtn) backBtn.style.display = 'none';
+        if (profileTrigger) profileTrigger.style.display = 'flex';
         
         // Show the summary strip only on the Tracker page
         const summaryStrip = document.getElementById('summary-strip');

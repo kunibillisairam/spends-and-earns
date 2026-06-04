@@ -13,6 +13,7 @@
     <title>Daily Expense Tracker</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="manifest" href="./manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#6366f1">
@@ -31,6 +32,9 @@
         <header>
             <div class="header-main">
                 <div class="header-left">
+                    <button id="settings-back-btn" class="back-btn" style="display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-main); padding: 4px; margin-right: 8px; align-items: center; justify-content: center;" aria-label="Go Back">
+                        ←
+                    </button>
                     <button id="profile-trigger" class="profile-icon-btn" aria-label="Profile">
                         <span id="user-initial">U</span>
                     </button>
