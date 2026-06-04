@@ -1,4 +1,4 @@
-const CACHE_NAME = 'spends-earns-v12';
+const CACHE_NAME = 'spends-earns-v13';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,16 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      // Map assets to Request objects with cache: 'reload' to bypass browser HTTP cache
+      const requests = ASSETS.map(url => {
+        if (url.startsWith('http') && !url.includes(self.location.hostname)) {
+          return new Request(url, { mode: 'cors' });
+        }
+        return new Request(url, { cache: 'reload' });
+      });
+      return cache.addAll(requests);
+    })
   );
 });
 
