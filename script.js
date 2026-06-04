@@ -962,26 +962,18 @@ if (drawerSettingsBtn) {
 const drawerSecurityBtn = document.getElementById('drawer-security-btn');
 if (drawerSecurityBtn) {
     drawerSecurityBtn.addEventListener('click', () => {
-        if (drawerSettingsBtn) {
-            drawerSettingsBtn.click();
-            setTimeout(() => {
-                const securityBtnSettings = document.getElementById('security-btn-settings');
-                if (securityBtnSettings) securityBtnSettings.click();
-            }, 150);
-        }
+        if (profileDrawer) profileDrawer.style.display = 'none';
+        const modal = document.getElementById('security-modal');
+        if (modal) modal.style.display = 'flex';
     });
 }
 
 const drawerHelpBtn = document.getElementById('drawer-help-btn');
 if (drawerHelpBtn) {
     drawerHelpBtn.addEventListener('click', () => {
-        if (drawerSettingsBtn) {
-            drawerSettingsBtn.click();
-            setTimeout(() => {
-                const feedbackBtnSettings = document.getElementById('feedback-btn-settings');
-                if (feedbackBtnSettings) feedbackBtnSettings.click();
-            }, 150);
-        }
+        if (profileDrawer) profileDrawer.style.display = 'none';
+        const modal = document.getElementById('feedback-modal');
+        if (modal) modal.style.display = 'flex';
     });
 }
 
@@ -1603,48 +1595,12 @@ const referModal = document.getElementById('refer-modal');
 document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
 document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
 
-document.getElementById('security-btn-settings')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'flex'; });
 document.getElementById('close-security-modal')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'none'; });
 
 document.getElementById('edit-email-btn')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'flex'; });
 document.getElementById('close-email-modal')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'none'; });
 
-document.getElementById('feedback-btn-settings')?.addEventListener('click', () => { if (feedbackModal) feedbackModal.style.display = 'flex'; });
 document.getElementById('close-feedback-modal')?.addEventListener('click', () => { if (feedbackModal) feedbackModal.style.display = 'none'; });
-
-document.getElementById('refer-btn-settings')?.addEventListener('click', () => {
-    if (referModal) {
-        const shareInput = document.getElementById('share-url-input-settings');
-        if (shareInput) shareInput.value = window.location.origin;
-        referModal.style.display = 'flex';
-    }
-});
-document.getElementById('close-refer-modal')?.addEventListener('click', () => { if (referModal) referModal.style.display = 'none'; });
-
-// Copy link in settings
-document.getElementById('copy-link-btn-settings')?.addEventListener('click', () => {
-    const shareInput = document.getElementById('share-url-input-settings');
-    if (shareInput) {
-        navigator.clipboard.writeText(shareInput.value).then(() => {
-            const btn = document.getElementById('copy-link-btn-settings');
-            const original = btn.textContent;
-            btn.textContent = 'Copied!';
-            setTimeout(() => { btn.textContent = original; }, 2000);
-        });
-    }
-});
-
-document.getElementById('share-whatsapp-btn-settings')?.addEventListener('click', () => {
-    const url = encodeURIComponent(window.location.origin);
-    const text = encodeURIComponent('Hey! Check out this premium Expense Tracker: ');
-    window.open(`https://wa.me/?text=${text}${url}`, '_blank');
-});
-
-document.getElementById('share-native-btn-settings')?.addEventListener('click', () => {
-    if (navigator.share) {
-        navigator.share({ title: 'Expense Tracker', url: window.location.origin }).catch(() => {});
-    }
-});
 
 // --- Profile Update ---
 document.getElementById('save-profile')?.addEventListener('click', async () => {
@@ -1798,31 +1754,7 @@ document.getElementById('logout-btn-settings')?.addEventListener('click', () => 
     }
 });
 
-// Export CSV in settings
-document.getElementById('export-csv-settings')?.addEventListener('click', () => {
-    if (trackerData.length === 0) return alert("No data to export!");
-    const headers = ["Date", "Earn", "Other", "Spend", "Balance"];
-    const csv = [
-        headers.join(","),
-        ...trackerData.map(r => [
-            r.date, 
-            r.earns || 0, 
-            r.other || 0, 
-            r.spends || 0, 
-            (r.earns || 0) + (r.other || 0) - (r.spends || 0)
-        ].join(","))
-    ].join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-});
 
 
 // =============================================
