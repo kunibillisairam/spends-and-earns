@@ -2305,20 +2305,10 @@ function initStoreView() {
     if (storeItems.length === 0) {
         container.innerHTML = '<p style="text-align:center; font-size:12px; color:#64748b;">You have unlocked all avatars!</p>';
     } else {
-        let storeHtml = '';
-        
-        Object.keys(emojiCategories).forEach(cat => {
-            const catLocked = emojiCategories[cat].filter(emoji => !freeAvatars.includes(emoji) && !unlockedAvatars.includes(emoji));
+        container.innerHTML = `
+            <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">Avatars</div>
+            <div id="store-avatars-group" class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;"></div>
             
-            if (catLocked.length > 0) {
-                storeHtml += `
-                    <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">${cat} Avatars</div>
-                    <div id="store-group-${cat.replace(/\\s+/g, '').replace(/&/g, '')}" class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;"></div>
-                `;
-            }
-        });
-
-        storeHtml += `
             <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">More Features (Coming Soon)</div>
             <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 20px;">
                 <div class="settings-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
@@ -2338,64 +2328,57 @@ function initStoreView() {
             </div>
         `;
 
-        container.innerHTML = storeHtml;
+        const avatarGroup = document.getElementById('store-avatars-group');
 
-        Object.keys(emojiCategories).forEach(cat => {
-            const catLocked = emojiCategories[cat].filter(emoji => !freeAvatars.includes(emoji) && !unlockedAvatars.includes(emoji));
-            
-            if (catLocked.length > 0) {
-                const groupEl = document.getElementById(`store-group-${cat.replace(/\\s+/g, '').replace(/&/g, '')}`);
-                
-                catLocked.forEach(emoji => {
-                    const item = document.createElement('div');
-                    item.className = 'settings-item';
-                    item.style.display = 'flex';
-                    item.style.alignItems = 'center';
-                    item.style.justifyContent = 'space-between';
-                    item.style.padding = '12px';
-                    item.style.borderBottom = '1px solid #f1f5f9';
+        storeItems.forEach(emoji => {
+            const item = document.createElement('div');
+            item.className = 'settings-item';
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.justifyContent = 'space-between';
+            item.style.padding = '12px';
+            item.style.borderBottom = '1px solid #f1f5f9';
 
-                    const cost = 300; // 300 XP per avatar
+            const cost = 300; // 300 XP per avatar
 
-                    item.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span style="font-size: 24px;">${emoji}</span>
-                            <span style="font-size: 13px; font-weight: 700; color: #1e293b;">Premium Avatar</span>
-                        </div>
-                        <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
-                    `;
+            item.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">${emoji}</span>
+                    <span style="font-size: 13px; font-weight: 700; color: #1e293b;">Premium Avatar</span>
+                </div>
+                <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
+            `;
 
-                    const buyBtn = item.querySelector('button');
-                    buyBtn.addEventListener('click', () => {
-                        const currentXp = user.xpBalance || 0;
-                        if (currentXp >= cost) {
-                            user.xpBalance = currentXp - cost;
-                            const newUnlocked = user.unlockedAvatars || [];
-                            newUnlocked.push(emoji);
-                            user.unlockedAvatars = newUnlocked;
-                            
-                            localStorage.setItem('currentUser', JSON.stringify(user));
-                            initUser(); // refresh XP in header
-                            updateDoc(doc(db, "users", user.phone), { 
-                                xpBalance: user.xpBalance,
-                                unlockedAvatars: user.unlockedAvatars
-                            }).catch(err => console.error("Store sync failed:", err));
-                            
-                            alert('Avatar Unlocked! You can now use it in your profile.');
-                            initStoreView(); // refresh store list
-                        } else {
-                            alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
-                        }
-                    });
-
-                    groupEl.appendChild(item);
-                });
-
-                if (groupEl.lastChild) {
-                    groupEl.lastChild.style.borderBottom = 'none';
+            const buyBtn = item.querySelector('button');
+            buyBtn.addEventListener('click', () => {
+                const currentXp = user.xpBalance || 0;
+                if (currentXp >= cost) {
+                    user.xpBalance = currentXp - cost;
+                    const newUnlocked = user.unlockedAvatars || [];
+                    newUnlocked.push(emoji);
+                    user.unlockedAvatars = newUnlocked;
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    initUser(); // refresh XP in header
+                    updateDoc(doc(db, "users", user.phone), { 
+                        xpBalance: user.xpBalance,
+                        unlockedAvatars: user.unlockedAvatars
+                    }).catch(err => console.error("Store sync failed:", err));
+                    
+                    alert('Avatar Unlocked! You can now use it in your profile.');
+                    initStoreView(); // refresh store list
+                } else {
+                    alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
                 }
-            }
+            });
+
+            avatarGroup.appendChild(item);
         });
+
+        // Remove bottom border from last avatar item
+        if (avatarGroup.lastChild) {
+            avatarGroup.lastChild.style.borderBottom = 'none';
+        }
     }
 }
 

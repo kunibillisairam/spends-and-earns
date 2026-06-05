@@ -2064,5 +2064,12 @@ button {
     border-color: #334155 !important;
 }
 
+/* Custom compact size for Edit Profile form inputs */
+#edit-profile-view .form-group input {
+    font-size: 13px !important;
+    padding: 10px 12px !important;
+    font-weight: 600 !important;
+}
+
 
 
