@@ -2052,5 +2052,17 @@ button {
     background: #475569;
 }
 
+/* Disabled phone input custom styling for Edit Profile */
+#edit-phone-input:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+}
+
+.dark-theme #edit-phone-input:disabled {
+    background: #1e293b !important;
+    color: #475569 !important;
+    border-color: #334155 !important;
+}
+
 
 

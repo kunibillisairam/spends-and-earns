@@ -245,6 +245,7 @@
                     <div class="profile-avatar" id="p-avatar" style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15); border: 2px solid white;">U</div>
                     <h2 id="p-name" style="font-size: 16px; font-weight: 800; margin: 0; color: #1e293b;">User Name</h2>
                     <p id="p-phone" style="font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 600;">+91 00000 00000</p>
+                    <p id="p-motto" style="font-size: 11px; font-style: italic; color: var(--text-muted); margin-top: 4px; font-weight: 500; max-width: 260px; margin-left: auto; margin-right: auto;"></p>
                 </div>
 
                 <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;">
@@ -426,6 +427,51 @@
 
                     <button class="primary-btn vibrant-shadow" id="save-avatar" style="width: 100%; padding: 12px; font-size: 13px;">Save Icon</button>
                     <button class="text-btn" id="close-avatar-modal" style="width: 100%; margin-top: 10px; color: #64748b; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700;">Cancel</button>
+                </div>
+            </section>
+
+            <!-- ===== View 6: Edit Profile (Page View) ===== -->
+            <section id="edit-profile-view" class="app-view" style="padding: 10px 0;">
+                <div class="edit-profile-card" style="background: var(--card-bg); border-radius: var(--radius-md); padding: 20px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); margin-bottom: 15px; color: var(--text-main);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                        <button id="edit-profile-back-btn" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-main); padding: 4px; display: flex; align-items: center; justify-content: center;" aria-label="Go Back">
+                            ←
+                        </button>
+                        <h2 style="font-size: 15px; font-weight: 800; color: var(--text-main); margin: 0;">Edit Profile</h2>
+                    </div>
+                    
+                    <div class="form-body" style="display: flex; flex-direction: column; gap: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Display Name</label>
+                            <input type="text" id="edit-name-input" placeholder="Your Name">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Recovery Email</label>
+                            <input type="email" id="edit-email-input" placeholder="email@example.com">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Financial Motto</label>
+                            <input type="text" id="edit-motto-input" placeholder="e.g. Spend less than you earn">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Date of Birth</label>
+                            <input type="date" id="edit-dob-input">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Phone Number (Account ID)</label>
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="text" id="edit-phone-input" disabled style="cursor: not-allowed; padding-right: 40px;">
+                                <span style="position: absolute; right: 14px; font-size: 14px;">🔒</span>
+                            </div>
+                        </div>
+                        
+                        <button class="primary-btn vibrant-shadow" id="save-profile" style="width: 100%; padding: 12px; font-size: 13px; margin-top: 8px;">Save Changes</button>
+                        <button class="text-btn" id="edit-profile-cancel" style="width: 100%; margin-top: 10px; color: #64748b; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700;">Cancel</button>
+                    </div>
                 </div>
             </section>
         </main>
@@ -664,6 +710,7 @@
                 </div>
                 <h2 id="display-name">Username</h2>
                 <p id="display-phone">+91 00000 00000</p>
+                <p id="display-motto" style="font-size: 10px; font-style: italic; color: var(--text-muted); margin-top: 4px; font-weight: 500; max-width: 200px; margin-left: auto; margin-right: auto;"></p>
             </div>
             <div class="drawer-body">
                 <div class="drawer-item" id="export-csv-btn">
@@ -896,18 +943,6 @@
         </div>
     </div>
 
-    <!-- ===== Edit Profile Modal (Settings) ===== -->
-    <div class="modal" id="edit-modal" style="display:none;">
-        <div class="modal-content">
-            <div class="modal-title">Edit Profile</div>
-            <div class="form-group">
-                <label>Display Name</label>
-                <input type="text" id="new-name" placeholder="Full Name">
-            </div>
-            <button class="primary-btn" id="save-profile" style="width: 100%;">Save Changes</button>
-            <button class="text-btn" id="close-modal" style="width: 100%; margin-top: 10px; color: #64748b;">Cancel</button>
-        </div>
-    </div>
 
 
 

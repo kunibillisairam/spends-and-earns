@@ -1004,6 +1004,15 @@ function initUser() {
         if (displayName) displayName.textContent = user.username;
         if (displayPhone) displayPhone.textContent = user.phone;
 
+        // Render dynamic motto
+        const cacheKey = `userSettings_${user.phone}`;
+        const cachedSettings = JSON.parse(localStorage.getItem(cacheKey)) || {};
+        const mottoText = cachedSettings.motto || '';
+        const displayMotto = document.getElementById('display-motto');
+        const pMotto = document.getElementById('p-motto');
+        if (displayMotto) displayMotto.textContent = mottoText;
+        if (pMotto) pMotto.textContent = mottoText;
+
         const xpAmountEl = document.getElementById('xp-amount');
         if (xpAmountEl) {
             xpAmountEl.textContent = user.xpBalance || 0;
@@ -1520,7 +1529,8 @@ const settingsBackBtn = document.getElementById('settings-back-btn');
 if (settingsBackBtn) {
     settingsBackBtn.addEventListener('click', () => {
         const avatarView = document.getElementById('avatar-view');
-        if (avatarView && avatarView.classList.contains('active')) {
+        const editProfileView = document.getElementById('edit-profile-view');
+        if ((avatarView && avatarView.classList.contains('active')) || (editProfileView && editProfileView.classList.contains('active'))) {
             const appViews = document.querySelectorAll('.app-view');
             appViews.forEach(v => v.classList.remove('active'));
             const settingsView = document.getElementById('settings-view');
@@ -2107,6 +2117,12 @@ async function initSettings() {
             if (userData.currency && userData.currency !== selectedCurrency) {
                 setCurrency(userData.currency, false);
             }
+            const displayMotto = document.getElementById('display-motto');
+            const pMotto = document.getElementById('p-motto');
+            if (userData.motto !== undefined) {
+                if (displayMotto) displayMotto.textContent = userData.motto;
+                if (pMotto) pMotto.textContent = userData.motto;
+            }
             if (lockStatus) {
                 if (userData.isLockActive) {
                     lockStatus.textContent = "Active";
@@ -2140,15 +2156,66 @@ async function initSettings() {
 }
 
 // --- Modals Logic Wires ---
-const editModal = document.getElementById('edit-modal');
 const securityModal = document.getElementById('security-modal');
 const emailModal = document.getElementById('email-modal');
 const feedbackModal = document.getElementById('feedback-modal');
 const referModal = document.getElementById('refer-modal');
 const avatarView = document.getElementById('avatar-view');
 
-document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
-document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
+document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
+    const editProfileView = document.getElementById('edit-profile-view');
+    if (editProfileView) {
+        const appViews = document.querySelectorAll('.app-view');
+        appViews.forEach(v => v.classList.remove('active'));
+        editProfileView.classList.add('active');
+
+        // Pre-populate fields
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user) {
+            const cacheKey = `userSettings_${user.phone}`;
+            const cachedSettings = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            
+            const nameInput = document.getElementById('edit-name-input');
+            const emailInput = document.getElementById('edit-email-input');
+            const mottoInput = document.getElementById('edit-motto-input');
+            const dobInput = document.getElementById('edit-dob-input');
+            const phoneInput = document.getElementById('edit-phone-input');
+            
+            if (nameInput) nameInput.value = user.username || '';
+            if (emailInput) emailInput.value = cachedSettings.email || '';
+            if (mottoInput) mottoInput.value = cachedSettings.motto || '';
+            if (dobInput) dobInput.value = cachedSettings.dob || '';
+            if (phoneInput) phoneInput.value = user.phone || '';
+        }
+
+        // Toggle header back button visibility
+        const backBtn = document.getElementById('settings-back-btn');
+        const profileTrigger = document.getElementById('profile-trigger');
+        if (backBtn && profileTrigger) {
+            backBtn.style.display = 'flex';
+            profileTrigger.style.display = 'none';
+        }
+    }
+});
+
+document.getElementById('edit-email-btn')?.addEventListener('click', () => {
+    // Redirect Recovery Email setting click to the Edit Profile view
+    document.getElementById('edit-profile-btn')?.click();
+});
+
+document.getElementById('edit-profile-cancel')?.addEventListener('click', () => {
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    const settingsView = document.getElementById('settings-view');
+    if (settingsView) settingsView.classList.add('active');
+});
+
+document.getElementById('edit-profile-back-btn')?.addEventListener('click', () => {
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    const settingsView = document.getElementById('settings-view');
+    if (settingsView) settingsView.classList.add('active');
+});
 
 const currencyModal = document.getElementById('currency-modal');
 
@@ -2238,10 +2305,20 @@ function initStoreView() {
     if (storeItems.length === 0) {
         container.innerHTML = '<p style="text-align:center; font-size:12px; color:#64748b;">You have unlocked all avatars!</p>';
     } else {
-        container.innerHTML = `
-            <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">Premium Avatars</div>
-            <div id="store-avatars-group" class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;"></div>
+        let storeHtml = '';
+        
+        Object.keys(emojiCategories).forEach(cat => {
+            const catLocked = emojiCategories[cat].filter(emoji => !freeAvatars.includes(emoji) && !unlockedAvatars.includes(emoji));
             
+            if (catLocked.length > 0) {
+                storeHtml += `
+                    <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">${cat} Avatars</div>
+                    <div id="store-group-${cat.replace(/\\s+/g, '').replace(/&/g, '')}" class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;"></div>
+                `;
+            }
+        });
+
+        storeHtml += `
             <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">More Features (Coming Soon)</div>
             <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 20px;">
                 <div class="settings-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
@@ -2261,57 +2338,64 @@ function initStoreView() {
             </div>
         `;
 
-        const avatarGroup = document.getElementById('store-avatars-group');
+        container.innerHTML = storeHtml;
 
-        storeItems.forEach(emoji => {
-            const item = document.createElement('div');
-            item.className = 'settings-item';
-            item.style.display = 'flex';
-            item.style.alignItems = 'center';
-            item.style.justifyContent = 'space-between';
-            item.style.padding = '12px';
-            item.style.borderBottom = '1px solid #f1f5f9';
+        Object.keys(emojiCategories).forEach(cat => {
+            const catLocked = emojiCategories[cat].filter(emoji => !freeAvatars.includes(emoji) && !unlockedAvatars.includes(emoji));
+            
+            if (catLocked.length > 0) {
+                const groupEl = document.getElementById(`store-group-${cat.replace(/\\s+/g, '').replace(/&/g, '')}`);
+                
+                catLocked.forEach(emoji => {
+                    const item = document.createElement('div');
+                    item.className = 'settings-item';
+                    item.style.display = 'flex';
+                    item.style.alignItems = 'center';
+                    item.style.justifyContent = 'space-between';
+                    item.style.padding = '12px';
+                    item.style.borderBottom = '1px solid #f1f5f9';
 
-            const cost = 300; // 300 XP per avatar
+                    const cost = 300; // 300 XP per avatar
 
-            item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 24px;">${emoji}</span>
-                    <span style="font-size: 13px; font-weight: 700; color: #1e293b;">Premium Avatar</span>
-                </div>
-                <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
-            `;
+                    item.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">${emoji}</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #1e293b;">Premium Avatar</span>
+                        </div>
+                        <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
+                    `;
 
-            const buyBtn = item.querySelector('button');
-            buyBtn.addEventListener('click', () => {
-                const currentXp = user.xpBalance || 0;
-                if (currentXp >= cost) {
-                    user.xpBalance = currentXp - cost;
-                    const newUnlocked = user.unlockedAvatars || [];
-                    newUnlocked.push(emoji);
-                    user.unlockedAvatars = newUnlocked;
-                    
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    initUser(); // refresh XP in header
-                    updateDoc(doc(db, "users", user.phone), { 
-                        xpBalance: user.xpBalance,
-                        unlockedAvatars: user.unlockedAvatars
-                    }).catch(err => console.error("Store sync failed:", err));
-                    
-                    alert('Avatar Unlocked! You can now use it in your profile.');
-                    initStoreView(); // refresh store list
-                } else {
-                    alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
+                    const buyBtn = item.querySelector('button');
+                    buyBtn.addEventListener('click', () => {
+                        const currentXp = user.xpBalance || 0;
+                        if (currentXp >= cost) {
+                            user.xpBalance = currentXp - cost;
+                            const newUnlocked = user.unlockedAvatars || [];
+                            newUnlocked.push(emoji);
+                            user.unlockedAvatars = newUnlocked;
+                            
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                            initUser(); // refresh XP in header
+                            updateDoc(doc(db, "users", user.phone), { 
+                                xpBalance: user.xpBalance,
+                                unlockedAvatars: user.unlockedAvatars
+                            }).catch(err => console.error("Store sync failed:", err));
+                            
+                            alert('Avatar Unlocked! You can now use it in your profile.');
+                            initStoreView(); // refresh store list
+                        } else {
+                            alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
+                        }
+                    });
+
+                    groupEl.appendChild(item);
+                });
+
+                if (groupEl.lastChild) {
+                    groupEl.lastChild.style.borderBottom = 'none';
                 }
-            });
-
-            avatarGroup.appendChild(item);
+            }
         });
-
-        // Remove bottom border from last avatar item
-        if (avatarGroup.lastChild) {
-            avatarGroup.lastChild.style.borderBottom = 'none';
-        }
     }
 }
 
@@ -2559,20 +2643,58 @@ document.getElementById('close-feedback-modal')?.addEventListener('click', () =>
 // --- Profile Update ---
 document.getElementById('save-profile')?.addEventListener('click', async () => {
     const btn = document.getElementById('save-profile');
-    const newName = document.getElementById('new-name')?.value;
+    const newName = document.getElementById('edit-name-input')?.value.trim();
+    const newEmail = document.getElementById('edit-email-input')?.value.trim();
+    const newMotto = document.getElementById('edit-motto-input')?.value.trim();
+    const newDob = document.getElementById('edit-dob-input')?.value;
+
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (newName && user) {
+    if (user) {
+        if (!newName) {
+            alert("Display name cannot be empty.");
+            return;
+        }
+
         btn.textContent = "Syncing...";
         btn.disabled = true;
+
         try {
-            await updateDoc(doc(db, "users", user.phone), { username: newName });
+            const updates = {
+                username: newName,
+                email: newEmail,
+                motto: newMotto,
+                dob: newDob
+            };
+
+            await updateDoc(doc(db, "users", user.phone), updates);
+
+            // Update local storage currentUser
             user.username = newName;
             localStorage.setItem('currentUser', JSON.stringify(user));
-            if (editModal) editModal.style.display = 'none';
-            initSettings();
+
+            // Update user settings cache
+            const cacheKey = `userSettings_${user.phone}`;
+            const cachedSettings = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            cachedSettings.username = newName;
+            cachedSettings.email = newEmail;
+            cachedSettings.motto = newMotto;
+            cachedSettings.dob = newDob;
+            localStorage.setItem(cacheKey, JSON.stringify(cachedSettings));
+
+            // Award 50 XP
+            addXP(50);
+
+            // Navigate back to Settings view
+            const appViews = document.querySelectorAll('.app-view');
+            appViews.forEach(v => v.classList.remove('active'));
+            const settingsView = document.getElementById('settings-view');
+            if (settingsView) settingsView.classList.add('active');
+
             initUser();
+            initSettings();
         } catch (err) {
-            alert("Sync failed.");
+            console.error("Save profile sync failed:", err);
+            alert("Sync failed. Check your internet connection.");
         } finally {
             btn.textContent = "Save Changes";
             btn.disabled = false;
