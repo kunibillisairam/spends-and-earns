@@ -2071,5 +2071,27 @@ button {
     font-weight: 600 !important;
 }
 
+/* Export Page View Specific Styles */
+#export-view .export-option-card {
+    border-width: 1.5px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
+}
+
+#export-view .export-option-card div div:first-child {
+    font-weight: 700 !important;
+    font-size: 11px !important;
+}
+
+#export-view .export-option-card div div:last-child {
+    font-size: 9px !important;
+}
+
+#export-view .export-fmt-btn {
+    border-width: 1.5px !important;
+    font-size: 11px !important;
+    padding: 8px 10px !important;
+}
+
 
 

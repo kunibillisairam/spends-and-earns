@@ -366,6 +366,15 @@
                     </div>
                 </div>
 
+                <!-- Referral Code (Optional) -->
+                <div class="form-group signup-only" style="display: none;">
+                    <label>Referral Code (Optional)</label>
+                    <div class="input-wrapper">
+                        <i>🎁</i>
+                        <input type="text" id="referral-code" placeholder="e.g. USER1234" oninput="this.value = this.value.toUpperCase()">
+                    </div>
+                </div>
+
                 <button type="submit" id="auth-submit-btn" class="submit-btn">Login</button>
             </form>
 
@@ -419,7 +428,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, query, where, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         // Initialize Firebase
@@ -627,13 +636,71 @@
                     if (userSnap.exists()) {
                         alert("This phone number is already registered.");
                     } else {
+                        let referrerPhone = null;
+                        let referrerName = null;
+                        let referrerCurrentXp = 0;
+                        
+                        const enteredRefCode = document.getElementById('referral-code')?.value.trim();
+                        if (enteredRefCode) {
+                            const q = query(collection(db, "users"), where("referralCode", "==", enteredRefCode.toUpperCase()));
+                            const querySnap = await getDocs(q);
+                            if (!querySnap.empty) {
+                                const refDoc = querySnap.docs[0];
+                                const refData = refDoc.data();
+                                if (refData.phone === phone) {
+                                    alert("You cannot use your own referral code!");
+                                    submitBtn.textContent = isLogin ? "Login" : "Get Started";
+                                    submitBtn.disabled = false;
+                                    return;
+                                }
+                                referrerPhone = refData.phone;
+                                referrerName = refData.username || 'Friend';
+                                referrerCurrentXp = refData.xpBalance || 0;
+                            } else {
+                                alert("Invalid referral code! Please check it or leave it blank.");
+                                submitBtn.textContent = isLogin ? "Login" : "Get Started";
+                                submitBtn.disabled = false;
+                                return;
+                            }
+                        }
+
+                        const cleanUsername = usernameInput.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                        const myReferralCode = (cleanUsername + phone.slice(-4)) || phone;
+
                         await setDoc(userRef, {
                             username: usernameInput,
-                            email: emailInput, // SAVING EMAIL NOW
+                            email: emailInput,
                             phone: phone,
                             password: password,
-                            createdAt: new Date().toISOString()
+                            createdAt: new Date().toISOString(),
+                            xpBalance: 0,
+                            referralCode: myReferralCode
                         });
+
+                        if (referrerPhone) {
+                            // Award XP to referrer
+                            await updateDoc(doc(db, "users", referrerPhone), {
+                                xpBalance: referrerCurrentXp + 500
+                            });
+                            
+                            // Log the referral
+                            await setDoc(doc(db, "referrals", `${referrerPhone}_${phone}`), {
+                                referrerPhone: referrerPhone,
+                                referredPhone: phone,
+                                referredName: usernameInput,
+                                timestamp: new Date().toISOString(),
+                                xpEarned: 500
+                            });
+                            
+                            // Send personal notification to referrer
+                            await setDoc(doc(db, "notifications", referrerPhone), {
+                                title: "🎁 Referral Bonus!",
+                                message: `Your friend ${usernameInput} joined! You earned +500 XP.`,
+                                active: true,
+                                timestamp: serverTimestamp()
+                            });
+                        }
+
                         alert("Account created successfully! Welcome aboard.");
                         window.location.reload();
                     }
@@ -649,6 +716,19 @@
 
         if(localStorage.getItem('currentUser')) {
             window.location.replace('index.html');
+        }
+
+        // URL Referral Code auto-prefill
+        const params = new URLSearchParams(window.location.search);
+        const refCode = params.get('ref') || params.get('referral');
+        if (refCode) {
+            if (isLogin) {
+                toggleMode();
+            }
+            const refField = document.getElementById('referral-code');
+            if (refField) {
+                refField.value = refCode.toUpperCase();
+            }
         }
     </script>
 </body>
