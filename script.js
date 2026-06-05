@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
 
 // Initialize Firebase
@@ -1147,6 +1147,31 @@ function initUser() {
         if (xpAmountEl) {
             xpAmountEl.textContent = user.xpBalance || 0;
         }
+
+        // Ensure referral code exists for this user (auto-migration)
+        if (user && user.phone && !user.referralCode) {
+            (async () => {
+                try {
+                    const userRef = doc(db, "users", user.phone);
+                    const snap = await getDoc(userRef);
+                    if (snap.exists()) {
+                        const dbData = snap.data();
+                        if (dbData.referralCode) {
+                            user.referralCode = dbData.referralCode;
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                        } else {
+                            const cleanName = (user.username || 'USER').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                            const generatedCode = (cleanName + user.phone.slice(-4)) || user.phone;
+                            await updateDoc(userRef, { referralCode: generatedCode });
+                            user.referralCode = generatedCode;
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error generating referral code for existing user:", err);
+                }
+            })();
+        }
     }
 }
 
@@ -1693,7 +1718,8 @@ if (settingsBackBtn) {
             return;
         }
 
-        if (exportView && exportView.classList.contains('active')) {
+        const referView = document.getElementById('refer-view');
+        if ((exportView && exportView.classList.contains('active')) || (referView && referView.classList.contains('active'))) {
             const trackerTab = document.getElementById('nav-tracker');
             if (trackerTab) {
                 trackerTab.click();
@@ -1827,74 +1853,198 @@ if (installBtn) {
     });
 }
 
-// ===== Refer & Share Feature =====
-const shareModal = document.getElementById('share-modal');
+// ===== Refer & Earn Feature =====
 const referShareBtn = document.getElementById('refer-share-btn');
-const shareUrlInput = document.getElementById('share-url-input');
+const referBackBtn = document.getElementById('refer-back-btn');
 
 function getAppUrl() {
-    // Use the current page URL (works for hosted/local apps)
     return window.location.href.split('?')[0].split('#')[0];
+}
+
+function getReferralLink(referralCode) {
+    const baseUrl = getAppUrl();
+    const cleanBase = baseUrl.endsWith('index.html') ? baseUrl.replace('index.html', '') : baseUrl;
+    const separator = cleanBase.endsWith('/') ? '' : '/';
+    return `${cleanBase}${separator}auth.html?ref=${referralCode}`;
 }
 
 if (referShareBtn) {
     referShareBtn.addEventListener('click', () => {
         // Close the profile drawer
-        const drawer = document.getElementById('profile-drawer');
-        if (drawer) drawer.style.display = 'none';
-        // Populate and show the share modal
-        if (shareUrlInput) shareUrlInput.value = getAppUrl();
-        if (shareModal) shareModal.style.display = 'flex';
+        if (profileDrawer) profileDrawer.style.display = 'none';
+
+        const appViews = document.querySelectorAll('.app-view');
+        appViews.forEach(v => v.classList.remove('active'));
+
+        const referView = document.getElementById('refer-view');
+        if (referView) referView.classList.add('active');
+
+        // Hide main elements
+        const summaryStrip = document.getElementById('summary-strip');
+        if (summaryStrip) summaryStrip.style.display = 'none';
+
+        const fabBtn = document.getElementById('fab-add-btn');
+        if (fabBtn) fabBtn.style.display = 'none';
+
+        // Show back button in header
+        const backBtn = document.getElementById('settings-back-btn');
+        if (backBtn && profileTrigger) {
+            backBtn.style.display = 'flex';
+            profileTrigger.style.display = 'none';
+        }
+
+        // Populate User Code
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const codeDisplay = document.getElementById('referral-code-display');
+        if (user && user.referralCode && codeDisplay) {
+            codeDisplay.textContent = user.referralCode;
+        }
+
+        // Fetch and load referral list
+        loadReferralData();
     });
 }
 
-function copyShareLink() {
-    const url = getAppUrl();
-    navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('copy-link-btn');
-        if (btn) {
-            const original = btn.innerHTML;
-            btn.innerHTML = '&#10003; Copied!';
-            btn.classList.add('copied');
+if (referBackBtn) {
+    referBackBtn.addEventListener('click', () => {
+        const appViews = document.querySelectorAll('.app-view');
+        appViews.forEach(v => v.classList.remove('active'));
+
+        const trackerView = document.getElementById('tracker-view');
+        if (trackerView) trackerView.classList.add('active');
+
+        // Restore main elements
+        const summaryStrip = document.getElementById('summary-strip');
+        if (summaryStrip) summaryStrip.style.display = 'flex';
+
+        const fabBtn = document.getElementById('fab-add-btn');
+        if (fabBtn) fabBtn.style.display = 'flex';
+
+        // Hide back button in header
+        const backBtn = document.getElementById('settings-back-btn');
+        if (backBtn && profileTrigger) {
+            backBtn.style.display = 'none';
+            profileTrigger.style.display = 'flex';
+        }
+    });
+}
+
+const copyRefBtn = document.getElementById('copy-ref-btn');
+if (copyRefBtn) {
+    copyRefBtn.addEventListener('click', () => {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user || !user.referralCode) return;
+        
+        navigator.clipboard.writeText(user.referralCode).then(() => {
+            const original = copyRefBtn.innerHTML;
+            copyRefBtn.innerHTML = '✓ Copied';
             setTimeout(() => {
-                btn.innerHTML = original;
-                btn.classList.remove('copied');
+                copyRefBtn.innerHTML = original;
             }, 2000);
-        }
-    }).catch(() => {
-        // Fallback for browsers without clipboard API
-        if (shareUrlInput) {
-            shareUrlInput.select();
-            document.execCommand('copy');
-            alert('Link copied!');
+        }).catch(() => {
+            alert('Referral code: ' + user.referralCode);
+        });
+    });
+}
+
+const referShareWhatsapp = document.getElementById('refer-share-whatsapp');
+if (referShareWhatsapp) {
+    referShareWhatsapp.addEventListener('click', () => {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user || !user.referralCode) return;
+        const link = getReferralLink(user.referralCode);
+        const text = encodeURIComponent(`Hey! I use this awesome Expense Tracker app to manage my daily finances. Sign up with my link and start tracking: `);
+        window.open(`https://wa.me/?text=${text}${encodeURIComponent(link)}`, '_blank');
+    });
+}
+
+const referShareNative = document.getElementById('refer-share-native');
+if (referShareNative) {
+    referShareNative.addEventListener('click', () => {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user || !user.referralCode) return;
+        const link = getReferralLink(user.referralCode);
+        
+        if (navigator.share) {
+            navigator.share({
+                title: 'Refer & Earn',
+                text: 'Track your daily expenses easily and earn rewards!',
+                url: link,
+            }).catch(() => {});
+        } else {
+            // Fallback: Copy link
+            navigator.clipboard.writeText(link).then(() => {
+                const original = referShareNative.innerHTML;
+                referShareNative.innerHTML = '✓ Link Copied!';
+                setTimeout(() => {
+                    referShareNative.innerHTML = original;
+                }, 2000);
+            }).catch(() => {
+                alert('Copied link: ' + link);
+            });
         }
     });
 }
 
-function shareWhatsApp() {
-    const url = encodeURIComponent(getAppUrl());
-    const text = encodeURIComponent('Hey! I use this awesome Expense Tracker app to manage my daily finances. Check it out: ');
-    window.open(`https://wa.me/?text=${text}${url}`, '_blank');
-}
+async function loadReferralData() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user || !user.phone) return;
 
-function shareNative() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'Expense Tracker App',
-            text: 'Hey! Track your daily expenses easily with this app!',
-            url: getAppUrl(),
-        }).catch(() => {});
-    } else {
-        // Fallback: just copy
-        copyShareLink();
+    const listBody = document.getElementById('referral-list-body');
+    const countEl = document.getElementById('stat-referral-count');
+    const earningsEl = document.getElementById('stat-referral-earnings');
+
+    if (!listBody) return;
+    listBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading referrals...</td></tr>';
+
+    try {
+        const q = query(collection(db, "referrals"), where("referrerPhone", "==", user.phone));
+        const snap = await getDocs(q);
+        
+        let count = 0;
+        let earnings = 0;
+        listBody.innerHTML = '';
+
+        if (snap.empty) {
+            listBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">No referrals yet. Share your code to start earning!</td></tr>';
+            if (countEl) countEl.textContent = '0';
+            if (earningsEl) earningsEl.textContent = '0 XP';
+            return;
+        }
+
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            count++;
+            earnings += (data.xpEarned || 500);
+
+            // Mask phone number for privacy e.g. 9876543210 -> 9876***210
+            const rawPhone = data.referredPhone || '';
+            const maskedPhone = rawPhone.length >= 10 ? `${rawPhone.slice(0, 4)}***${rawPhone.slice(-3)}` : rawPhone;
+
+            const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleDateString(undefined, {
+                month: 'short', day: 'numeric', year: 'numeric'
+            }) : 'N/A';
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border-color)';
+            tr.innerHTML = `
+                <td style="padding: 8px 10px; color: var(--text-main); font-weight: 700;">
+                    ${data.referredName || 'Friend'}<br>
+                    <span style="font-size: 9px; color: var(--text-muted); font-weight: 400;">${maskedPhone}</span>
+                </td>
+                <td style="padding: 8px 10px; color: #10b981; font-weight: 800;">+${data.xpEarned || 500} XP</td>
+                <td style="padding: 8px 10px; color: var(--text-muted); text-align: right;">${dateStr}</td>
+            `;
+            listBody.appendChild(tr);
+        });
+
+        if (countEl) countEl.textContent = count;
+        if (earningsEl) earningsEl.textContent = `${earnings} XP`;
+
+    } catch (err) {
+        console.error("Error loading referral data:", err);
+        listBody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #ef4444;">Failed to load referrals.</td></tr>';
     }
-}
-
-// Close share modal when clicking outside
-if (shareModal) {
-    shareModal.addEventListener('click', (e) => {
-        if (e.target === shareModal) shareModal.style.display = 'none';
-    });
 }
 
 // =============================================
