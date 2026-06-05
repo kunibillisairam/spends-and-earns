@@ -2238,22 +2238,46 @@ function initStoreView() {
     if (storeItems.length === 0) {
         container.innerHTML = '<p style="text-align:center; font-size:12px; color:#64748b;">You have unlocked all avatars!</p>';
     } else {
+        container.innerHTML = `
+            <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">Premium Avatars</div>
+            <div id="store-avatars-group" class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;"></div>
+            
+            <div class="store-section-label" style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; margin-left: 4px;">More Features (Coming Soon)</div>
+            <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 20px;">
+                <div class="settings-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                    <div class="settings-left" style="display: flex; align-items: center; gap: 12px;">
+                        <span class="settings-icon" style="font-size: 18px;">🎨</span>
+                        <span class="settings-label" style="font-size: 13px; font-weight: 700; color: #94a3b8;">Custom Themes</span>
+                    </div>
+                    <div class="settings-right" style="color: var(--text-muted); font-size: 10px;"><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 10px; font-weight: 700;">Locked</span></div>
+                </div>
+                <div class="settings-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px;">
+                    <div class="settings-left" style="display: flex; align-items: center; gap: 12px;">
+                        <span class="settings-icon" style="font-size: 18px;">📊</span>
+                        <span class="settings-label" style="font-size: 13px; font-weight: 700; color: #94a3b8;">Pro Analytics</span>
+                    </div>
+                    <div class="settings-right" style="color: var(--text-muted); font-size: 10px;"><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 10px; font-weight: 700;">Locked</span></div>
+                </div>
+            </div>
+        `;
+
+        const avatarGroup = document.getElementById('store-avatars-group');
+
         storeItems.forEach(emoji => {
             const item = document.createElement('div');
+            item.className = 'settings-item';
             item.style.display = 'flex';
             item.style.alignItems = 'center';
             item.style.justifyContent = 'space-between';
-            item.style.padding = '10px 12px';
-            item.style.background = '#f8fafc';
-            item.style.borderRadius = '10px';
-            item.style.border = '1px solid #e2e8f0';
+            item.style.padding = '12px';
+            item.style.borderBottom = '1px solid #f1f5f9';
 
             const cost = 300; // 300 XP per avatar
 
             item.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 24px;">${emoji}</span>
-                    <span style="font-size: 12px; font-weight: 600; color: #1e293b;">Premium Avatar</span>
+                    <span style="font-size: 13px; font-weight: 700; color: #1e293b;">Premium Avatar</span>
                 </div>
                 <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
             `;
@@ -2281,8 +2305,13 @@ function initStoreView() {
                 }
             });
 
-            container.appendChild(item);
+            avatarGroup.appendChild(item);
         });
+
+        // Remove bottom border from last avatar item
+        if (avatarGroup.lastChild) {
+            avatarGroup.lastChild.style.borderBottom = 'none';
+        }
     }
 }
 
