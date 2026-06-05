@@ -352,22 +352,30 @@ function parseDate(str) {
     return new Date(y, m - 1, d);
 }
 
-function updateBudgetStatus() {
+function updateBudgetStatus(customBudget) {
     if (!budgetSpentEl) return;
+    
+    const budgetToUse = customBudget !== undefined ? customBudget : weeklyBudget;
     
     const now = new Date();
     const monday = getMonday(now);
     
+    // Calculate Sunday (end of current week)
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
     const weekSpends = trackerData.reduce((total, row) => {
         const d = parseDate(row.date);
-        if (d >= monday) return total + (row.spends || 0);
+        // Include transaction only if it lies within current Monday to Sunday
+        if (d >= monday && d <= sunday) return total + (row.spends || 0);
         return total;
     }, 0);
     
     budgetSpentEl.textContent = `Spent: ${Math.round(weekSpends)}`;
     
-    if (weeklyBudget > 0) {
-        const percent = Math.min((weekSpends / weeklyBudget) * 100, 100);
+    if (budgetToUse > 0) {
+        const percent = Math.min((weekSpends / budgetToUse) * 100, 100);
         budgetPercentEl.textContent = `${Math.round(percent)}%`;
         progressFill.style.width = `${percent}%`;
         if (percent < 50) progressFill.style.backgroundColor = '#10b981';
@@ -379,12 +387,35 @@ function updateBudgetStatus() {
     }
 }
 
-budgetInput.addEventListener('input', (e) => {
-    weeklyBudget = parseFloat(e.target.value) || 0;
-    saveData();
-    updateBudgetStatus();
-    setHasChangesSinceLastSave(true);
-});
+if (budgetInput) {
+    budgetInput.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) || 0;
+        updateBudgetStatus(val);
+    });
+}
+
+const setBudgetBtn = document.getElementById('set-budget-btn');
+if (setBudgetBtn) {
+    setBudgetBtn.addEventListener('click', () => {
+        const val = parseFloat(budgetInput.value) || 0;
+        weeklyBudget = val;
+        saveData(true); // Persist to local cache and sync to Firebase cloud
+        updateBudgetStatus();
+        setHasChangesSinceLastSave(true);
+        
+        // Show success confirmation on the button
+        const btn = document.getElementById('set-budget-btn');
+        const originalText = btn.textContent;
+        btn.textContent = 'Set ✓';
+        btn.style.background = 'var(--success-gradient)';
+        btn.style.color = 'white';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+            btn.style.color = '';
+        }, 1500);
+    });
+}
 
 function getLocalDateString(date) {
     const d = parseDate(date);
@@ -2148,15 +2179,36 @@ document.getElementById('close-currency-modal')?.addEventListener('click', () =>
 });
 
 // --- Rewards Store Logic ---
-const storeModal = document.getElementById('store-modal');
+document.getElementById('store-btn')?.addEventListener('click', () => {
+    const profileDrawer = document.getElementById('profile-drawer');
+    if (profileDrawer) profileDrawer.style.display = 'none';
 
-document.getElementById('store-btn')?.addEventListener('click', openStoreModal);
-document.getElementById('close-store-modal')?.addEventListener('click', () => {
-    if (storeModal) storeModal.style.display = 'none';
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(i => i.classList.remove('active'));
+
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    
+    const storeView = document.getElementById('store-view');
+    if (storeView) storeView.classList.add('active');
+
+    const summaryStrip = document.getElementById('summary-strip');
+    if (summaryStrip) summaryStrip.style.display = 'none';
+
+    const fabBtn = document.getElementById('fab-add-btn');
+    if (fabBtn) fabBtn.style.display = 'none';
+
+    const backBtn = document.getElementById('settings-back-btn');
+    const profileTrigger = document.getElementById('profile-trigger');
+    if (backBtn && profileTrigger) {
+        backBtn.style.display = 'flex';
+        profileTrigger.style.display = 'none';
+    }
+
+    initStoreView();
 });
 
-function openStoreModal() {
-    if (!storeModal) return;
+function initStoreView() {
     const container = document.getElementById('store-items-container');
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!container || !user) return;
@@ -2214,7 +2266,7 @@ function openStoreModal() {
                     }).catch(err => console.error("Store sync failed:", err));
                     
                     alert('Avatar Unlocked! You can now use it in your profile.');
-                    openStoreModal(); // refresh store list
+                    initStoreView(); // refresh store list
                 } else {
                     alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
                 }
@@ -2223,8 +2275,6 @@ function openStoreModal() {
             container.appendChild(item);
         });
     }
-
-    storeModal.style.display = 'flex';
 }
 
 function addXP(amount) {
