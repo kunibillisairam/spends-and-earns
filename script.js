@@ -2322,6 +2322,26 @@ document.getElementById('store-btn')?.addEventListener('click', () => {
 
 let currentStoreCategory = "Boy";
 
+// Avatar price map: one premium (1000 XP) per category, rest vary 200-500
+const avatarPrices = {
+    // Boy
+    "👱‍♂️": 1000, "👨‍🦰": 400, "👨‍🦱": 350, "👨‍🦳": 300, "👨‍🦲": 250, "🧑‍🦰": 450,
+    "🧑‍🦱": 300, "🧑‍🦳": 250, "🧑‍🦲": 200, "👦🏼": 200, "👦🏽": 200, "👦🏾": 200, "👦🏿": 200,
+    // Girl
+    "👱‍♀️": 1000, "👩‍🦰": 400, "👩‍🦱": 350, "👩‍🦳": 300, "👩‍🦲": 250, "🧒": 300,
+    "🧒🏻": 200, "🧒🏼": 200, "🧒🏽": 200, "🧒🏾": 200, "🧒🏿": 200, "👧🏼": 200, "👧🏽": 200, "👧🏾": 200, "👧🏿": 200,
+    // Uncle
+    "🕵️‍♂️": 1000, "👮‍♂️": 500, "🧔": 350, "🧔‍♂️": 400, "👴": 300, "👴🏻": 200,
+    "👴🏼": 200, "👴🏽": 200, "👴🏾": 200, "👴🏿": 200, "👨🏻": 200, "👨🏼": 200, "👨🏽": 200, "👨🏾": 200, "👨🏿": 200,
+    // Aunty
+    "🕵️‍♀️": 1000, "👮‍♀️": 500, "🧕": 400, "👵": 300, "👵🏻": 200,
+    "👵🏼": 200, "👵🏽": 200, "👵🏾": 200, "👵🏿": 200, "👩🏻": 200, "👩🏼": 200, "👩🏽": 200, "👩🏾": 200, "👩🏿": 200,
+    // Fun & Pets
+    "👑": 1000, "💎": 500, "🦄": 450, "🔥": 400, "⚡": 350, "🦁": 350,
+    "🦊": 300, "🦉": 300, "🌟": 250, "🚀": 250, "💰": 200, "💸": 200, "💳": 200,
+    "⚽": 200, "🎮": 250, "🍕": 200, "☕": 200, "🐼": 350, "🐨": 300, "🐱": 250
+};
+
 function initStoreView() {
     const container = document.getElementById('store-items-container');
     const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -2417,11 +2437,19 @@ function initStoreView() {
                 item.style.borderRadius = '12px';
                 item.style.border = '1px solid #e2e8f0';
 
-                const cost = 300; // 300 XP per avatar
+                const cost = avatarPrices[emoji] || 300;
+                const isPremium = cost === 1000;
+
+                if (isPremium) {
+                    item.style.background = 'linear-gradient(135deg, #fef3c7, #fde68a)';
+                    item.style.border = '1.5px solid #f59e0b';
+                    item.style.position = 'relative';
+                }
 
                 item.innerHTML = `
+                    ${isPremium ? '<span style="position:absolute;top:4px;right:6px;font-size:9px;font-weight:800;color:#92400e;background:#fcd34d;padding:2px 5px;border-radius:6px;">⭐ RARE</span>' : ''}
                     <span style="font-size: 32px; line-height: 1;">${emoji}</span>
-                    <button class="primary-btn" style="padding: 4px 0; font-size: 10px; width: 100%; border-radius: 8px;">⭐ ${cost} XP</button>
+                    <button class="primary-btn" style="padding: 4px 0; font-size: 10px; width: 100%; border-radius: 8px; ${isPremium ? 'background: linear-gradient(135deg,#f59e0b,#d97706); color:white; border:none;' : ''}">${isPremium ? '👑' : '⭐'} ${cost} XP</button>
                 `;
 
                 const buyBtn = item.querySelector('button');
