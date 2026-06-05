@@ -195,7 +195,8 @@
             <!-- Tabs -->
             <div style="display: flex; border-bottom: 1px solid #fef3c7; background: #fffbeb;">
                 <button id="xp-tab-single" onclick="switchXpTab('single')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: #f59e0b; color: white; border-radius: 0;">👤 Single User</button>
-                <button id="xp-tab-broadcast" onclick="switchXpTab('broadcast')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: transparent; color: #92400e;">📡 All Users (Broadcast)</button>
+                <button id="xp-tab-broadcast" onclick="switchXpTab('broadcast')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: transparent; color: #92400e; border-left: 1px solid #fde68a;">📡 All Users (Broadcast)</button>
+                <button id="xp-tab-history" onclick="switchXpTab('history')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: transparent; color: #92400e; border-left: 1px solid #fde68a;">📜 History</button>
             </div>
 
             <!-- Single User Tab -->
@@ -283,6 +284,28 @@
 
                 <button id="xp-give-broadcast-btn" onclick="broadcastXpToAll()" style="width: 100%; padding: 10px; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">📡 Broadcast XP to ALL Users</button>
                 <div id="xp-broadcast-status" style="margin-top: 8px; text-align: center; font-weight: 700; font-size: 10px; height: 14px;"></div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="xp-panel-history" style="padding: 16px 20px; display: none;">
+                <!-- Sub-tabs for History -->
+                <div style="display: flex; gap: 8px; margin-bottom: 14px; background: #fffbeb; padding: 4px; border-radius: 8px; border: 1px solid #fcd34d;">
+                    <button id="xp-history-sub-individual" onclick="switchXpHistorySub('individual')" style="flex: 1; padding: 6px; font-size: 10px; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; background: #f59e0b; color: white;">👤 Sent to Individuals</button>
+                    <button id="xp-history-sub-broadcast" onclick="switchXpHistorySub('broadcast')" style="flex: 1; padding: 6px; font-size: 10px; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #92400e;">📡 Broadcasts to All</button>
+                </div>
+
+                <div id="xp-history-loading" style="text-align: center; padding: 20px; display: none;">
+                    <div class="spinner" style="display: inline-block; width: 14px; height: 14px; border: 2px solid #fffbeb; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <span style="font-size: 10px; color: #a16207; margin-left: 6px;">Loading history...</span>
+                </div>
+
+                <!-- History Lists -->
+                <div id="xp-history-list-individual" style="max-height: 250px; overflow-y: auto;">
+                    <!-- Table or items for individual -->
+                </div>
+                <div id="xp-history-list-broadcast" style="max-height: 250px; overflow-y: auto; display: none;">
+                    <!-- Table or items for broadcast -->
+                </div>
             </div>
         </div>
 
@@ -465,7 +488,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, collection, serverTimestamp, query, orderBy, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         // Initialize Firebase immediately
@@ -936,24 +959,176 @@
         function switchXpTab(tab) {
             const singlePanel = document.getElementById('xp-panel-single');
             const broadcastPanel = document.getElementById('xp-panel-broadcast');
+            const historyPanel = document.getElementById('xp-panel-history');
             const singleTab = document.getElementById('xp-tab-single');
             const broadcastTab = document.getElementById('xp-tab-broadcast');
+            const historyTab = document.getElementById('xp-tab-history');
 
             if (tab === 'single') {
                 singlePanel.style.display = 'block';
                 broadcastPanel.style.display = 'none';
+                historyPanel.style.display = 'none';
+                
                 singleTab.style.background = '#f59e0b';
                 singleTab.style.color = 'white';
                 broadcastTab.style.background = 'transparent';
                 broadcastTab.style.color = '#92400e';
-            } else {
+                historyTab.style.background = 'transparent';
+                historyTab.style.color = '#92400e';
+            } else if (tab === 'broadcast') {
                 singlePanel.style.display = 'none';
                 broadcastPanel.style.display = 'block';
+                historyPanel.style.display = 'none';
+                
                 broadcastTab.style.background = '#f59e0b';
                 broadcastTab.style.color = 'white';
                 singleTab.style.background = 'transparent';
                 singleTab.style.color = '#92400e';
+                historyTab.style.background = 'transparent';
+                historyTab.style.color = '#92400e';
                 document.getElementById('broadcast-user-count').textContent = allUsers.length;
+            } else if (tab === 'history') {
+                singlePanel.style.display = 'none';
+                broadcastPanel.style.display = 'none';
+                historyPanel.style.display = 'block';
+                
+                historyTab.style.background = '#f59e0b';
+                historyTab.style.color = 'white';
+                singleTab.style.background = 'transparent';
+                singleTab.style.color = '#92400e';
+                broadcastTab.style.background = 'transparent';
+                broadcastTab.style.color = '#92400e';
+                
+                loadXpHistory();
+            }
+        }
+
+        function switchXpHistorySub(subTab) {
+            const indBtn = document.getElementById('xp-history-sub-individual');
+            const bcBtn = document.getElementById('xp-history-sub-broadcast');
+            const indList = document.getElementById('xp-history-list-individual');
+            const bcList = document.getElementById('xp-history-list-broadcast');
+            
+            if (subTab === 'individual') {
+                indList.style.display = 'block';
+                bcList.style.display = 'none';
+                indBtn.style.background = '#f59e0b';
+                indBtn.style.color = 'white';
+                bcBtn.style.background = 'transparent';
+                bcBtn.style.color = '#92400e';
+            } else {
+                indList.style.display = 'none';
+                bcList.style.display = 'block';
+                bcBtn.style.background = '#f59e0b';
+                bcBtn.style.color = 'white';
+                indBtn.style.background = 'transparent';
+                indBtn.style.color = '#92400e';
+            }
+        }
+
+        async function loadXpHistory() {
+            const loadingEl = document.getElementById('xp-history-loading');
+            const indList = document.getElementById('xp-history-list-individual');
+            const bcList = document.getElementById('xp-history-list-broadcast');
+            
+            loadingEl.style.display = 'block';
+            indList.innerHTML = '';
+            bcList.innerHTML = '';
+            
+            try {
+                const q = query(collection(db, "xp_history"), orderBy("timestamp", "desc"));
+                const snap = await getDocs(q);
+                
+                let hasInd = false;
+                let hasBc = false;
+                
+                const indTable = document.createElement('table');
+                indTable.style.width = '100%';
+                indTable.style.borderCollapse = 'collapse';
+                indTable.innerHTML = `
+                    <thead>
+                        <tr style="border-bottom: 2px solid #fcd34d; font-size: 10px; color: #92400e; text-align: left;">
+                            <th style="padding: 6px; font-weight: 800;">User</th>
+                            <th style="padding: 6px; font-weight: 800;">XP</th>
+                            <th style="padding: 6px; font-weight: 800;">Reason</th>
+                            <th style="padding: 6px; font-weight: 800; text-align: right;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="xp-history-ind-body"></tbody>
+                `;
+                
+                const bcTable = document.createElement('table');
+                bcTable.style.width = '100%';
+                bcTable.style.borderCollapse = 'collapse';
+                bcTable.innerHTML = `
+                    <thead>
+                        <tr style="border-bottom: 2px solid #fcd34d; font-size: 10px; color: #92400e; text-align: left;">
+                            <th style="padding: 6px; font-weight: 800;">Count</th>
+                            <th style="padding: 6px; font-weight: 800;">XP</th>
+                            <th style="padding: 6px; font-weight: 800;">Reason</th>
+                            <th style="padding: 6px; font-weight: 800; text-align: right;">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="xp-history-bc-body"></tbody>
+                `;
+                
+                indList.appendChild(indTable);
+                bcList.appendChild(bcTable);
+                
+                const indBody = document.getElementById('xp-history-ind-body');
+                const bcBody = document.getElementById('xp-history-bc-body');
+                
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const dateStr = data.timestamp ? new Date(data.timestamp.toMillis()).toLocaleDateString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    }) : 'Just now';
+                    
+                    if (data.type === 'individual') {
+                        hasInd = true;
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid #fef3c7';
+                        tr.style.fontSize = '11px';
+                        tr.innerHTML = `
+                            <td style="padding: 6px; color: #1e293b; font-weight: 700;">
+                                ${data.recipientName || 'Unknown'}<br>
+                                <span style="font-size: 9px; color: #64748b; font-weight: 400;">${data.recipientPhone || ''}</span>
+                            </td>
+                            <td style="padding: 6px; color: #d97706; font-weight: 800;">+${data.amount}</td>
+                            <td style="padding: 6px; color: #475569; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.reason || ''}">${data.reason || 'Admin reward'}</td>
+                            <td style="padding: 6px; color: #94a3b8; text-align: right; font-size: 9px;">${dateStr}</td>
+                        `;
+                        indBody.appendChild(tr);
+                    } else if (data.type === 'broadcast') {
+                        hasBc = true;
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid #fef3c7';
+                        tr.style.fontSize = '11px';
+                        tr.innerHTML = `
+                            <td style="padding: 6px; color: #1e293b; font-weight: 700;">
+                                👥 ${data.recipientCount || 'All'} users
+                            </td>
+                            <td style="padding: 6px; color: #b91c1c; font-weight: 800;">+${data.amount}</td>
+                            <td style="padding: 6px; color: #475569; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data.reason || ''}">${data.reason || 'Broadcast'}</td>
+                            <td style="padding: 6px; color: #94a3b8; text-align: right; font-size: 9px;">${dateStr}</td>
+                        `;
+                        bcBody.appendChild(tr);
+                    }
+                });
+                
+                if (!hasInd) {
+                    indBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 11px;">No individual XP history found.</td></tr>';
+                }
+                if (!hasBc) {
+                    bcBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #94a3b8; font-size: 11px;">No broadcast XP history found.</td></tr>';
+                }
+                
+            } catch (err) {
+                console.error("Error fetching XP history:", err);
+                indList.innerHTML = '<div style="color: #ef4444; font-size: 11px; text-align: center; padding: 10px;">Failed to load history.</div>';
+                bcList.innerHTML = '<div style="color: #ef4444; font-size: 11px; text-align: center; padding: 10px;">Failed to load history.</div>';
+            } finally {
+                loadingEl.style.display = 'none';
             }
         }
 
@@ -1027,6 +1202,16 @@
                     timestamp: serverTimestamp()
                 });
 
+                // Log to history
+                await addDoc(collection(db, 'xp_history'), {
+                    type: 'individual',
+                    recipientPhone: selectedXpUser.phone,
+                    recipientName: selectedXpUser.username || 'Unknown',
+                    amount: amount,
+                    reason: reason,
+                    timestamp: serverTimestamp()
+                });
+
                 // Update local allUsers state
                 const u = allUsers.find(u => u.phone === selectedXpUser.phone);
                 if (u) u.xpBalance = newXp;
@@ -1034,6 +1219,11 @@
                 selectedXpUser.xpBalance = newXp;
 
                 showSuccess(`⭐ +${amount} XP Given!`, `Successfully gave ${amount} XP to ${selectedXpUser.username}. Their new balance is ${newXp} XP.`);
+                
+                // Rebuilt back: reset search/selection and inputs
+                selectedXpUser = null;
+                document.getElementById('xp-user-search').value = '';
+                document.getElementById('xp-selected-user').style.display = 'none';
                 document.getElementById('xp-amount-single').value = '';
                 document.getElementById('xp-reason-single').value = '';
 
@@ -1085,6 +1275,15 @@
                     timestamp: serverTimestamp()
                 });
 
+                // Log to history
+                await addDoc(collection(db, 'xp_history'), {
+                    type: 'broadcast',
+                    amount: amount,
+                    reason: reason,
+                    recipientCount: success,
+                    timestamp: serverTimestamp()
+                });
+
                 showSuccess(`📡 XP Broadcast Complete!`, `+${amount} XP sent to ${success} users successfully.${failed > 0 ? ` (${failed} failed)` : ''}`);
                 document.getElementById('xp-amount-broadcast').value = '';
                 document.getElementById('xp-reason-broadcast').value = '';
@@ -1100,6 +1299,8 @@
         }
 
         window.switchXpTab = switchXpTab;
+        window.switchXpHistorySub = switchXpHistorySub;
+        window.loadXpHistory = loadXpHistory;
         window.filterXpUsers = filterXpUsers;
         window.giveXpToUser = giveXpToUser;
         window.broadcastXpToAll = broadcastXpToAll;
