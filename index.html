@@ -43,7 +43,10 @@
                         <p id="header-greeting">Good morning! 👋</p>
                     </div>
                 </div>
-                <div class="header-right">
+                <div class="header-right" style="display: flex; align-items: center; gap: 8px;">
+                    <div id="xp-badge" style="display: flex; align-items: center; background: rgba(99, 102, 241, 0.1); padding: 4px 10px; border-radius: 20px; color: #6366f1; font-weight: 800; font-size: 12px; border: 1.5px solid rgba(99, 102, 241, 0.2); box-shadow: 0 2px 8px rgba(99,102,241,0.1); cursor: pointer;" title="Your Experience Points">
+                        <span style="margin-right: 4px; font-size: 14px;">⭐</span> <span id="xp-amount">0</span> XP
+                    </div>
                     <button id="install-btn" class="install-btn" style="display:none;">
                         ⬇️ Install
                     </button>
@@ -255,6 +258,13 @@
                             <span class="settings-label" style="font-size: 12px; font-weight: 600; color: #1e293b;">Change Profile Icon</span>
                         </div>
                         <div class="settings-right" style="color: var(--text-muted); font-size: 10px; display: flex; align-items: center; gap: 4px;"><span>›</span></div>
+                    </div>
+                    <div class="settings-item" id="store-btn" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;">
+                        <div class="settings-left" style="display: flex; align-items: center; gap: 10px;">
+                            <span class="settings-icon" style="font-size: 15px;">🛍️</span>
+                            <span class="settings-label" style="font-size: 12px; font-weight: 600; color: #1e293b;">Rewards Store</span>
+                        </div>
+                        <div class="settings-right" style="color: var(--text-muted); font-size: 10px; display: flex; align-items: center; gap: 4px;"><span style="background: rgba(99, 102, 241, 0.1); color: #6366f1; padding: 2px 6px; border-radius: 10px; font-weight: 700;">Unlock</span><span>›</span></div>
                     </div>
                     <div class="settings-item" id="edit-email-btn" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;">
                         <div class="settings-left" style="display: flex; align-items: center; gap: 10px;">
@@ -879,6 +889,20 @@
 
             <button class="primary-btn" id="save-avatar" style="width: 100%;">Save Icon</button>
             <button class="text-btn" id="close-avatar-modal" style="width: 100%; margin-top: 10px; color: #64748b;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ===== Rewards Store Modal ===== -->
+    <div class="modal" id="store-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 360px; padding: 20px;">
+            <div class="modal-title" style="display: flex; align-items: center; justify-content: center; gap: 8px;">🛍️ Rewards Store</div>
+            <p style="font-size: 11px; color: #64748b; margin-bottom: 16px; text-align: center;">Unlock premium features, avatars, and customizations using your XP!</p>
+            
+            <div id="store-items-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto; padding-right: 4px;">
+                <!-- Store items will be injected here dynamically -->
+            </div>
+
+            <button class="text-btn" id="close-store-modal" style="width: 100%; margin-top: 16px; color: #64748b;">Close Store</button>
         </div>
     </div>
 

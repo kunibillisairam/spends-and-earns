@@ -798,6 +798,9 @@ function manualSave() {
         fireConfetti();
     }
 
+    // Award XP for saving
+    addXP(50);
+
     setTimeout(() => {
         setHasChangesSinceLastSave(false);
     }, 1000);
@@ -969,6 +972,11 @@ function initUser() {
         }
         if (displayName) displayName.textContent = user.username;
         if (displayPhone) displayPhone.textContent = user.phone;
+
+        const xpAmountEl = document.getElementById('xp-amount');
+        if (xpAmountEl) {
+            xpAmountEl.textContent = user.xpBalance || 0;
+        }
     }
 }
 
@@ -2139,6 +2147,114 @@ document.getElementById('close-currency-modal')?.addEventListener('click', () =>
     if (currencyModal) currencyModal.style.display = 'none';
 });
 
+// --- Rewards Store Logic ---
+const storeModal = document.getElementById('store-modal');
+
+document.getElementById('store-btn')?.addEventListener('click', openStoreModal);
+document.getElementById('close-store-modal')?.addEventListener('click', () => {
+    if (storeModal) storeModal.style.display = 'none';
+});
+
+function openStoreModal() {
+    if (!storeModal) return;
+    const container = document.getElementById('store-items-container');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!container || !user) return;
+
+    container.innerHTML = '';
+    const unlockedAvatars = user.unlockedAvatars || [];
+    
+    // We'll collect all locked avatars to show in the store
+    const storeItems = [];
+    Object.keys(emojiCategories).forEach(cat => {
+        emojiCategories[cat].forEach(emoji => {
+            if (!freeAvatars.includes(emoji) && !unlockedAvatars.includes(emoji)) {
+                storeItems.push(emoji);
+            }
+        });
+    });
+
+    if (storeItems.length === 0) {
+        container.innerHTML = '<p style="text-align:center; font-size:12px; color:#64748b;">You have unlocked all avatars!</p>';
+    } else {
+        storeItems.forEach(emoji => {
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.justifyContent = 'space-between';
+            item.style.padding = '10px 12px';
+            item.style.background = '#f8fafc';
+            item.style.borderRadius = '10px';
+            item.style.border = '1px solid #e2e8f0';
+
+            const cost = 300; // 300 XP per avatar
+
+            item.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">${emoji}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #1e293b;">Premium Avatar</span>
+                </div>
+                <button class="primary-btn" style="padding: 6px 12px; font-size: 11px;">⭐ ${cost} XP</button>
+            `;
+
+            const buyBtn = item.querySelector('button');
+            buyBtn.addEventListener('click', () => {
+                const currentXp = user.xpBalance || 0;
+                if (currentXp >= cost) {
+                    user.xpBalance = currentXp - cost;
+                    const newUnlocked = user.unlockedAvatars || [];
+                    newUnlocked.push(emoji);
+                    user.unlockedAvatars = newUnlocked;
+                    
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    initUser(); // refresh XP in header
+                    updateDoc(doc(db, "users", user.phone), { 
+                        xpBalance: user.xpBalance,
+                        unlockedAvatars: user.unlockedAvatars
+                    }).catch(err => console.error("Store sync failed:", err));
+                    
+                    alert('Avatar Unlocked! You can now use it in your profile.');
+                    openStoreModal(); // refresh store list
+                } else {
+                    alert('Not enough XP! Keep logging expenses and reaching limits to earn more XP.');
+                }
+            });
+
+            container.appendChild(item);
+        });
+    }
+
+    storeModal.style.display = 'flex';
+}
+
+function addXP(amount) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (user) {
+        user.xpBalance = (user.xpBalance || 0) + amount;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        initUser(); // Update header
+        updateDoc(doc(db, "users", user.phone), { xpBalance: user.xpBalance }).catch(e => console.error("XP Sync failed", e));
+        
+        // Show floating toast
+        const toast = document.createElement('div');
+        toast.textContent = `⭐ +${amount} XP Earned!`;
+        toast.style.position = 'fixed';
+        toast.style.bottom = '20px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.background = '#10b981';
+        toast.style.color = 'white';
+        toast.style.padding = '8px 16px';
+        toast.style.borderRadius = '20px';
+        toast.style.fontWeight = 'bold';
+        toast.style.zIndex = '9999';
+        toast.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
+        toast.style.transition = 'opacity 0.3s';
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+    }
+}
+
 // --- Change Profile Icon Modal ---
 const emojiCategories = {
     "Boy": ["👦", "👦🏻", "👦🏼", "👦🏽", "👦🏾", "👦🏿", "👱‍♂️", "👨‍🦰", "👨‍🦱", "👨‍🦳", "👨‍🦲", "🧑‍🦰", "🧑‍🦱", "🧑‍🦳", "🧑‍🦲"],
@@ -2147,6 +2263,8 @@ const emojiCategories = {
     "Aunty": ["👩", "👩🏻", "👩🏼", "👩🏽", "👩🏾", "👩🏿", "👵", "👵🏻", "👵🏼", "👵🏽", "👵🏾", "👵🏿", "🧕", "👮‍♀️", "🕵️‍♀️"],
     "Fun & Pets": ["🦊", "🐱", "🦁", "🐼", "🐨", "🦄", "🦉", "🚀", "💎", "💰", "💸", "💳", "⚡", "👑", "🔥", "⚽", "🎮", "🌟", "🍕", "☕"]
 };
+
+const freeAvatars = ["👦", "👦🏻", "👧", "👧🏻", "👨", "👨🏻", "👩", "👩🏻", "🦊", "🐱"];
 
 const bgOptions = [
     'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', // Indigo-Purple (Default)
@@ -2216,11 +2334,29 @@ function openAvatarModal() {
         if (!emojiGrid) return;
         emojiGrid.innerHTML = '';
         const emojis = emojiCategories[category] || [];
+        const unlockedAvatars = user.unlockedAvatars || [];
         emojis.forEach(emoji => {
+            const isFree = freeAvatars.includes(emoji);
+            const isUnlocked = isFree || unlockedAvatars.includes(emoji);
+
             const item = document.createElement('div');
             item.className = `avatar-emoji-item ${selectedEmoji === emoji ? 'active' : ''}`;
-            item.textContent = emoji;
+            item.style.position = 'relative';
+
+            if (!isUnlocked) {
+                item.style.opacity = '0.5';
+                item.style.cursor = 'not-allowed';
+                item.innerHTML = `<span>${emoji}</span><span style="position:absolute; bottom:-2px; right:-2px; font-size:10px; background:rgba(0,0,0,0.6); border-radius:50%; padding:2px;">🔒</span>`;
+            } else {
+                item.textContent = emoji;
+            }
+
             item.addEventListener('click', () => {
+                if (!isUnlocked) {
+                    alert('This avatar is locked! Visit the Rewards Store to unlock it using XP.');
+                    return;
+                }
+
                 if (selectedEmoji === emoji) {
                     item.classList.remove('active');
                     selectedEmoji = "";
