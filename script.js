@@ -1515,10 +1515,19 @@ if (drawerHelpBtn) {
     });
 }
 
-// Settings Back Button Action (Go back to tracker and open profile drawer)
+// Settings Back Button Action (Go back to tracker and open profile drawer, or settings from sub-pages)
 const settingsBackBtn = document.getElementById('settings-back-btn');
 if (settingsBackBtn) {
     settingsBackBtn.addEventListener('click', () => {
+        const avatarView = document.getElementById('avatar-view');
+        if (avatarView && avatarView.classList.contains('active')) {
+            const appViews = document.querySelectorAll('.app-view');
+            appViews.forEach(v => v.classList.remove('active'));
+            const settingsView = document.getElementById('settings-view');
+            if (settingsView) settingsView.classList.add('active');
+            return;
+        }
+
         const trackerTab = document.getElementById('nav-tracker');
         if (trackerTab) {
             trackerTab.click();
@@ -2136,7 +2145,7 @@ const securityModal = document.getElementById('security-modal');
 const emailModal = document.getElementById('email-modal');
 const feedbackModal = document.getElementById('feedback-modal');
 const referModal = document.getElementById('refer-modal');
-const avatarModal = document.getElementById('avatar-modal');
+const avatarView = document.getElementById('avatar-view');
 
 document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
 document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
@@ -2333,7 +2342,7 @@ let selectedEmoji = "";
 let selectedBg = "";
 
 function openAvatarModal() {
-    if (!avatarModal) return;
+    if (!avatarView) return;
 
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) return;
@@ -2451,13 +2460,28 @@ function openAvatarModal() {
         });
     }
 
-    avatarModal.style.display = 'flex';
+    // Hide all other views and show avatar view
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    avatarView.classList.add('active');
 }
+
+// Back button to navigate to Settings Page
+document.getElementById('avatar-back-btn')?.addEventListener('click', () => {
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    const settingsView = document.getElementById('settings-view');
+    if (settingsView) settingsView.classList.add('active');
+});
 
 document.getElementById('change-avatar-btn')?.addEventListener('click', openAvatarModal);
 document.getElementById('p-avatar')?.addEventListener('click', openAvatarModal);
 document.getElementById('close-avatar-modal')?.addEventListener('click', () => {
-    if (avatarModal) avatarModal.style.display = 'none';
+    // Cancel also goes back to settings page
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+    const settingsView = document.getElementById('settings-view');
+    if (settingsView) settingsView.classList.add('active');
 });
 
 document.getElementById('save-avatar')?.addEventListener('click', async () => {
@@ -2472,7 +2496,11 @@ document.getElementById('save-avatar')?.addEventListener('click', async () => {
             user.profileBg = selectedBg;
             localStorage.setItem('currentUser', JSON.stringify(user));
             
-            if (avatarModal) avatarModal.style.display = 'none';
+            // Go back to settings view
+            const appViews = document.querySelectorAll('.app-view');
+            appViews.forEach(v => v.classList.remove('active'));
+            const settingsView = document.getElementById('settings-view');
+            if (settingsView) settingsView.classList.add('active');
             
             initUser();
             initSettings();
