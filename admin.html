@@ -1176,6 +1176,29 @@
         }
 
         async function giveXpToUser() {
+            if (!selectedXpUser) {
+                const searchVal = document.getElementById('xp-user-search').value.trim();
+                if (searchVal) {
+                    let match = null;
+                    const parenMatch = searchVal.match(/\(([^)]+)\)/);
+                    if (parenMatch && parenMatch[1]) {
+                        const phone = parenMatch[1].trim();
+                        match = allUsers.find(u => u.phone === phone);
+                    }
+                    if (!match) {
+                        const digits = searchVal.replace(/\D/g, '');
+                        if (digits.length >= 10) {
+                            match = allUsers.find(u => u.phone === digits);
+                        }
+                    }
+                    if (!match) {
+                        match = allUsers.find(u => (u.username || '').toLowerCase() === searchVal.toLowerCase());
+                    }
+                    if (match) {
+                        selectedXpUser = match;
+                    }
+                }
+            }
             if (!selectedXpUser) { alert('Please search and select a user first.'); return; }
             const amount = parseInt(document.getElementById('xp-amount-single').value);
             const reason = document.getElementById('xp-reason-single').value.trim() || 'Admin reward';
