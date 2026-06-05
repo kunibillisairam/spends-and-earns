@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, query, collection, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
 
 // Initialize Firebase
@@ -3089,7 +3089,6 @@ document.getElementById('save-email')?.addEventListener('click', async () => {
 });
 
 // --- Support ticket submission ---
-import { collection, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 document.getElementById('submit-ticket')?.addEventListener('click', async () => {
     const type = document.getElementById('ticket-type').value;
     const message = document.getElementById('ticket-message').value;
