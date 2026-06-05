@@ -47,7 +47,7 @@ function CS() {
     return SUPPORTED_CURRENCIES[selectedCurrency]?.symbol || '₹';
 }
 
-function setCurrency(code) {
+function setCurrency(code, syncToCloudVal = true) {
     if (!SUPPORTED_CURRENCIES[code]) return;
     selectedCurrency = code;
     localStorage.setItem('selectedCurrency', code);
@@ -58,18 +58,44 @@ function setCurrency(code) {
     updateChart();
     updateBudgetStatus();
     
+    // Re-render subscription views
+    if (typeof renderCalendar === 'function') renderCalendar();
+    if (typeof renderSubscriptionsList === 'function') renderSubscriptionsList();
+    
     // Update currency display label in settings
     const currLabel = document.getElementById('currency-current-label');
     if (currLabel) {
         currLabel.textContent = `${SUPPORTED_CURRENCIES[code].flag} ${SUPPORTED_CURRENCIES[code].symbol} ${code}`;
     }
     
+    // Update Set Limit input placeholder
+    const budgetInput = document.getElementById('budget-input');
+    if (budgetInput) {
+        budgetInput.placeholder = `Set Limit (${SUPPORTED_CURRENCIES[code].symbol})`;
+    }
+    
+    // Update Subscription Price Label
+    const subPriceLabel = document.getElementById('sub-price-label');
+    if (subPriceLabel) {
+        subPriceLabel.textContent = `Price (${SUPPORTED_CURRENCIES[code].symbol})`;
+    }
+    
+    // Update Quick Add Placeholders
+    const newEarns = document.getElementById('new-earns');
+    const newOther = document.getElementById('new-other');
+    const newSpends = document.getElementById('new-spends');
+    if (newEarns) newEarns.placeholder = `${SUPPORTED_CURRENCIES[code].symbol}0`;
+    if (newOther) newOther.placeholder = `${SUPPORTED_CURRENCIES[code].symbol}0`;
+    if (newSpends) newSpends.placeholder = `${SUPPORTED_CURRENCIES[code].symbol}0`;
+    
     // Sync to Firebase
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (user && user.phone) {
-        import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js").then(({ updateDoc, doc: fbDoc }) => {
-            updateDoc(fbDoc(db, "users", user.phone), { currency: code }).catch(e => console.warn("Currency sync failed:", e));
-        });
+    if (syncToCloudVal) {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user && user.phone) {
+            import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js").then(({ updateDoc, doc: fbDoc }) => {
+                updateDoc(fbDoc(db, "users", user.phone), { currency: code }).catch(e => console.warn("Currency sync failed:", e));
+            });
+        }
     }
 }
 
@@ -143,6 +169,9 @@ function fireConfetti() {
 
 // Initialize the app
 async function init() {
+    // Set active base currency (without syncing to cloud since it's already set)
+    setCurrency(selectedCurrency, false);
+    
     // 1. Instantly process and display data from the local cache
     autoAddMissingDays();
     checkAutoLogSubscriptions(); // Process due subscription bills on startup
@@ -2027,6 +2056,9 @@ async function initSettings() {
                 pEmail.textContent = userData.email;
                 pEmail.style.color = '#6366f1';
             }
+            if (userData.currency && userData.currency !== selectedCurrency) {
+                setCurrency(userData.currency, false);
+            }
             if (lockStatus) {
                 if (userData.isLockActive) {
                     lockStatus.textContent = "Active";
@@ -2069,6 +2101,43 @@ const avatarModal = document.getElementById('avatar-modal');
 
 document.getElementById('edit-profile-btn')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'flex'; });
 document.getElementById('close-modal')?.addEventListener('click', () => { if (editModal) editModal.style.display = 'none'; });
+
+const currencyModal = document.getElementById('currency-modal');
+
+function openCurrencyModal() {
+    if (!currencyModal) return;
+    const container = document.getElementById('currency-list-container');
+    if (container) {
+        container.innerHTML = '';
+        Object.keys(SUPPORTED_CURRENCIES).forEach(code => {
+            const curr = SUPPORTED_CURRENCIES[code];
+            const isActive = selectedCurrency === code;
+            const item = document.createElement('div');
+            item.className = `currency-card-item ${isActive ? 'active' : ''}`;
+            item.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 20px;">${curr.flag}</span>
+                    <div style="display: flex; flex-direction: column; text-align: left;">
+                        <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">${curr.name}</span>
+                        <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${code}</span>
+                    </div>
+                </div>
+                <span class="currency-symbol">${curr.symbol}</span>
+            `;
+            item.addEventListener('click', () => {
+                setCurrency(code);
+                currencyModal.style.display = 'none';
+            });
+            container.appendChild(item);
+        });
+    }
+    currencyModal.style.display = 'flex';
+}
+
+document.getElementById('currency-select-btn')?.addEventListener('click', openCurrencyModal);
+document.getElementById('close-currency-modal')?.addEventListener('click', () => {
+    if (currencyModal) currencyModal.style.display = 'none';
+});
 
 // --- Change Profile Icon Modal ---
 const emojiCategories = {

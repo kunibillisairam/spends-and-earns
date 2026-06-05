@@ -1968,4 +1968,55 @@ button {
     display: none;
 }
 
+/* =============================================
+   CURRENCY MODAL CARD STYLES
+   ============================================= */
+.currency-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.currency-card-item:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+    transform: translateY(-1px);
+}
+.currency-card-item.active {
+    border-color: #6366f1;
+    background: #f5f3ff;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+.currency-card-item .currency-symbol {
+    font-size: 16px;
+    font-weight: 800;
+    color: #475569;
+}
+.currency-card-item.active .currency-symbol {
+    color: #6366f1;
+}
+
+/* Dark Theme Adjustments */
+.dark-theme .currency-card-item:hover {
+    background: #1e293b;
+    border-color: #475569;
+}
+.dark-theme .currency-card-item.active {
+    background: #1e1b4b;
+    border-color: #6366f1;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+.dark-theme .currency-card-item .currency-symbol {
+    color: #94a3b8;
+}
+.dark-theme .currency-card-item.active .currency-symbol {
+    color: #818cf8;
+}
+
+
 

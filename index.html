@@ -266,6 +266,19 @@
                 </div>
 
                 <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;">
+                    <div class="settings-item" id="currency-select-btn" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;">
+                        <div class="settings-left" style="display: flex; align-items: center; gap: 10px;">
+                            <span class="settings-icon" style="font-size: 15px;">💱</span>
+                            <span class="settings-label" style="font-size: 12px; font-weight: 600; color: #1e293b;">Base Currency</span>
+                        </div>
+                        <div class="settings-right" style="color: var(--text-muted); font-size: 11px; display: flex; align-items: center; gap: 4px; font-weight: 600;">
+                            <span id="currency-current-label">🇮🇳 ₹ INR</span>
+                            <span style="font-size: 10px;">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group" style="background: white; border-radius: 14px; padding: 0; margin-bottom: 10px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;">
                     <div class="settings-item" id="theme-btn-settings" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;">
                         <div class="settings-left" style="display: flex; align-items: center; gap: 10px;">
                             <span class="settings-icon" style="font-size: 15px;">🌙</span>
@@ -320,7 +333,7 @@
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 10px; font-weight: 700; color: var(--text-muted);">Price (₹)</label>
+                                <label id="sub-price-label" style="font-size: 10px; font-weight: 700; color: var(--text-muted);">Price (₹)</label>
                                 <input type="number" id="sub-price" placeholder="0" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: #f8fafc; font-weight: 600; font-family: inherit;">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
@@ -866,6 +879,20 @@
 
             <button class="primary-btn" id="save-avatar" style="width: 100%;">Save Icon</button>
             <button class="text-btn" id="close-avatar-modal" style="width: 100%; margin-top: 10px; color: #64748b;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- ===== Base Currency Selector Modal ===== -->
+    <div class="modal" id="currency-modal" style="display:none;">
+        <div class="modal-content" style="max-width: 340px; padding: 20px;">
+            <div class="modal-title">Select Base Currency</div>
+            <p style="font-size: 11px; color: #64748b; margin-bottom: 16px; text-align: center;">Choose your base currency. All figures across dashboards, transactions, budgets, lists, and statements will update instantly.</p>
+            
+            <div id="currency-list-container" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 260px; overflow-y: auto; padding: 2px;">
+                <!-- Loaded dynamically by JS -->
+            </div>
+            
+            <button class="text-btn" id="close-currency-modal" style="width: 100%; margin-top: 10px; color: #64748b; background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 700;">Cancel</button>
         </div>
     </div>
 
