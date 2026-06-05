@@ -181,6 +181,111 @@
                 <p style="margin-top: 8px;">Fetching directory data...</p>
             </div>
         </div>
+
+        <!-- ===== XP MANAGEMENT PANEL ===== -->
+        <div class="broadcast-panel" style="margin-top: 20px; padding: 0; overflow: hidden; border: 2px solid #f59e0b; border-radius: 14px;">
+            <div style="padding: 14px 20px; border-bottom: 1px solid #fef3c7; background: linear-gradient(135deg, #fef3c7, #fde68a); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="margin: 0 0 2px; font-size: 14px; color: #92400e;">⭐ XP Management</h2>
+                    <p style="margin: 0; font-size: 10px; color: #a16207;">Give XP rewards to individual users or broadcast to all</p>
+                </div>
+                <span style="font-size: 28px;">🎁</span>
+            </div>
+
+            <!-- Tabs -->
+            <div style="display: flex; border-bottom: 1px solid #fef3c7; background: #fffbeb;">
+                <button id="xp-tab-single" onclick="switchXpTab('single')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: #f59e0b; color: white; border-radius: 0;">👤 Single User</button>
+                <button id="xp-tab-broadcast" onclick="switchXpTab('broadcast')" style="flex: 1; padding: 10px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; background: transparent; color: #92400e;">📡 All Users (Broadcast)</button>
+            </div>
+
+            <!-- Single User Tab -->
+            <div id="xp-panel-single" style="padding: 16px 20px;">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Search User</label>
+                    <div style="position: relative;">
+                        <input type="text" id="xp-user-search" placeholder="Search by name or phone..." style="padding-left: 30px; font-size: 12px; width: 100%; border: 1px solid #fcd34d; border-radius: 8px; padding: 8px 12px;" oninput="filterXpUsers(this.value)">
+                    </div>
+                    <div id="xp-user-dropdown" style="display: none; max-height: 180px; overflow-y: auto; border: 1px solid #fcd34d; border-radius: 8px; margin-top: 4px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <!-- Suggestions injected here -->
+                    </div>
+                </div>
+
+                <div id="xp-selected-user" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;" id="xp-user-avatar">U</div>
+                    <div>
+                        <div id="xp-user-name" style="font-weight: 800; font-size: 13px; color: #1e293b;">-</div>
+                        <div id="xp-user-phone-display" style="font-size: 10px; color: #94a3b8;">-</div>
+                    </div>
+                    <div style="margin-left: auto; text-align: right;">
+                        <div style="font-size: 9px; color: #92400e; font-weight: 700;">Current XP</div>
+                        <div id="xp-user-current-xp" style="font-size: 18px; font-weight: 800; color: #f59e0b;">-</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">XP Amount to Give</label>
+                    <input type="number" id="xp-amount-single" placeholder="e.g. 100" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #fcd34d; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Quick Presets</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button onclick="document.getElementById('xp-amount-single').value=50" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+50 XP</button>
+                        <button onclick="document.getElementById('xp-amount-single').value=100" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+100 XP</button>
+                        <button onclick="document.getElementById('xp-amount-single').value=225" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+225 XP</button>
+                        <button onclick="document.getElementById('xp-amount-single').value=500" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+500 XP</button>
+                        <button onclick="document.getElementById('xp-amount-single').value=1000" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+1000 XP</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Reason / Note (optional)</label>
+                    <input type="text" id="xp-reason-single" placeholder="e.g. Admin bonus reward" style="width: 100%; padding: 8px 12px; border: 1px solid #fcd34d; border-radius: 8px; font-size: 12px;">
+                </div>
+
+                <button id="xp-give-single-btn" onclick="giveXpToUser()" style="width: 100%; padding: 10px; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.4);">⭐ Give XP to User</button>
+                <div id="xp-single-status" style="margin-top: 8px; text-align: center; font-weight: 700; font-size: 10px; height: 14px;"></div>
+            </div>
+
+            <!-- Broadcast XP Tab -->
+            <div id="xp-panel-broadcast" style="padding: 16px 20px; display: none;">
+                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">📡</span>
+                    <div>
+                        <div style="font-weight: 800; font-size: 12px; color: #92400e;">Broadcast to All Users</div>
+                        <div style="font-size: 10px; color: #a16207;">This will add XP to every registered user's balance</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">XP Amount for All Users</label>
+                    <input type="number" id="xp-amount-broadcast" placeholder="e.g. 100" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #fcd34d; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Quick Presets</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button onclick="document.getElementById('xp-amount-broadcast').value=25" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+25 XP</button>
+                        <button onclick="document.getElementById('xp-amount-broadcast').value=50" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+50 XP</button>
+                        <button onclick="document.getElementById('xp-amount-broadcast').value=100" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+100 XP</button>
+                        <button onclick="document.getElementById('xp-amount-broadcast').value=200" style="padding: 4px 10px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d; border-radius: 20px; background: white; color: #92400e; cursor: pointer;">+200 XP</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="font-size: 9px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Reason / Note (will show as notification)</label>
+                    <input type="text" id="xp-reason-broadcast" placeholder="e.g. Weekend bonus for all users!" style="width: 100%; padding: 8px 12px; border: 1px solid #fcd34d; border-radius: 8px; font-size: 12px;">
+                </div>
+
+                <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 8px 12px; margin-bottom: 14px;">
+                    <div style="font-size: 10px; color: #dc2626; font-weight: 700;">⚠️ Warning: This action will give XP to ALL <span id="broadcast-user-count">0</span> users. This cannot be undone.</div>
+                </div>
+
+                <button id="xp-give-broadcast-btn" onclick="broadcastXpToAll()" style="width: 100%; padding: 10px; font-size: 12px; font-weight: 800; background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">📡 Broadcast XP to ALL Users</button>
+                <div id="xp-broadcast-status" style="margin-top: 8px; text-align: center; font-weight: 700; font-size: 10px; height: 14px;"></div>
+            </div>
+        </div>
+
         <div class="broadcast-panel" style="margin-top: 20px; padding: 0; overflow: hidden; border: 1px solid #e2e8f0;">
             <div style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="margin-bottom: 0; font-size: 14px;">Support Inbox</h2>
@@ -825,6 +930,179 @@
                 sendBtn.disabled = false;
             }
         });
+        // ===== XP MANAGEMENT LOGIC =====
+        let selectedXpUser = null;
+
+        function switchXpTab(tab) {
+            const singlePanel = document.getElementById('xp-panel-single');
+            const broadcastPanel = document.getElementById('xp-panel-broadcast');
+            const singleTab = document.getElementById('xp-tab-single');
+            const broadcastTab = document.getElementById('xp-tab-broadcast');
+
+            if (tab === 'single') {
+                singlePanel.style.display = 'block';
+                broadcastPanel.style.display = 'none';
+                singleTab.style.background = '#f59e0b';
+                singleTab.style.color = 'white';
+                broadcastTab.style.background = 'transparent';
+                broadcastTab.style.color = '#92400e';
+            } else {
+                singlePanel.style.display = 'none';
+                broadcastPanel.style.display = 'block';
+                broadcastTab.style.background = '#f59e0b';
+                broadcastTab.style.color = 'white';
+                singleTab.style.background = 'transparent';
+                singleTab.style.color = '#92400e';
+                document.getElementById('broadcast-user-count').textContent = allUsers.length;
+            }
+        }
+
+        function filterXpUsers(query) {
+            const dropdown = document.getElementById('xp-user-dropdown');
+            if (!query.trim()) { dropdown.style.display = 'none'; return; }
+
+            const matched = allUsers.filter(u =>
+                (u.username || '').toLowerCase().includes(query.toLowerCase()) ||
+                (u.phone || '').includes(query)
+            ).slice(0, 6);
+
+            if (matched.length === 0) { dropdown.style.display = 'none'; return; }
+
+            dropdown.innerHTML = '';
+            matched.forEach(u => {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #fef3c7; display: flex; align-items: center; gap: 8px; font-size: 12px;';
+                item.innerHTML = `
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; flex-shrink: 0;">${(u.username||'?').charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div style="font-weight: 700; color: #1e293b;">${u.username}</div>
+                        <div style="font-size: 10px; color: #94a3b8;">${u.phone} • ⭐ ${u.xpBalance || 0} XP</div>
+                    </div>
+                `;
+                item.addEventListener('mouseenter', () => item.style.background = '#fffbeb');
+                item.addEventListener('mouseleave', () => item.style.background = 'white');
+                item.addEventListener('click', () => selectXpUser(u));
+                dropdown.appendChild(item);
+            });
+            dropdown.style.display = 'block';
+        }
+
+        function selectXpUser(user) {
+            selectedXpUser = user;
+            document.getElementById('xp-user-search').value = `${user.username} (${user.phone})`;
+            document.getElementById('xp-user-dropdown').style.display = 'none';
+
+            const box = document.getElementById('xp-selected-user');
+            document.getElementById('xp-user-avatar').textContent = (user.username||'?').charAt(0).toUpperCase();
+            document.getElementById('xp-user-name').textContent = user.username || 'Unknown';
+            document.getElementById('xp-user-phone-display').textContent = user.phone;
+            document.getElementById('xp-user-current-xp').textContent = (user.xpBalance || 0) + ' XP';
+            box.style.display = 'flex';
+        }
+
+        async function giveXpToUser() {
+            if (!selectedXpUser) { alert('Please search and select a user first.'); return; }
+            const amount = parseInt(document.getElementById('xp-amount-single').value);
+            const reason = document.getElementById('xp-reason-single').value.trim() || 'Admin reward';
+            if (!amount || amount < 1) { alert('Enter a valid XP amount.'); return; }
+
+            const btn = document.getElementById('xp-give-single-btn');
+            const status = document.getElementById('xp-single-status');
+            btn.textContent = 'Giving XP...';
+            btn.disabled = true;
+
+            try {
+                const userRef = doc(db, 'users', selectedXpUser.phone);
+                const snap = await getDoc(userRef);
+                const currentXp = snap.exists() ? (snap.data().xpBalance || 0) : 0;
+                const newXp = currentXp + amount;
+
+                await updateDoc(userRef, { xpBalance: newXp });
+
+                // Send personal notification
+                await setDoc(doc(db, 'notifications', selectedXpUser.phone), {
+                    title: '⭐ XP Reward!',
+                    message: `You received +${amount} XP from admin! (${reason})`,
+                    active: true,
+                    timestamp: serverTimestamp()
+                });
+
+                // Update local allUsers state
+                const u = allUsers.find(u => u.phone === selectedXpUser.phone);
+                if (u) u.xpBalance = newXp;
+                document.getElementById('xp-user-current-xp').textContent = newXp + ' XP';
+                selectedXpUser.xpBalance = newXp;
+
+                showSuccess(`⭐ +${amount} XP Given!`, `Successfully gave ${amount} XP to ${selectedXpUser.username}. Their new balance is ${newXp} XP.`);
+                document.getElementById('xp-amount-single').value = '';
+                document.getElementById('xp-reason-single').value = '';
+
+            } catch (err) {
+                console.error(err);
+                status.textContent = '❌ Failed. Check console.';
+                status.style.color = '#ef4444';
+            } finally {
+                btn.textContent = '⭐ Give XP to User';
+                btn.disabled = false;
+            }
+        }
+
+        async function broadcastXpToAll() {
+            const amount = parseInt(document.getElementById('xp-amount-broadcast').value);
+            const reason = document.getElementById('xp-reason-broadcast').value.trim() || 'Admin broadcast reward';
+            if (!amount || amount < 1) { alert('Enter a valid XP amount.'); return; }
+            if (!confirm(`Are you sure you want to give +${amount} XP to ALL ${allUsers.length} users?`)) return;
+
+            const btn = document.getElementById('xp-give-broadcast-btn');
+            const status = document.getElementById('xp-broadcast-status');
+            btn.textContent = `Sending to ${allUsers.length} users...`;
+            btn.disabled = true;
+
+            let success = 0, failed = 0;
+
+            try {
+                // Batch XP updates to all users
+                for (const user of allUsers) {
+                    try {
+                        const userRef = doc(db, 'users', user.phone);
+                        const snap = await getDoc(userRef);
+                        const currentXp = snap.exists() ? (snap.data().xpBalance || 0) : 0;
+                        await updateDoc(userRef, { xpBalance: currentXp + amount });
+                        user.xpBalance = currentXp + amount;
+                        success++;
+                        status.textContent = `✅ Updated ${success}/${allUsers.length} users...`;
+                        status.style.color = '#10b981';
+                    } catch (e) {
+                        failed++;
+                    }
+                }
+
+                // Send broadcast notification
+                await setDoc(doc(db, 'notifications', 'broadcast'), {
+                    title: '⭐ XP Reward for Everyone!',
+                    message: `You received +${amount} XP! ${reason}`,
+                    active: true,
+                    timestamp: serverTimestamp()
+                });
+
+                showSuccess(`📡 XP Broadcast Complete!`, `+${amount} XP sent to ${success} users successfully.${failed > 0 ? ` (${failed} failed)` : ''}`);
+                document.getElementById('xp-amount-broadcast').value = '';
+                document.getElementById('xp-reason-broadcast').value = '';
+
+            } catch (err) {
+                console.error(err);
+                status.textContent = '❌ Broadcast failed.';
+                status.style.color = '#ef4444';
+            } finally {
+                btn.textContent = '📡 Broadcast XP to ALL Users';
+                btn.disabled = false;
+            }
+        }
+
+        window.switchXpTab = switchXpTab;
+        window.filterXpUsers = filterXpUsers;
+        window.giveXpToUser = giveXpToUser;
+        window.broadcastXpToAll = broadcastXpToAll;
     </script>
 </body>
 </html>
