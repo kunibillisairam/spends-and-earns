@@ -829,8 +829,8 @@ function manualSave() {
         fireConfetti();
     }
 
-    // Award XP for saving
-    addXP(50);
+    // Award XP based on milestones
+    checkXPMilestones();
 
     setTimeout(() => {
         setHasChangesSinceLastSave(false);
@@ -838,6 +838,111 @@ function manualSave() {
 }
 
 
+
+// ===== Comprehensive XP Milestone System =====
+function checkXPMilestones() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const today = getLocalDateString(new Date());
+    const milestoneKey = `xpMilestones_${user.phone}`;
+    const milestones = JSON.parse(localStorage.getItem(milestoneKey)) || {};
+
+    // --- 1. Daily Earns XP: 50 XP when user logs earns today ---
+    const todayRow = trackerData.find(r => r.date === today);
+    const todayEarns = todayRow ? ((todayRow.earns || 0) + (todayRow.other || 0)) : 0;
+    if (todayEarns > 0 && milestones.lastDailyEarnDate !== today) {
+        milestones.lastDailyEarnDate = today;
+        addXP(50);
+        showXPToast('📅 Daily Earns Logged!', 50);
+    }
+
+    // --- 2. Weekly Budget Not Reached XP ---
+    const monday = getMonday(new Date());
+    const weekKey = getLocalDateString(monday);
+    if (weeklyBudget > 0 && milestones.lastWeeklyBudgetCheck !== weekKey) {
+        const weekEnd = new Date(monday);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        let weekSpends = 0;
+        trackerData.forEach(r => {
+            if (!r.date) return;
+            const d = parseDate(r.date);
+            if (d >= monday && d <= weekEnd) weekSpends += (r.spends || 0);
+        });
+        if (weekSpends <= weeklyBudget) {
+            let xpReward = 0;
+            if (weekSpends <= 300) xpReward = 100;
+            else if (weekSpends <= 1000) xpReward = 70;
+            else xpReward = 50;
+            milestones.lastWeeklyBudgetCheck = weekKey;
+            addXP(xpReward);
+            showXPToast('🎯 Weekly Budget Kept!', xpReward);
+        }
+    }
+
+    // --- 3. Balance Milestones: First ₹1000, ₹5000, ₹10000 balance (225 XP each) ---
+    let totalBalance = 0;
+    trackerData.forEach(r => {
+        totalBalance += (r.earns || 0) + (r.other || 0) - (r.spends || 0);
+    });
+    const balanceMilestones = [1000, 5000, 10000];
+    const earnedBalanceMilestones = milestones.balanceMilestones || [];
+    balanceMilestones.forEach(milestone => {
+        if (totalBalance >= milestone && !earnedBalanceMilestones.includes(milestone)) {
+            earnedBalanceMilestones.push(milestone);
+            addXP(225);
+            showXPToast(`💰 Balance Milestone ₹${milestone.toLocaleString()}!`, 225);
+        }
+    });
+    milestones.balanceMilestones = earnedBalanceMilestones;
+
+    // --- 4. Spend Less Than Last Month (100 XP) ---
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+    const lastMonth = lastMonthDate.getMonth();
+    const lastMonthYear = lastMonthDate.getFullYear();
+    const monthCheckKey = `${currentYear}-${currentMonth}`;
+    if (milestones.lastMonthSpendCheck !== monthCheckKey && currentMonth > 0) {
+        let thisMonthSpends = 0, lastMonthSpends = 0;
+        trackerData.forEach(r => {
+            if (!r.date) return;
+            const d = parseDate(r.date);
+            const m = d.getMonth(), y = d.getFullYear();
+            if (m === currentMonth && y === currentYear) thisMonthSpends += (r.spends || 0);
+            if (m === lastMonth && y === lastMonthYear) lastMonthSpends += (r.spends || 0);
+        });
+        if (lastMonthSpends > 0 && thisMonthSpends < lastMonthSpends) {
+            milestones.lastMonthSpendCheck = monthCheckKey;
+            addXP(100);
+            showXPToast('📉 Spent Less Than Last Month!', 100);
+        }
+    }
+
+    // Save updated milestones
+    localStorage.setItem(milestoneKey, JSON.stringify(milestones));
+}
+
+function showXPToast(label, amount) {
+    const toast = document.createElement('div');
+    toast.innerHTML = `<span style="font-size:14px;">⭐ +${amount} XP</span><br><span style="font-size:10px; opacity:0.85;">${label}</span>`;
+    toast.style.cssText = `
+        position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        color:white; padding:10px 18px; border-radius:14px;
+        font-weight:800; font-family:inherit; text-align:center;
+        box-shadow:0 4px 20px rgba(99,102,241,0.4); z-index:9999;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        white-space: nowrap;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+        setTimeout(() => toast.remove(), 400);
+    }, 2500);
+}
 
 saveBtn.addEventListener('click', manualSave);
 clearAllBtn.addEventListener('click', clearAll);
