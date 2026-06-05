@@ -2115,11 +2115,11 @@ function openCurrencyModal() {
             const item = document.createElement('div');
             item.className = `currency-card-item ${isActive ? 'active' : ''}`;
             item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 20px;">${curr.flag}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">${curr.flag}</span>
                     <div style="display: flex; flex-direction: column; text-align: left;">
-                        <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">${curr.name}</span>
-                        <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${code}</span>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-main);">${curr.name}</span>
+                        <span style="font-size: 8px; color: var(--text-muted); font-weight: 600;">${code}</span>
                     </div>
                 </div>
                 <span class="currency-symbol">${curr.symbol}</span>

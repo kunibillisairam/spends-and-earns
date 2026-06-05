@@ -1975,9 +1975,9 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    padding: 8px 10px;
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1.5px solid var(--border-color);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1985,15 +1985,15 @@ button {
 .currency-card-item:hover {
     border-color: #94a3b8;
     background: #f8fafc;
-    transform: translateY(-1px);
+    transform: translateY(-0.5px);
 }
 .currency-card-item.active {
     border-color: #6366f1;
     background: #f5f3ff;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.05);
 }
 .currency-card-item .currency-symbol {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 800;
     color: #475569;
 }
@@ -2009,13 +2009,46 @@ button {
 .dark-theme .currency-card-item.active {
     background: #1e1b4b;
     border-color: #6366f1;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
 }
 .dark-theme .currency-card-item .currency-symbol {
     color: #94a3b8;
 }
 .dark-theme .currency-card-item.active .currency-symbol {
     color: #818cf8;
+}
+
+/* Base Currency Modal overrides to reduce size */
+#currency-modal .modal-content {
+    max-width: 290px !important;
+    padding: 16px !important;
+}
+#currency-modal .modal-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+}
+#currency-modal p {
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 12px !important;
+}
+#currency-modal #close-currency-modal {
+    font-size: 12px !important;
+    margin-top: 8px !important;
+}
+#currency-list-container {
+    gap: 6px !important;
+    max-height: 240px !important;
+}
+#currency-list-container::-webkit-scrollbar {
+    width: 3px;
+}
+#currency-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}
+.dark-theme #currency-list-container::-webkit-scrollbar-thumb {
+    background: #475569;
 }
 
 
