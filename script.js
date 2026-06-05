@@ -1072,6 +1072,31 @@ if (user && user.phone) {
             }
         }
     });
+
+    // --- Real-time XP sync: listen to user's own Firestore doc for admin-given XP ---
+    onSnapshot(doc(db, "users", user.phone), (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.data();
+            const remoteXp = data.xpBalance || 0;
+
+            // Fetch from localStorage for comparison
+            const localUser = JSON.parse(localStorage.getItem('currentUser'));
+            const localXp = localUser ? (localUser.xpBalance || 0) : 0;
+
+            // Only update if Firebase has a HIGHER value (admin gave XP)
+            if (remoteXp > localXp && localUser) {
+                const gained = remoteXp - localXp;
+                localUser.xpBalance = remoteXp;
+                localStorage.setItem('currentUser', JSON.stringify(localUser));
+                initUser(); // refresh XP display in header
+                
+                // Show a toast only if the difference is meaningful (not from own actions)
+                if (gained >= 10) {
+                    showXPToast(`🎁 Admin Reward!`, gained);
+                }
+            }
+        }
+    });
 }
 
 const profileTrigger = document.getElementById('profile-trigger');
