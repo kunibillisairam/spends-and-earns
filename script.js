@@ -2212,19 +2212,24 @@ document.getElementById('save-avatar')?.addEventListener('click', async () => {
         btn.textContent = "Syncing...";
         btn.disabled = true;
         try {
-            await updateDoc(doc(db, "users", user.phone), { 
-                profileIcon: selectedEmoji, 
-                profileBg: selectedBg 
-            });
+            // Optimistic UI Update - make it instant for the user
             user.profileIcon = selectedEmoji;
             user.profileBg = selectedBg;
             localStorage.setItem('currentUser', JSON.stringify(user));
+            
             if (avatarModal) avatarModal.style.display = 'none';
+            
             initUser();
             initSettings();
+
+            // Sync to Firestore in the background (non-blocking)
+            updateDoc(doc(db, "users", user.phone), { 
+                profileIcon: selectedEmoji, 
+                profileBg: selectedBg 
+            }).catch(err => console.error("Avatar sync failed:", err));
+
         } catch (err) {
             console.error(err);
-            alert("Sync failed.");
         } finally {
             btn.textContent = "Save Icon";
             btn.disabled = false;
