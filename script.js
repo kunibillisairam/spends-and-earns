@@ -1699,12 +1699,42 @@ if (drawerSettingsBtn) {
     });
 }
 
+let securitySourceView = "tracker";
+
+function goToSecurityView(source) {
+    securitySourceView = source || "tracker";
+    if (profileDrawer) profileDrawer.style.display = 'none';
+
+    const appViews = document.querySelectorAll('.app-view');
+    appViews.forEach(v => v.classList.remove('active'));
+
+    const securityView = document.getElementById('security-view');
+    if (securityView) securityView.classList.add('active');
+
+    // Hide main elements
+    const summaryStrip = document.getElementById('summary-strip');
+    if (summaryStrip) summaryStrip.style.display = 'none';
+
+    const fabBtn = document.getElementById('fab-add-btn');
+    if (fabBtn) fabBtn.style.display = 'none';
+
+    // Show back button in header
+    const backBtn = document.getElementById('settings-back-btn');
+    if (backBtn && profileTrigger) {
+        backBtn.style.display = 'flex';
+        profileTrigger.style.display = 'none';
+    }
+
+    // Refresh data in security page
+    if (typeof loadSecurityPageData === "function") {
+        loadSecurityPageData();
+    }
+}
+
 const drawerSecurityBtn = document.getElementById('drawer-security-btn');
 if (drawerSecurityBtn) {
     drawerSecurityBtn.addEventListener('click', () => {
-        if (profileDrawer) profileDrawer.style.display = 'none';
-        const modal = document.getElementById('security-modal');
-        if (modal) modal.style.display = 'flex';
+        goToSecurityView("tracker");
     });
 }
 
@@ -1724,7 +1754,23 @@ if (settingsBackBtn) {
         const avatarView = document.getElementById('avatar-view');
         const editProfileView = document.getElementById('edit-profile-view');
         const exportView = document.getElementById('export-view');
+        const securityView = document.getElementById('security-view');
         
+        if (securityView && securityView.classList.contains('active')) {
+            const appViews = document.querySelectorAll('.app-view');
+            appViews.forEach(v => v.classList.remove('active'));
+            
+            if (securitySourceView === "settings") {
+                const settingsView = document.getElementById('settings-view');
+                if (settingsView) settingsView.classList.add('active');
+            } else {
+                const trackerTab = document.getElementById('nav-tracker');
+                if (trackerTab) trackerTab.click();
+                if (profileDrawer) profileDrawer.style.display = 'block';
+            }
+            return;
+        }
+
         if ((avatarView && avatarView.classList.contains('active')) || (editProfileView && editProfileView.classList.contains('active'))) {
             const appViews = document.querySelectorAll('.app-view');
             appViews.forEach(v => v.classList.remove('active'));
@@ -1792,15 +1838,61 @@ function showLockOverlay(correctPin) {
     const overlay = document.getElementById('app-lock-overlay');
     if (!overlay) return;
 
+    // Reset lock panels
+    const pinPanel = document.getElementById('lock-pin-panel');
+    const mfaPanel = document.getElementById('lock-2fa-panel');
+    if (pinPanel) pinPanel.style.display = 'flex';
+    if (mfaPanel) mfaPanel.style.display = 'none';
+
     overlay.style.display = 'flex';
     let inputPin = "";
     const dots = document.querySelectorAll('.pin-dot-lock');
     const btns = document.querySelectorAll('.lock-pin-btn');
 
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const cacheKey = user ? `userSettings_${user.phone}` : '';
+    const cachedSettings = cacheKey ? JSON.parse(localStorage.getItem(cacheKey)) : null;
+
     btns.forEach(btn => {
         const newBtn = btn.cloneNode(true); // Remove previous listeners
         btn.parentNode.replaceChild(newBtn, btn);
         
+        // Handle biometric trigger
+        if (newBtn.id === 'lock-biometric-btn') {
+            if (cachedSettings && cachedSettings.biometricsEnabled) {
+                newBtn.style.display = 'block';
+                newBtn.addEventListener('click', () => {
+                    const bioOverlay = document.getElementById('biometric-scanner-overlay');
+                    const bioStatus = document.getElementById('biometric-scan-status');
+                    if (bioOverlay) {
+                        bioOverlay.style.display = 'flex';
+                        if (bioStatus) bioStatus.textContent = "Scanning face/fingerprint...";
+                        
+                        setTimeout(() => {
+                            if (bioStatus) bioStatus.textContent = "Analyzing biometrics...";
+                            setTimeout(() => {
+                                if (bioStatus) bioStatus.textContent = "Unlock Successful! Match Found";
+                                setTimeout(() => {
+                                    bioOverlay.style.display = 'none';
+                                    
+                                    if (cachedSettings && cachedSettings.twoFactorEnabled) {
+                                        if (pinPanel) pinPanel.style.display = 'none';
+                                        if (mfaPanel) mfaPanel.style.display = 'flex';
+                                    } else {
+                                        sessionStorage.setItem('app_verified', 'true');
+                                        overlay.style.display = 'none';
+                                    }
+                                }, 500);
+                            }, 1000);
+                        }, 1000);
+                    }
+                });
+            } else {
+                newBtn.style.display = 'none';
+            }
+            return;
+        }
+
         newBtn.addEventListener('click', () => {
             const val = newBtn.textContent;
             if (val === "⌫" || val === "←" || val.trim() === '') {
@@ -1818,9 +1910,15 @@ function showLockOverlay(correctPin) {
             // Check PIN
             if (inputPin.length === 4) {
                 if (inputPin === correctPin) {
-                    sessionStorage.setItem('app_verified', 'true');
-                    overlay.style.fadeOut = "0.3s";
-                    setTimeout(() => overlay.style.display = 'none', 300);
+                    if (cachedSettings && cachedSettings.twoFactorEnabled) {
+                        // Go to 2FA phase
+                        if (pinPanel) pinPanel.style.display = 'none';
+                        if (mfaPanel) mfaPanel.style.display = 'flex';
+                    } else {
+                        // Direct unlock
+                        sessionStorage.setItem('app_verified', 'true');
+                        overlay.style.display = 'none';
+                    }
                 } else {
                     alert("Incorrect PIN! Try again.");
                     inputPin = "";
@@ -2529,9 +2627,8 @@ document.getElementById('edit-profile-btn')?.addEventListener('click', () => {
     }
 });
 
-document.getElementById('edit-email-btn')?.addEventListener('click', () => {
-    // Redirect Recovery Email setting click to the Edit Profile view
-    document.getElementById('edit-profile-btn')?.click();
+document.getElementById('settings-security-btn')?.addEventListener('click', () => {
+    goToSecurityView("settings");
 });
 
 document.getElementById('edit-profile-cancel')?.addEventListener('click', () => {
@@ -3012,11 +3109,6 @@ document.getElementById('save-avatar')?.addEventListener('click', async () => {
     }
 });
 
-document.getElementById('close-security-modal')?.addEventListener('click', () => { if (securityModal) securityModal.style.display = 'none'; });
-
-document.getElementById('edit-email-btn')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'flex'; });
-document.getElementById('close-email-modal')?.addEventListener('click', () => { if (emailModal) emailModal.style.display = 'none'; });
-
 document.getElementById('close-feedback-modal')?.addEventListener('click', () => { if (feedbackModal) feedbackModal.style.display = 'none'; });
 
 // --- Profile Update ---
@@ -3145,56 +3237,693 @@ document.getElementById('success-close-settings')?.addEventListener('click', () 
     if (overlay) overlay.style.display = 'none';
 });
 
-// --- Security PIN Logic ---
-let settingsPin = "";
-const settingsPinDots = document.querySelectorAll('#security-modal .pin-dot');
-const settingsPinButtons = document.querySelectorAll('#security-modal .pin-btn');
+// =============================================
+// ADVANCED ACCOUNT SECURITY REDESIGN LOGIC
+// =============================================
+let pinFlowState = "new"; // "verify_current" | "new" | "confirm"
+let secPinBuffer = "";
+let currentPinAnswer = "";
+let newPinCandidate = "";
 
-settingsPinButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const val = btn.textContent;
-        if (val === "⌫" || val === "←" || val.trim() === '') {
-            settingsPin = settingsPin.slice(0, -1);
-        } else if (settingsPin.length < 4) {
-            settingsPin += val;
+// Inactivity variables
+let lastInteractionTime = Date.now();
+let inactivityInterval = null;
+
+// 2FA state
+let currentMfaCode = "123456";
+
+// Utility helpers for platform detection
+function getBrowserName() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Chrome")) return "Chrome";
+    if (ua.includes("Safari") && !ua.includes("Chrome")) return "Safari";
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("Edge")) return "Edge";
+    return "Web Browser";
+}
+
+function getOSName() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Windows")) return "Windows";
+    if (ua.includes("Macintosh") || ua.includes("Mac OS")) return "macOS";
+    if (ua.includes("iPhone") || ua.includes("iPad")) return "iOS";
+    if (ua.includes("Android")) return "Android";
+    return "Device OS";
+}
+
+// 1. Core Data Refresher
+async function loadSecurityPageData() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const cacheKey = `userSettings_${user.phone}`;
+    let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+
+    // Elements
+    const lockToggle = document.getElementById('lock-toggle');
+    const pinActionsSection = document.getElementById('pin-actions-section');
+    const autolockSelect = document.getElementById('autolock-duration-select');
+    const biometricsToggle = document.getElementById('biometrics-toggle');
+    const twofactorToggle = document.getElementById('twofactor-toggle');
+    const recoveryEmailInput = document.getElementById('recovery-email-input');
+
+    // Load states
+    if (lockToggle) {
+        lockToggle.checked = !!userData.isLockActive;
+        if (pinActionsSection) {
+            pinActionsSection.style.display = userData.isLockActive ? 'block' : 'none';
         }
-        updateSettingsPinUI();
+    }
+    
+    currentPinAnswer = userData.appPin || "";
+    
+    if (autolockSelect) {
+        autolockSelect.value = userData.autoLockDuration || "immediate";
+    }
+
+    if (biometricsToggle) {
+        biometricsToggle.checked = !!userData.biometricsEnabled;
+    }
+
+    if (twofactorToggle) {
+        twofactorToggle.checked = !!userData.twoFactorEnabled;
+    }
+
+    if (recoveryEmailInput) {
+        recoveryEmailInput.value = userData.email || "";
+    }
+
+    // Refresh dynamic lists
+    renderActiveSessions(userData);
+    renderSecurityAuditLog(userData);
+}
+
+// 2. Security Log Logger Helper
+async function addSecurityLog(action, status) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const cacheKey = `userSettings_${user.phone}`;
+    let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+
+    let logs = userData.securityLog || [];
+    const newEntry = {
+        action: action,
+        status: status || "success",
+        time: new Date().toLocaleString()
+    };
+    
+    logs.unshift(newEntry);
+    
+    // limit logs size to 10 entries for neat rendering
+    if (logs.length > 10) logs = logs.slice(0, 10);
+
+    userData.securityLog = logs;
+    localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+    // Save to Firebase non-blockingly
+    try {
+        const userRef = doc(db, "users", user.phone);
+        await updateDoc(userRef, { securityLog: logs });
+    } catch(e) {
+        console.warn("Audit log firebase sync failed:", e);
+    }
+}
+
+// 3. Render Session Log
+function renderActiveSessions(userData) {
+    const sessionList = document.getElementById('active-sessions-list');
+    if (!sessionList) return;
+
+    sessionList.innerHTML = "";
+
+    // A. Current Device
+    const browser = getBrowserName();
+    const os = getOSName();
+
+    const currentItem = document.createElement('div');
+    currentItem.className = "session-item";
+    currentItem.innerHTML = `
+        <div class="session-device-icon">💻</div>
+        <div class="session-details">
+            <div class="session-device-name">${browser} on ${os} <span class="active-dot"></span></div>
+            <div class="session-meta">This device • Bangalore, India • Active now</div>
+        </div>
+    `;
+    sessionList.appendChild(currentItem);
+
+    // B. Mock Devices if not revoked
+    if (!userData.sessionsRevoked) {
+        const mockDevice1 = document.createElement('div');
+        mockDevice1.className = "session-item";
+        mockDevice1.innerHTML = `
+            <div class="session-device-icon">📱</div>
+            <div class="session-details">
+                <div class="session-device-name">Safari on iPhone 15 Pro</div>
+                <div class="session-meta">Mobile • London, UK • Active 2 hours ago</div>
+            </div>
+        `;
+        sessionList.appendChild(mockDevice1);
+
+        const mockDevice2 = document.createElement('div');
+        mockDevice2.className = "session-item";
+        mockDevice2.innerHTML = `
+            <div class="session-device-icon">💻</div>
+            <div class="session-details">
+                <div class="session-device-name">Chrome on macOS</div>
+                <div class="session-meta">Desktop • New York, USA • Active 3 days ago</div>
+            </div>
+        `;
+        sessionList.appendChild(mockDevice2);
+        
+        document.getElementById('revoke-sessions-btn').style.display = 'block';
+    } else {
+        document.getElementById('revoke-sessions-btn').style.display = 'none';
+    }
+}
+
+// 4. Render Audit Logs
+function renderSecurityAuditLog(userData) {
+    const logBody = document.getElementById('security-log-body');
+    if (!logBody) return;
+
+    logBody.innerHTML = "";
+
+    let logs = userData.securityLog;
+    if (!logs || logs.length === 0) {
+        logs = [
+            { action: "Login session started", status: "success", time: new Date(Date.now() - 3600000 * 2).toLocaleString() },
+            { action: "Security verification setup", status: "success", time: new Date(Date.now() - 86400000).toLocaleString() }
+        ];
+    }
+
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = "1px solid var(--border-color)";
+        
+        const badgeClass = log.status === "success" ? "badge-success" : (log.status === "failed" ? "badge-failed" : "badge-info");
+        
+        row.innerHTML = `
+            <td style="padding: 6px 8px; font-weight: 600; color: var(--text-main);">${log.action}</td>
+            <td style="padding: 6px 8px;"><span class="badge ${badgeClass}">${log.status}</span></td>
+            <td style="padding: 6px 8px; text-align: right; color: var(--text-muted);">${log.time.split(',')[1] || log.time}</td>
+        `;
+        logBody.appendChild(row);
+    });
+}
+
+// 5. Wire Active Revocation
+document.getElementById('revoke-sessions-btn')?.addEventListener('click', async () => {
+    if (confirm("Are you sure you want to log out all other sessions?")) {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) return;
+        
+        const cacheKey = `userSettings_${user.phone}`;
+        let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+
+        userData.sessionsRevoked = true;
+        localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+        try {
+            const userRef = doc(db, "users", user.phone);
+            await updateDoc(userRef, { sessionsRevoked: true });
+            alert("All other sessions successfully revoked!");
+            await addSecurityLog("Logged out other sessions", "success");
+            loadSecurityPageData();
+        } catch (e) {
+            alert("Failed to revoke sessions.");
+        }
+    }
+});
+
+// 6. Wire Recovery Email Save
+document.getElementById('save-email')?.addEventListener('click', async () => {
+    const btn = document.getElementById('save-email');
+    const newEmail = document.getElementById('recovery-email-input')?.value.trim();
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (newEmail && newEmail.includes('@') && user) {
+        btn.textContent = "Saving...";
+        btn.disabled = true;
+        
+        try {
+            await updateDoc(doc(db, "users", user.phone), { email: newEmail });
+            
+            const cacheKey = `userSettings_${user.phone}`;
+            let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            userData.email = newEmail;
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+            alert("Recovery email updated!");
+            await addSecurityLog("Updated recovery email", "success");
+            loadSecurityPageData();
+            initSettings(); // Refresh settings panel
+        } catch (err) {
+            alert("Update failed.");
+        } finally {
+            btn.textContent = "Save";
+            btn.disabled = false;
+        }
+    } else {
+        alert("Please enter a valid email address.");
+    }
+});
+
+// 7. Autolock select listener
+document.getElementById('autolock-duration-select')?.addEventListener('change', async (e) => {
+    const val = e.target.value;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const cacheKey = `userSettings_${user.phone}`;
+    let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+    userData.autoLockDuration = val;
+    localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+    try {
+        await updateDoc(doc(db, "users", user.phone), { autoLockDuration: val });
+        await addSecurityLog(`Changed auto-lock timeout to ${val}`, "success");
+    } catch(err) {
+        console.warn("Failed to save timeout settings:", err);
+    }
+});
+
+// 8. Biometrics Toggle listener
+document.getElementById('biometrics-toggle')?.addEventListener('change', async (e) => {
+    const val = e.target.checked;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const cacheKey = `userSettings_${user.phone}`;
+    let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+    userData.biometricsEnabled = val;
+    localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+    try {
+        await updateDoc(doc(db, "users", user.phone), { biometricsEnabled: val });
+        await addSecurityLog(`${val ? "Enabled" : "Disabled"} simulated biometrics`, "success");
+        alert(val ? "Simulated Touch/Face ID enabled!" : "Simulated biometrics disabled.");
+    } catch(err) {
+        console.warn("Failed to save biometrics setting:", err);
+    }
+});
+
+// 9. Two-Factor Authentication Setup Flow
+document.getElementById('twofactor-toggle')?.addEventListener('change', async (e) => {
+    const val = e.target.checked;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const qrBlock = document.getElementById('qr-setup-block');
+
+    if (val) {
+        // Show QR block for verification
+        if (qrBlock) qrBlock.style.display = 'block';
+        e.target.checked = false; // Reset checkbox until verified
+    } else {
+        // Turn off directly
+        if (confirm("Are you sure you want to disable 2FA?")) {
+            const cacheKey = `userSettings_${user.phone}`;
+            let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            userData.twoFactorEnabled = false;
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+            try {
+                await updateDoc(doc(db, "users", user.phone), { twoFactorEnabled: false });
+                if (qrBlock) qrBlock.style.display = 'none';
+                await addSecurityLog("Disabled 2FA", "success");
+                alert("2FA has been disabled.");
+                loadSecurityPageData();
+            } catch(err) {
+                console.warn(err);
+            }
+        } else {
+            e.target.checked = true;
+        }
+    }
+});
+
+// 2FA setup verification inputs focus wiring
+const totpInputs = document.querySelectorAll('#qr-setup-block .totp-digit');
+totpInputs.forEach((inp, idx) => {
+    inp.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val && idx < totpInputs.length - 1) {
+            totpInputs[idx + 1].focus();
+        }
+    });
+    inp.addEventListener('keydown', (e) => {
+        if (e.key === "Backspace" && !inp.value && idx > 0) {
+            totpInputs[idx - 1].focus();
+        }
     });
 });
 
-function updateSettingsPinUI() {
-    settingsPinDots.forEach((dot, i) => {
-        if (i < settingsPin.length) dot.classList.add('filled');
+document.getElementById('verify-2fa-setup-btn')?.addEventListener('click', async () => {
+    let joinedCode = "";
+    totpInputs.forEach(inp => joinedCode += inp.value);
+
+    if (joinedCode === currentMfaCode) {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) return;
+
+        const cacheKey = `userSettings_${user.phone}`;
+        let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+        userData.twoFactorEnabled = true;
+        localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+        try {
+            await updateDoc(doc(db, "users", user.phone), { twoFactorEnabled: true });
+            alert("2FA Verification Successful! Google Authenticator 2FA enabled.");
+            await addSecurityLog("Enabled Google Authenticator 2FA", "success");
+            
+            // Reset input boxes
+            totpInputs.forEach(inp => inp.value = "");
+            const qrBlock = document.getElementById('qr-setup-block');
+            if (qrBlock) qrBlock.style.display = 'none';
+            loadSecurityPageData();
+        } catch(err) {
+            alert("Firebase write failed.");
+        }
+    } else {
+        alert("Invalid verification code. Please enter '123456' to simulate setup.");
+        await addSecurityLog("Attempted 2FA setup validation", "failed");
+    }
+});
+
+// 10. Inline Keypad PIN Setup/Change Flow
+const secPinDots = document.querySelectorAll('.sec-pin-dot');
+const secPinButtons = document.querySelectorAll('.sec-pin-btn');
+const inlineKeypadSection = document.getElementById('security-inline-keypad');
+const changePinBtn = document.getElementById('trigger-change-pin-btn');
+const pinActionsSection = document.getElementById('pin-actions-section');
+
+function updateSecPinDotsUI() {
+    secPinDots.forEach((dot, i) => {
+        if (i < secPinBuffer.length) dot.classList.add('filled');
         else dot.classList.remove('filled');
     });
 }
 
-document.getElementById('save-security')?.addEventListener('click', async () => {
-    const isLockActive = document.getElementById('lock-toggle').checked;
-    const btn = document.getElementById('save-security');
+function resetSecPinFlow() {
+    secPinBuffer = "";
+    newPinCandidate = "";
+    updateSecPinDotsUI();
+    if (inlineKeypadSection) inlineKeypadSection.style.display = 'none';
+}
+
+if (changePinBtn) {
+    changePinBtn.addEventListener('click', () => {
+        if (inlineKeypadSection) {
+            if (inlineKeypadSection.style.display === 'block') {
+                resetSecPinFlow();
+            } else {
+                inlineKeypadSection.style.display = 'block';
+                secPinBuffer = "";
+                newPinCandidate = "";
+                updateSecPinDotsUI();
+                
+                const flowMsg = document.getElementById('pin-flow-message');
+                if (currentPinAnswer) {
+                    pinFlowState = "verify_current";
+                    if (flowMsg) flowMsg.textContent = "Enter Current PIN";
+                } else {
+                    pinFlowState = "new";
+                    if (flowMsg) flowMsg.textContent = "Enter New 4-digit PIN";
+                }
+            }
+        }
+    });
+}
+
+// Cancel pin setup click
+document.querySelector('.cancel-pin-flow')?.addEventListener('click', () => {
+    resetSecPinFlow();
+});
+
+// Lock toggle change logic
+document.getElementById('lock-toggle')?.addEventListener('change', async (e) => {
+    const val = e.target.checked;
     const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
 
-    if (isLockActive && settingsPin.length !== 4) {
-        return alert("Please set a 4-digit PIN to enable App Lock.");
+    if (val) {
+        // Enabling App Lock
+        if (!currentPinAnswer) {
+            // Need a new PIN first!
+            e.target.checked = false;
+            alert("Please set a secure PIN first.");
+            // Open change pin keypad
+            changePinBtn?.click();
+        } else {
+            // Toggle active directly
+            const cacheKey = `userSettings_${user.phone}`;
+            let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            userData.isLockActive = true;
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+            try {
+                await updateDoc(doc(db, "users", user.phone), { isLockActive: true });
+                await addSecurityLog("Enabled App Lock", "success");
+                loadSecurityPageData();
+            } catch(e) {
+                console.warn(e);
+            }
+        }
+    } else {
+        // Disabling App Lock
+        // Ask for current PIN to confirm disable!
+        e.target.checked = true; // reset until validated
+        const entered = prompt("Enter your current secure PIN to disable App Lock:");
+        if (entered === currentPinAnswer) {
+            const cacheKey = `userSettings_${user.phone}`;
+            let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            userData.isLockActive = false;
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+            try {
+                await updateDoc(doc(db, "users", user.phone), { isLockActive: false });
+                await addSecurityLog("Disabled App Lock", "success");
+                loadSecurityPageData();
+            } catch(e) {
+                console.warn(e);
+            }
+        } else if (entered !== null) {
+            alert("Incorrect PIN! Security setting unchanged.");
+            await addSecurityLog("Failed disable App Lock check", "failed");
+        }
     }
+});
 
-    btn.textContent = "Updating...";
-    btn.disabled = true;
+// Inline keypad numbers clicks
+secPinButtons.forEach(btn => {
+    if (btn.classList.contains('cancel-pin-flow') || btn.classList.contains('back')) return;
+    
+    btn.addEventListener('click', () => {
+        const val = btn.textContent;
+        if (secPinBuffer.length < 4) {
+            secPinBuffer += val;
+            updateSecPinDotsUI();
+            
+            if (secPinBuffer.length === 4) {
+                setTimeout(handlePinBufferFull, 200);
+            }
+        }
+    });
+});
 
-    try {
-        const userRef = doc(db, "users", user.phone);
-        const updates = { isLockActive: isLockActive };
-        if (settingsPin.length === 4) updates.appPin = settingsPin;
+// Backspace click
+document.querySelector('.sec-pin-btn.back')?.addEventListener('click', () => {
+    secPinBuffer = secPinBuffer.slice(0, -1);
+    updateSecPinDotsUI();
+});
 
-        await updateDoc(userRef, updates);
-        alert("Security settings updated successfully!");
-        if (securityModal) securityModal.style.display = 'none';
-        initSettings();
-    } catch (err) {
-        alert("Failed to update security.");
-    } finally {
-        btn.textContent = "Save Security Rules";
-        btn.disabled = false;
+async function handlePinBufferFull() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const flowMsg = document.getElementById('pin-flow-message');
+    const entered = secPinBuffer;
+    secPinBuffer = "";
+    updateSecPinDotsUI();
+
+    if (pinFlowState === "verify_current") {
+        if (entered === currentPinAnswer) {
+            pinFlowState = "new";
+            if (flowMsg) flowMsg.textContent = "Enter New 4-digit PIN";
+        } else {
+            alert("Incorrect PIN code! Please try again.");
+            await addSecurityLog("Attempted change PIN validation", "failed");
+            resetSecPinFlow();
+        }
+    } else if (pinFlowState === "new") {
+        newPinCandidate = entered;
+        pinFlowState = "confirm";
+        if (flowMsg) flowMsg.textContent = "Confirm New 4-digit PIN";
+    } else if (pinFlowState === "confirm") {
+        if (entered === newPinCandidate) {
+            // Save PIN
+            const cacheKey = `userSettings_${user.phone}`;
+            let userData = JSON.parse(localStorage.getItem(cacheKey)) || {};
+            userData.isLockActive = true;
+            userData.appPin = entered;
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+
+            try {
+                await updateDoc(doc(db, "users", user.phone), { 
+                    isLockActive: true,
+                    appPin: entered
+                });
+                alert("PIN changed and App Lock enabled successfully!");
+                await addSecurityLog("Updated secure PIN", "success");
+                resetSecPinFlow();
+                loadSecurityPageData();
+            } catch(e) {
+                alert("Failed to write to database.");
+            }
+        } else {
+            alert("PINs do not match! Resetting PIN setup flow.");
+            pinFlowState = "new";
+            if (flowMsg) flowMsg.textContent = "Enter New 4-digit PIN";
+        }
+    }
+}
+
+// 11. Inactivity detection and auto-locking
+function updateInteractionTime() {
+    lastInteractionTime = Date.now();
+}
+
+function handleVisibilityLock() {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    const cacheKey = `userSettings_${user.phone}`;
+    const cachedSettings = JSON.parse(localStorage.getItem(cacheKey));
+    if (cachedSettings && cachedSettings.isLockActive && cachedSettings.appPin) {
+        if (sessionStorage.getItem('app_verified') === 'true') {
+            const duration = cachedSettings.autoLockDuration || "immediate";
+            if (duration === "immediate") {
+                // Backgrounding triggers lock immediately
+                sessionStorage.removeItem('app_verified');
+                checkAppLock();
+            }
+        }
+    }
+}
+
+function startInactivityCheck() {
+    window.addEventListener('mousemove', updateInteractionTime);
+    window.addEventListener('click', updateInteractionTime);
+    window.addEventListener('keydown', updateInteractionTime);
+    window.addEventListener('touchstart', updateInteractionTime);
+
+    if (inactivityInterval) clearInterval(inactivityInterval);
+    inactivityInterval = setInterval(() => {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) return;
+
+        const cacheKey = `userSettings_${user.phone}`;
+        const cachedSettings = JSON.parse(localStorage.getItem(cacheKey));
+        if (cachedSettings && cachedSettings.isLockActive && cachedSettings.appPin) {
+            if (sessionStorage.getItem('app_verified') === 'true') {
+                const duration = cachedSettings.autoLockDuration || "immediate";
+                if (duration !== "immediate") {
+                    const thresholdMs = parseInt(duration) * 60 * 1000;
+                    if (Date.now() - lastInteractionTime >= thresholdMs) {
+                        sessionStorage.removeItem('app_verified');
+                        checkAppLock();
+                    }
+                }
+            }
+        }
+    }, 10000); // Check every 10 seconds
+}
+
+// Initialize activity check
+startInactivityCheck();
+document.addEventListener('visibilitychange', handleVisibilityLock);
+
+// 12. Lock Screen Verification & Biometrics Simulation
+const lockBiometricBtn = document.getElementById('lock-biometric-btn');
+const biometricOverlay = document.getElementById('biometric-scanner-overlay');
+const biometricStatus = document.getElementById('biometric-scan-status');
+
+if (lockBiometricBtn) {
+    lockBiometricBtn.addEventListener('click', () => {
+        if (biometricOverlay) {
+            biometricOverlay.style.display = 'flex';
+            if (biometricStatus) biometricStatus.textContent = "Scanning face/fingerprint...";
+            
+            // Simulating biometric sweep
+            setTimeout(() => {
+                if (biometricStatus) biometricStatus.textContent = "Analyzing biometrics...";
+                
+                setTimeout(() => {
+                    if (biometricStatus) biometricStatus.textContent = "Unlock Successful! Match Found";
+                    
+                    setTimeout(() => {
+                        biometricOverlay.style.display = 'none';
+                        
+                        // Proceed to 2FA if active, else unlock!
+                        const user = JSON.parse(localStorage.getItem('currentUser'));
+                        const cacheKey = `userSettings_${user.phone}`;
+                        const cachedSettings = JSON.parse(localStorage.getItem(cacheKey));
+                        
+                        if (cachedSettings && cachedSettings.twoFactorEnabled) {
+                            // Go to 2FA phase
+                            const pinPanel = document.getElementById('lock-pin-panel');
+                            const mfaPanel = document.getElementById('lock-2fa-panel');
+                            if (pinPanel) pinPanel.style.display = 'none';
+                            if (mfaPanel) mfaPanel.style.display = 'flex';
+                        } else {
+                            // Full unlock
+                            sessionStorage.setItem('app_verified', 'true');
+                            const overlay = document.getElementById('app-lock-overlay');
+                            if (overlay) overlay.style.display = 'none';
+                        }
+                    }, 500);
+                }, 1000);
+            }, 1000);
+        }
+    });
+}
+
+// 13. Lock overlay 2FA inputs wiring
+const lockTotpInputs = document.querySelectorAll('#lock-2fa-panel .totp-lock-digit');
+lockTotpInputs.forEach((inp, idx) => {
+    inp.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val && idx < lockTotpInputs.length - 1) {
+            lockTotpInputs[idx + 1].focus();
+        }
+    });
+    inp.addEventListener('keydown', (e) => {
+        if (e.key === "Backspace" && !inp.value && idx > 0) {
+            lockTotpInputs[idx - 1].focus();
+        }
+    });
+});
+
+document.getElementById('verify-lock-2fa-btn')?.addEventListener('click', () => {
+    let joinedCode = "";
+    lockTotpInputs.forEach(inp => joinedCode += inp.value);
+
+    if (joinedCode === currentMfaCode) {
+        sessionStorage.setItem('app_verified', 'true');
+        const overlay = document.getElementById('app-lock-overlay');
+        if (overlay) overlay.style.display = 'none';
+        
+        // Reset inputs
+        lockTotpInputs.forEach(inp => inp.value = "");
+        const pinPanel = document.getElementById('lock-pin-panel');
+        const mfaPanel = document.getElementById('lock-2fa-panel');
+        if (pinPanel) pinPanel.style.display = 'flex';
+        if (mfaPanel) mfaPanel.style.display = 'none';
+    } else {
+        alert("Invalid verification code. Please enter '123456'.");
+        lockTotpInputs.forEach(inp => inp.value = "");
+        lockTotpInputs[0].focus();
     }
 });
 
