@@ -1548,9 +1548,11 @@ async function downloadPDFData(data, dateRangeLabel) {
 
     // Create a temporary container for html2pdf
     const element = document.createElement('div');
-    element.style.position = 'absolute';
-    element.style.left = '-9999px';
+    element.id = 'pdf-temp-template';
+    element.style.position = 'fixed';
+    element.style.left = '0';
     element.style.top = '0';
+    element.style.zIndex = '-9999';
     element.style.width = '750px'; // standard width for standard A4 scale
     element.style.padding = '24px';
     element.style.fontFamily = "'Inter', -apple-system, sans-serif";
@@ -1621,7 +1623,20 @@ async function downloadPDFData(data, dateRangeLabel) {
             margin:       12,
             filename:     `${docTitle}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const el = clonedDoc.getElementById('pdf-temp-template');
+                    if (el) {
+                        el.style.position = 'relative';
+                        el.style.left = '0';
+                        el.style.top = '0';
+                        el.style.zIndex = '9999';
+                    }
+                }
+            },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
         const blob = await html2pdfLib().set(opt).from(element).outputPdf('blob');
