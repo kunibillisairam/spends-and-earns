@@ -1387,6 +1387,11 @@
                             <div style="font-size: 10px; color: var(--admin-text-muted); font-weight: 600;">${time}</div>
                         </div>
                         <div class="ticket-msg">${ticket.message}</div>
+                        ${ticket.adminReply ? `
+                            <div class="ticket-reply" style="font-size: 11px; margin-top: 8px; padding: 10px; background: rgba(16, 185, 129, 0.05); border-left: 3px solid #10b981; border-radius: 6px; color: var(--admin-text);">
+                                <strong>Reply:</strong> ${ticket.adminReply}
+                            </div>
+                        ` : ''}
                         <div class="ticket-actions">
                             ${ticket.status === 'open' ? `
                                 <button class="reply-btn" onclick="openReplyModal('${ticket.userId}', '${ticket.username}', '${id}')">Reply</button>
@@ -1463,8 +1468,12 @@
                     timestamp: serverTimestamp()
                 });
 
-                // Resolve support ticket automatically
-                await updateDoc(doc(db, "support_tickets", currentTicketId), { status: 'resolved' });
+                // Resolve support ticket automatically and save the reply
+                await updateDoc(doc(db, "support_tickets", currentTicketId), {
+                    status: 'resolved',
+                    adminReply: msg,
+                    repliedAt: serverTimestamp()
+                });
 
                 showSuccess("Reply Sent!", "Your reply has been dispatched to the user's notification feed.");
                 document.getElementById('reply-modal').style.display = 'none';

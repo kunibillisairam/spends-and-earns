@@ -1737,13 +1737,14 @@ if (drawerSecurityBtn) {
         goToSecurityView("tracker");
     });
 }
-
 const drawerHelpBtn = document.getElementById('drawer-help-btn');
 if (drawerHelpBtn) {
     drawerHelpBtn.addEventListener('click', () => {
         if (profileDrawer) profileDrawer.style.display = 'none';
         const modal = document.getElementById('feedback-modal');
         if (modal) modal.style.display = 'flex';
+        const tabFaq = document.getElementById('tab-support-faq');
+        if (tabFaq) tabFaq.click();
     });
 }
 
@@ -1929,15 +1930,14 @@ function showLockOverlay(correctPin) {
     });
 }
 
-// Update init to include lock check
-const oldInit = init;
-init = async function() {
+// Run lock check before initializing
+async function startApp() {
     await checkAppLock();
-    await oldInit();
+    await init();
+    initUser();
 }
 
-init();
-initUser();
+startApp();
 setTimeout(checkNotificationPermission, 8000);
 
 window.updateData = updateData;
@@ -3195,32 +3195,235 @@ document.getElementById('save-email')?.addEventListener('click', async () => {
     } else { alert("Please enter a valid email."); }
 });
 
+// =============================================
+// HELP & SUPPORT CENTER REDESIGN LOGIC
+// =============================================
+
+// Tab Switching Wires
+const tabFaq = document.getElementById('tab-support-faq');
+const tabCreate = document.getElementById('tab-support-create');
+const tabHistory = document.getElementById('tab-support-history');
+
+const panelFaq = document.getElementById('support-panel-faq');
+const panelCreate = document.getElementById('support-panel-create');
+const panelHistory = document.getElementById('support-panel-history');
+
+function switchSupportTab(activeTab) {
+    [tabFaq, tabCreate, tabHistory].forEach(tab => {
+        if (!tab) return;
+        if (tab === activeTab) {
+            tab.classList.add('active');
+            tab.style.background = '#6366f1';
+            tab.style.color = 'white';
+        } else {
+            tab.classList.remove('active');
+            tab.style.background = 'transparent';
+            tab.style.color = '#64748b';
+        }
+    });
+
+    if (activeTab === tabFaq) {
+        if (panelFaq) panelFaq.style.display = 'block';
+        if (panelCreate) panelCreate.style.display = 'none';
+        if (panelHistory) panelHistory.style.display = 'none';
+    } else if (activeTab === tabCreate) {
+        if (panelFaq) panelFaq.style.display = 'none';
+        if (panelCreate) panelCreate.style.display = 'block';
+        if (panelHistory) panelHistory.style.display = 'none';
+    } else if (activeTab === tabHistory) {
+        if (panelFaq) panelFaq.style.display = 'none';
+        if (panelCreate) panelCreate.style.display = 'none';
+        if (panelHistory) panelHistory.style.display = 'block';
+    }
+}
+
+tabFaq?.addEventListener('click', () => switchSupportTab(tabFaq));
+tabCreate?.addEventListener('click', () => switchSupportTab(tabCreate));
+tabHistory?.addEventListener('click', () => switchSupportTab(tabHistory));
+
+// FAQ Search Filter
+const faqSearch = document.getElementById('faq-search');
+faqSearch?.addEventListener('input', (e) => {
+    const queryStr = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const question = item.querySelector('.faq-trigger span')?.textContent.toLowerCase() || '';
+        const answer = item.querySelector('.faq-content')?.textContent.toLowerCase() || '';
+        if (question.includes(queryStr) || answer.includes(queryStr)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// FAQ Accordion Collapsing
+document.querySelectorAll('.faq-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+        const content = trigger.nextElementSibling;
+        const arrow = trigger.querySelector('.faq-arrow');
+        const isOpen = content.style.display === 'block';
+
+        // Collapse all other FAQ panels first
+        document.querySelectorAll('.faq-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.faq-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+
+        if (!isOpen) {
+            content.style.display = 'block';
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        }
+    });
+});
+
+// Category Selector Cards
+let selectedSupportCategory = "Bug Report";
+const supportCards = document.querySelectorAll('.support-cat-card');
+supportCards.forEach(card => {
+    card.addEventListener('click', () => {
+        supportCards.forEach(c => {
+            c.classList.remove('active');
+            c.style.borderColor = 'var(--border-color)';
+            c.style.background = 'white';
+        });
+        card.classList.add('active');
+        card.style.borderColor = '#6366f1';
+        card.style.background = 'rgba(99, 102, 241, 0.05)';
+        selectedSupportCategory = card.getAttribute('data-value') || 'Other';
+    });
+});
+
+// Textarea Character Counter
+const ticketMessageInput = document.getElementById('ticket-message');
+const charCounter = document.getElementById('support-char-counter');
+ticketMessageInput?.addEventListener('input', () => {
+    const len = ticketMessageInput.value.length;
+    if (charCounter) charCounter.textContent = `${len}/500`;
+});
+
+// Firestore Live Support History Listener
+let supportTicketsListener = null;
+function startSupportTicketsListener() {
+    const localUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!localUser || !localUser.phone) return;
+
+    if (supportTicketsListener) {
+        supportTicketsListener();
+    }
+
+    const q = query(collection(db, "support_tickets"), where("userId", "==", localUser.phone));
+    supportTicketsListener = onSnapshot(q, (snapshot) => {
+        const historyList = document.getElementById('support-history-list');
+        const historyBadge = document.getElementById('support-history-badge');
+        if (!historyList) return;
+
+        let tickets = [];
+        snapshot.forEach(docSnap => {
+            tickets.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Client-side sort by createdAt desc to avoid index requirements
+        tickets.sort((a, b) => {
+            const timeA = a.createdAt ? a.createdAt.toMillis() : 0;
+            const timeB = b.createdAt ? b.createdAt.toMillis() : 0;
+            return timeB - timeA;
+        });
+
+        // Set unread replies badge (number of resolved tickets that have an admin reply)
+        const unresolvedRepliesCount = tickets.filter(t => t.status === 'resolved' && t.adminReply).length;
+        if (historyBadge) {
+            if (unresolvedRepliesCount > 0) {
+                historyBadge.textContent = unresolvedRepliesCount;
+                historyBadge.style.display = 'inline-block';
+            } else {
+                historyBadge.style.display = 'none';
+            }
+        }
+
+        historyList.innerHTML = '';
+        if (tickets.length === 0) {
+            historyList.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 11px; font-weight: 600;">No support tickets logged.</div>';
+            return;
+        }
+
+        tickets.forEach(ticket => {
+            const timeStr = ticket.createdAt ? new Date(ticket.createdAt.toMillis()).toLocaleString(undefined, {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : 'Just now';
+
+            const card = document.createElement('div');
+            card.className = 'history-ticket-card';
+            card.style.cssText = 'border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; position: relative;';
+
+            let typeColor = '#6366f1';
+            if (ticket.type === 'Bug Report') typeColor = '#ef4444';
+            else if (ticket.type === 'Payment Issue' || ticket.type === 'Payment/XP') typeColor = '#f59e0b';
+            else if (ticket.type === 'Suggestion') typeColor = '#10b981';
+
+            const isResolved = ticket.status === 'resolved';
+            const badgeClass = isResolved ? 'resolved' : 'open';
+            const badgeText = isResolved ? 'Resolved' : 'Open';
+
+            card.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: white; background: ${typeColor}; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">${ticket.type || 'Support'}</span>
+                        <span class="support-status-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <span style="font-size: 9px; color: var(--text-muted); font-weight: 600;">${timeStr}</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-main); line-height: 1.4; white-space: pre-wrap; margin-top: 4px;">${ticket.message}</div>
+                ${ticket.adminReply ? `
+                    <div style="margin-top: 8px; padding: 10px; background: rgba(16, 185, 129, 0.05); border-left: 3px solid #10b981; border-radius: 6px;">
+                        <div style="font-size: 9px; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                            <span>📩 Admin Response</span>
+                            ${ticket.repliedAt ? `<span style="font-weight: 600; text-transform: none; color: var(--text-muted); font-size: 8px;">(${new Date(ticket.repliedAt.toMillis()).toLocaleString(undefined, {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})})</span>` : ''}
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--text-main); line-height: 1.4; white-space: pre-wrap;">${ticket.adminReply}</div>
+                    </div>
+                ` : ''}
+            `;
+            historyList.appendChild(card);
+        });
+    });
+}
+
+// Initial Call to Start Listener
+startSupportTicketsListener();
+
 // --- Support ticket submission ---
 document.getElementById('submit-ticket')?.addEventListener('click', async () => {
-    const type = document.getElementById('ticket-type').value;
-    const message = document.getElementById('ticket-message').value;
+    const message = ticketMessageInput?.value || "";
     const btn = document.getElementById('submit-ticket');
     const successOverlay = document.getElementById('success-overlay-settings');
-    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const localUser = JSON.parse(localStorage.getItem('currentUser'));
 
     if (!message.trim()) return alert("Please type a message.");
-    if (!user) return alert("You must be logged in.");
+    if (!localUser) return alert("You must be logged in.");
 
     btn.textContent = "Sending...";
     btn.disabled = true;
 
     try {
         await addDoc(collection(db, "support_tickets"), {
-            userId: user.phone,
-            username: user.username,
-            type: type,
+            userId: localUser.phone,
+            username: localUser.username,
+            type: selectedSupportCategory,
             message: message,
             status: 'open',
             createdAt: serverTimestamp()
         });
 
         if (feedbackModal) feedbackModal.style.display = 'none';
-        document.getElementById('ticket-message').value = "";
+        if (ticketMessageInput) ticketMessageInput.value = "";
+        if (charCounter) charCounter.textContent = "0/500";
+        
+        // Reset category cards back to Bug Report
+        supportCards.forEach(c => {
+            const isBug = c.getAttribute('data-value') === 'Bug Report';
+            c.classList.toggle('active', isBug);
+            c.style.borderColor = isBug ? '#6366f1' : 'var(--border-color)';
+            c.style.background = isBug ? 'rgba(99, 102, 241, 0.05)' : 'white';
+        });
+        selectedSupportCategory = "Bug Report";
         
         if (successOverlay) successOverlay.style.display = 'flex';
     } catch (err) {
