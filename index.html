@@ -854,6 +854,136 @@
                     </div>
                 </div>
             </section>
+            
+            <!-- ===== View 10: Help & Support View (Page View) ===== -->
+            <section id="support-view" class="app-view" style="padding: 10px 0; display: none;">
+                <div class="edit-profile-card" style="background: var(--card-bg); border-radius: var(--radius-md); padding: 18px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); margin-bottom: 15px; color: var(--text-main); position: relative;">
+                    
+                    <!-- Header -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <h2 style="font-size: 13px; font-weight: 800; color: var(--text-main); margin: 0;">Help & Support Center</h2>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 32px; margin-bottom: 6px;">🤝</div>
+                        <h3 style="font-size: 14px; font-weight: 800; color: var(--text-main); margin: 0 0 4px;">Support Center</h3>
+                        <p style="font-size: 10px; color: var(--text-muted); margin: 0;">Need assistance? Browse FAQs or send a support ticket.</p>
+                    </div>
+
+                    <!-- Tabs Header -->
+                    <div style="display: flex; border: 1px solid var(--border-color); margin-bottom: 16px; background: #f8fafc; border-radius: 8px; padding: 4px;" id="support-modal-tabs">
+                        <button id="tab-support-faq" class="support-tab-btn active" style="flex: 1; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: #6366f1; color: white;">📋 FAQs</button>
+                        <button id="tab-support-create" class="support-tab-btn" style="flex: 1; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b; margin-left: 4px;">✍️ Ticket</button>
+                        <button id="tab-support-history" class="support-tab-btn" style="flex: 1; padding: 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b; margin-left: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            📜 History
+                            <span id="support-history-badge" style="display: none; background: #ef4444; color: white; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 10px;">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: FAQs -->
+                    <div id="support-panel-faq" class="support-panel" style="display: block;">
+                        <!-- FAQ Search Box -->
+                        <div style="position: relative; margin-bottom: 12px;">
+                            <input type="text" id="faq-search" placeholder="Search questions..." style="width: 100%; padding: 8px 12px 8px 30px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 11px; background: var(--bg-color); color: var(--text-main);">
+                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 11px;">🔍</span>
+                        </div>
+                        <!-- FAQ Accordion List -->
+                        <div id="faq-accordion-list" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                            <!-- FAQ Items -->
+                            <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
+                                <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
+                                    <span>📊 How do I export my data?</span>
+                                    <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                                </button>
+                                <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                                    Go to your Profile drawer, select <strong>Export Statement</strong>, choose your desired date range and file format (CSV or PDF), and click download. It takes just a few seconds.
+                                </div>
+                            </div>
+                            <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
+                                <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
+                                    <span>⭐ What are XP milestones & rewards?</span>
+                                    <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                                </button>
+                                <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                                    XP (Experience Points) are awarded when you update your profile (+50 XP), complete daily tracking, or refer friends (+500 XP). You can use your XP in the <strong>Rewards Store</strong> to unlock premium avatars, profile badges, and UI customization features!
+                                </div>
+                            </div>
+                            <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
+                                <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
+                                    <span>📅 How does the Weekly Budget limit work?</span>
+                                    <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                                </button>
+                                <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                                    Under the Insights view, you can define a weekly budget limit in your local currency. The system tracks all spends recorded in the active week, shows your current progress bar, and sends notification alerts if you cross 80% or 100% of your budget.
+                                </div>
+                            </div>
+                            <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
+                                <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
+                                    <span>🔒 Is my financial ledger secure?</span>
+                                    <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                                </button>
+                                <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                                    Yes! Go to settings and click <strong>Account Security</strong>. You can configure a 4-digit PIN lock on startup, enable inactivity auto-lock timeout, set recovery email addresses, revoke active devices, and log in securely with Face ID/Fingerprint mock settings.
+                                </div>
+                            </div>
+                            <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
+                                <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
+                                    <span>💱 How can I update my base currency?</span>
+                                    <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
+                                </button>
+                                <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                                    Click the base currency item in Settings to launch the selector modal. Choose USD ($), INR (₹), EUR (€), GBP (£), or any other currency. All figures across your dashboard, history lists, statements, and budgets will update instantly.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Create Ticket -->
+                    <div id="support-panel-create" class="support-panel" style="display: none;">
+                        <!-- Category Select Cards -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Select Issue Category</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;" id="support-category-grid">
+                                <div class="support-cat-card active" data-value="Bug Report" style="border: 1.5px solid #6366f1; border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: rgba(99, 102, 241, 0.05); text-align: center; transition: all 0.2s;">
+                                    <span style="font-size: 18px;">🪲</span>
+                                    <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Bug Report</span>
+                                </div>
+                                <div class="support-cat-card" data-value="Suggestion" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
+                                    <span style="font-size: 18px;">💡</span>
+                                    <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Suggestion</span>
+                                </div>
+                                <div class="support-cat-card" data-value="Payment Issue" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
+                                    <span style="font-size: 18px;">💰</span>
+                                    <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Payment/XP</span>
+                                </div>
+                                <div class="support-cat-card" data-value="Other" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
+                                    <span style="font-size: 18px;">❓</span>
+                                    <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Other Query</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <label style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Message</label>
+                                <span id="support-char-counter" style="font-size: 9px; color: var(--text-muted); font-weight: 700;">0/500</span>
+                            </div>
+                            <textarea id="ticket-message" maxlength="500" placeholder="Please describe your issue in detail..." style="width: 100%; min-height: 100px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-family: inherit; font-size: 11px; resize: none; background: white; color: var(--text-main); box-sizing: border-box;"></textarea>
+                        </div>
+
+                        <button class="primary-btn" id="submit-ticket" style="width: 100%; margin-top: 5px; padding: 10px; font-size: 12px;">Submit Ticket</button>
+                    </div>
+
+                    <!-- Tab 3: History -->
+                    <div id="support-panel-history" class="support-panel" style="display: none;">
+                        <div id="support-history-stats" style="margin-bottom: 12px; display: flex; gap: 6px; justify-content: space-between;"></div>
+                        <div id="support-history-list" style="max-height: 340px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+                            <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 11px; font-weight: 600;">No support tickets logged.</div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
         </main>
 
         <!-- ===== STICKY SUMMARY STRIP ===== -->
@@ -1167,202 +1297,7 @@
         </div>
     </div>
 
-    <!-- ===== Feedback Modal (Settings) ===== -->
-    <div class="modal" id="feedback-modal" style="display:none; z-index: 10002;">
-        <div class="modal-content" style="max-width: 440px; padding: 20px; border-radius: 20px;">
-            <style>
-                .support-tab-btn {
-                    outline: none;
-                }
-                .support-tab-btn:hover:not(.active) {
-                    background: #f1f5f9 !important;
-                    color: var(--text-main) !important;
-                }
-                .dark-theme .support-tab-btn:hover:not(.active) {
-                    background: #1e2937 !important;
-                    color: white !important;
-                }
-                
-                .support-cat-card {
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                }
-                .support-cat-card:hover:not(.active) {
-                    border-color: var(--primary) !important;
-                    background: #f8fafc !important;
-                }
-                .dark-theme .support-cat-card {
-                    background: #111827 !important;
-                    border-color: #1f2937 !important;
-                }
-                .dark-theme .support-cat-card:hover:not(.active) {
-                    background: #1e2937 !important;
-                }
-                .dark-theme .support-cat-card.active {
-                    background: rgba(99, 102, 241, 0.1) !important;
-                    border-color: #6366f1 !important;
-                }
-                
-                /* FAQ transition styles */
-                .faq-item:hover {
-                    border-color: var(--primary) !important;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-                }
-                .dark-theme .faq-item {
-                    background: #111827 !important;
-                    border-color: #1f2937 !important;
-                }
-                
-                /* Support ticket status badges */
-                .support-status-badge {
-                    font-size: 8px;
-                    font-weight: 800;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                }
-                .support-status-badge.open {
-                    background: #fef3c7;
-                    color: #d97706;
-                }
-                .support-status-badge.resolved {
-                    background: #ecfdf5;
-                    color: #059669;
-                }
-                
-                /* History card styling */
-                .history-ticket-card {
-                    border: 1px solid var(--border-color);
-                    border-radius: 12px;
-                    padding: 12px;
-                    background: #f8fafc;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                }
-                .dark-theme .history-ticket-card {
-                    background: #1e2937 !important;
-                    border-color: #1f2937 !important;
-                }
-            </style>
 
-            <div class="modal-title" style="margin-bottom: 5px; font-weight: 800; font-size: 18px; text-align: center;">Help & Support</div>
-            <p style="font-size: 11px; color: #64748b; margin-bottom: 16px; text-align: center; margin-top: 0;">Need assistance? Browse FAQs or send a support ticket.</p>
-            
-            <!-- Tabs Header -->
-            <div style="display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; background: #f8fafc; border-radius: 8px; padding: 4px;" id="support-modal-tabs">
-                <button id="tab-support-faq" class="support-tab-btn active" style="flex: 1; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: #6366f1; color: white;">📋 FAQs</button>
-                <button id="tab-support-create" class="support-tab-btn" style="flex: 1; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b; margin-left: 4px;">✍️ Ticket</button>
-                <button id="tab-support-history" class="support-tab-btn" style="flex: 1; padding: 8px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b; margin-left: 4px; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                    📜 History
-                    <span id="support-history-badge" style="display: none; background: #ef4444; color: white; font-size: 8px; font-weight: 800; padding: 1px 4px; border-radius: 10px;">0</span>
-                </button>
-            </div>
-
-            <!-- Tab 1: FAQs -->
-            <div id="support-panel-faq" class="support-panel" style="display: block;">
-                <!-- FAQ Search Box -->
-                <div style="position: relative; margin-bottom: 12px;">
-                    <input type="text" id="faq-search" placeholder="Search questions..." style="width: 100%; padding: 8px 12px 8px 30px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 11px; background: var(--bg-color); color: var(--text-main);">
-                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.5; font-size: 11px;">🔍</span>
-                </div>
-                <!-- FAQ Accordion List -->
-                <div id="faq-accordion-list" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
-                    <!-- FAQ Items -->
-                    <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
-                        <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
-                            <span>📊 How do I export my data?</span>
-                            <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
-                        </button>
-                        <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                            Go to your Profile drawer, select <strong>Export Statement</strong>, choose your desired date range and file format (CSV or PDF), and click download. It takes just a few seconds.
-                        </div>
-                    </div>
-                    <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
-                        <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
-                            <span>⭐ What are XP milestones & rewards?</span>
-                            <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
-                        </button>
-                        <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                            XP (Experience Points) are awarded when you update your profile (+50 XP), complete daily tracking, or refer friends (+500 XP). You can use your XP in the <strong>Rewards Store</strong> to unlock premium avatars, profile badges, and UI customization features!
-                        </div>
-                    </div>
-                    <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
-                        <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
-                            <span>📅 How does the Weekly Budget limit work?</span>
-                            <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
-                        </button>
-                        <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                            Under the Insights view, you can define a weekly budget limit in your local currency. The system tracks all spends recorded in the active week, shows your current progress bar, and sends notification alerts if you cross 80% or 100% of your budget.
-                        </div>
-                    </div>
-                    <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
-                        <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
-                            <span>🔒 Is my financial ledger secure?</span>
-                            <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
-                        </button>
-                        <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                            Yes! Go to settings and click <strong>Account Security</strong>. You can configure a 4-digit PIN lock on startup, enable inactivity auto-lock timeout, set recovery email addresses, revoke active devices, and log in securely with Face ID/Fingerprint mock settings.
-                        </div>
-                    </div>
-                    <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: 10px; background: white; overflow: hidden; transition: all 0.2s;">
-                        <button class="faq-trigger" style="width: 100%; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; color: var(--text-main); text-align: left; outline: none;">
-                            <span>💱 How can I update my base currency?</span>
-                            <span class="faq-arrow" style="font-size: 10px; transition: transform 0.2s;">▼</span>
-                        </button>
-                        <div class="faq-content" style="display: none; padding: 0 12px 10px; font-size: 10px; color: #64748b; line-height: 1.4; border-top: 1px dashed var(--border-color); padding-top: 8px;">
-                            Click the base currency item in Settings to launch the selector modal. Choose USD ($), INR (₹), EUR (€), GBP (£), or any other currency. All figures across your dashboard, history lists, statements, and budgets will update instantly.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 2: Create Ticket -->
-            <div id="support-panel-create" class="support-panel" style="display: none;">
-                <!-- Category Select Cards -->
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <label style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Select Issue Category</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;" id="support-category-grid">
-                        <div class="support-cat-card active" data-value="Bug Report" style="border: 1.5px solid #6366f1; border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: rgba(99, 102, 241, 0.05); text-align: center; transition: all 0.2s;">
-                            <span style="font-size: 18px;">🪲</span>
-                            <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Bug Report</span>
-                        </div>
-                        <div class="support-cat-card" data-value="Suggestion" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
-                            <span style="font-size: 18px;">💡</span>
-                            <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Suggestion</span>
-                        </div>
-                        <div class="support-cat-card" data-value="Payment Issue" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
-                            <span style="font-size: 18px;">💰</span>
-                            <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Payment/XP</span>
-                        </div>
-                        <div class="support-cat-card" data-value="Other" style="border: 1.5px solid var(--border-color); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: white; text-align: center; transition: all 0.2s;">
-                            <span style="font-size: 18px;">❓</span>
-                            <span style="font-size: 10px; font-weight: 700; color: var(--text-main);">Other Query</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 12px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <label style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Message</label>
-                        <span id="support-char-counter" style="font-size: 9px; color: var(--text-muted); font-weight: 700;">0/500</span>
-                    </div>
-                    <textarea id="ticket-message" maxlength="500" placeholder="Please describe your issue in detail..." style="width: 100%; min-height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-family: inherit; font-size: 11px; resize: none; background: white; color: var(--text-main); box-sizing: border-box;"></textarea>
-                </div>
-
-                <button class="primary-btn" id="submit-ticket" style="width: 100%; margin-top: 5px; padding: 10px; font-size: 12px;">Submit Ticket</button>
-            </div>
-
-            <!-- Tab 3: History -->
-            <div id="support-panel-history" class="support-panel" style="display: none;">
-                <div id="support-history-list" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
-                    <div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 11px; font-weight: 600;">No support tickets logged.</div>
-                </div>
-            </div>
-
-            <button class="text-btn" id="close-feedback-modal" style="width: 100%; margin-top: 14px; color: #64748b; font-weight: 700; font-size: 11px; border: none; background: none; cursor: pointer; outline: none;">Dismiss</button>
-        </div>
-    </div>
 
 
 

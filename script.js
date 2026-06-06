@@ -1741,8 +1741,27 @@ const drawerHelpBtn = document.getElementById('drawer-help-btn');
 if (drawerHelpBtn) {
     drawerHelpBtn.addEventListener('click', () => {
         if (profileDrawer) profileDrawer.style.display = 'none';
-        const modal = document.getElementById('feedback-modal');
-        if (modal) modal.style.display = 'flex';
+        
+        const appViews = document.querySelectorAll('.app-view');
+        appViews.forEach(v => v.classList.remove('active'));
+        
+        const supportView = document.getElementById('support-view');
+        if (supportView) supportView.classList.add('active');
+
+        // Hide tracker specific layouts
+        const summaryStrip = document.getElementById('summary-strip');
+        if (summaryStrip) summaryStrip.style.display = 'none';
+
+        const fabBtn = document.getElementById('fab-add-btn');
+        if (fabBtn) fabBtn.style.display = 'none';
+
+        // Show back button in header
+        const backBtn = document.getElementById('settings-back-btn');
+        if (backBtn && profileTrigger) {
+            backBtn.style.display = 'flex';
+            profileTrigger.style.display = 'none';
+        }
+
         const tabFaq = document.getElementById('tab-support-faq');
         if (tabFaq) tabFaq.click();
     });
@@ -1756,6 +1775,7 @@ if (settingsBackBtn) {
         const editProfileView = document.getElementById('edit-profile-view');
         const exportView = document.getElementById('export-view');
         const securityView = document.getElementById('security-view');
+        const supportView = document.getElementById('support-view');
         
         if (securityView && securityView.classList.contains('active')) {
             const appViews = document.querySelectorAll('.app-view');
@@ -1781,7 +1801,9 @@ if (settingsBackBtn) {
         }
 
         const referView = document.getElementById('refer-view');
-        if ((exportView && exportView.classList.contains('active')) || (referView && referView.classList.contains('active'))) {
+        if ((exportView && exportView.classList.contains('active')) || 
+            (referView && referView.classList.contains('active')) || 
+            (supportView && supportView.classList.contains('active'))) {
             const trackerTab = document.getElementById('nav-tracker');
             if (trackerTab) {
                 trackerTab.click();
@@ -3241,15 +3263,42 @@ tabFaq?.addEventListener('click', () => switchSupportTab(tabFaq));
 tabCreate?.addEventListener('click', () => switchSupportTab(tabCreate));
 tabHistory?.addEventListener('click', () => switchSupportTab(tabHistory));
 
-// FAQ Search Filter
+// FAQ Search Filter and Highlight
 const faqSearch = document.getElementById('faq-search');
 faqSearch?.addEventListener('input', (e) => {
     const queryStr = e.target.value.toLowerCase().trim();
     document.querySelectorAll('.faq-item').forEach(item => {
-        const question = item.querySelector('.faq-trigger span')?.textContent.toLowerCase() || '';
-        const answer = item.querySelector('.faq-content')?.textContent.toLowerCase() || '';
-        if (question.includes(queryStr) || answer.includes(queryStr)) {
+        const triggerSpan = item.querySelector('.faq-trigger span');
+        const contentDiv = item.querySelector('.faq-content');
+        if (!triggerSpan || !contentDiv) return;
+        
+        const originalQuestion = triggerSpan.getAttribute('data-original') || triggerSpan.textContent;
+        if (!triggerSpan.getAttribute('data-original')) {
+            triggerSpan.setAttribute('data-original', originalQuestion);
+        }
+        
+        const originalAnswer = contentDiv.getAttribute('data-original') || contentDiv.textContent.trim();
+        if (!contentDiv.getAttribute('data-original')) {
+            contentDiv.setAttribute('data-original', originalAnswer);
+        }
+        
+        const questionLower = originalQuestion.toLowerCase();
+        const answerLower = originalAnswer.toLowerCase();
+        
+        if (questionLower.includes(queryStr) || answerLower.includes(queryStr)) {
             item.style.display = 'block';
+            
+            if (queryStr) {
+                // Highlight query in question
+                const qRegex = new RegExp(`(${queryStr.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+                triggerSpan.innerHTML = originalQuestion.replace(qRegex, '<mark style="background: #fef08a; color: #1e293b; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+                
+                // Highlight query in answer
+                contentDiv.innerHTML = originalAnswer.replace(qRegex, '<mark style="background: #fef08a; color: #1e293b; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+            } else {
+                triggerSpan.textContent = originalQuestion;
+                contentDiv.textContent = originalAnswer;
+            }
         } else {
             item.style.display = 'none';
         }
@@ -3338,6 +3387,19 @@ function startSupportTicketsListener() {
             }
         }
 
+        // Render Support History Stats
+        const statsContainer = document.getElementById('support-history-stats');
+        if (statsContainer) {
+            const total = tickets.length;
+            const open = tickets.filter(t => t.status === 'open').length;
+            const resolved = tickets.filter(t => t.status === 'resolved').length;
+            statsContainer.innerHTML = `
+                <div style="flex: 1; background: var(--border-color); opacity: 0.8; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 9px; font-weight: 700; color: var(--text-main);">📋 ${total} Total</div>
+                <div style="flex: 1; background: rgba(217, 119, 6, 0.1); padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 9px; font-weight: 700; color: #d97706;">🟢 ${open} Open</div>
+                <div style="flex: 1; background: rgba(5, 150, 105, 0.1); padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 9px; font-weight: 700; color: #059669;">✅ ${resolved} Resolved</div>
+            `;
+        }
+
         historyList.innerHTML = '';
         if (tickets.length === 0) {
             historyList.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted); font-size: 11px; font-weight: 600;">No support tickets logged.</div>';
@@ -3412,7 +3474,6 @@ document.getElementById('submit-ticket')?.addEventListener('click', async () => 
             createdAt: serverTimestamp()
         });
 
-        if (feedbackModal) feedbackModal.style.display = 'none';
         if (ticketMessageInput) ticketMessageInput.value = "";
         if (charCounter) charCounter.textContent = "0/500";
         
@@ -3424,6 +3485,10 @@ document.getElementById('submit-ticket')?.addEventListener('click', async () => 
             c.style.background = isBug ? 'rgba(99, 102, 241, 0.05)' : 'white';
         });
         selectedSupportCategory = "Bug Report";
+        
+        // Switch to history tab to immediately show the user their ticket
+        const tabHistory = document.getElementById('tab-support-history');
+        if (tabHistory) tabHistory.click();
         
         if (successOverlay) successOverlay.style.display = 'flex';
     } catch (err) {
