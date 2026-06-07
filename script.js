@@ -1445,36 +1445,43 @@ btnCancel?.addEventListener('click', () => {
     resetExportModal();
 });
 
-btnConfirm2?.addEventListener('click', () => {
+btnConfirm2?.addEventListener('click', async () => {
     exportStep3.style.display = "none";
     exportStepSuccess.style.display = "block";
     
     const successTitle = document.querySelector('#export-step-success h4');
     const successDesc = document.querySelector('#export-step-success p');
     if (successTitle) {
-        successTitle.textContent = selectedExportFormat === 'pdf' ? 'Statement Generated!' : 'Report Ready!';
+        successTitle.textContent = selectedExportFormat === 'pdf' ? 'Generating PDF...' : 'Report Ready!';
     }
     if (successDesc) {
         successDesc.textContent = selectedExportFormat === 'pdf' 
-            ? 'Your PDF statement download has started.' 
+            ? 'Please wait, compiling transaction history...' 
             : 'Your CSV file download has started.';
     }
     
     // Fire download based on format
     if (selectedExportFormat === 'pdf') {
-        downloadPDFData(filteredExportData, summaryRangeText ? summaryRangeText.textContent : "Report");
+        try {
+            await downloadPDFData(filteredExportData, summaryRangeText ? summaryRangeText.textContent : "Report");
+            if (successTitle) successTitle.textContent = 'Statement Generated!';
+            if (successDesc) successDesc.textContent = 'Your PDF statement download has started.';
+        } catch (err) {
+            if (successTitle) successTitle.textContent = 'Export Failed';
+            if (successDesc) successDesc.textContent = 'Could not generate PDF. Please try again.';
+        }
     } else {
         downloadCSVData(filteredExportData);
     }
     
-    // Auto return to tracker after 1.5s
+    // Auto return to tracker after 2s
     setTimeout(() => {
         const trackerTab = document.getElementById('nav-tracker');
         if (trackerTab) {
             trackerTab.click();
         }
         resetExportModal();
-    }, 1500);
+    }, 2000);
 });
 
 // CSV Generator
@@ -1567,18 +1574,26 @@ async function downloadPDFData(data, dateRangeLabel) {
 
     const docTitle = `Financial_Statement_${dateRangeLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
-    // Create a temporary container for html2pdf
+    // Create a temporary hidden layout container that stays in flow to retain width
+    const wrapper = document.createElement('div');
+    wrapper.id = 'pdf-wrapper';
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '0';
+    wrapper.style.left = '0';
+    wrapper.style.width = '750px';
+    wrapper.style.height = '0';
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.opacity = '0.01';
+    wrapper.style.pointerEvents = 'none';
+
     const element = document.createElement('div');
     element.id = 'pdf-temp-template';
-    element.style.position = 'fixed';
-    element.style.left = '0';
-    element.style.top = '0';
-    element.style.zIndex = '-9999';
-    element.style.width = '750px'; // standard width for standard A4 scale
+    element.style.width = '750px';
     element.style.padding = '24px';
     element.style.fontFamily = "'Inter', -apple-system, sans-serif";
     element.style.color = '#1e293b';
     element.style.background = '#ffffff';
+    element.style.boxSizing = 'border-box';
     
     element.innerHTML = `
         <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px;">
@@ -1635,45 +1650,48 @@ async function downloadPDFData(data, dateRangeLabel) {
         </div>
     `;
 
-    document.body.appendChild(element);
+    wrapper.appendChild(element);
+    document.body.appendChild(wrapper);
     
     // Load library dynamically and perform direct PDF Blob download
     try {
         const html2pdfLib = await loadHtml2Pdf();
+        
+        // Detect mobile users to set smaller scale to bypass HTML5 canvas limits
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const canvasScale = isMobile ? 1.3 : 2.0;
+
         const opt = {
             margin:       12,
             filename:     `${docTitle}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { 
-                scale: 2, 
+                scale: canvasScale, 
                 useCORS: true, 
                 logging: false,
+                letterRendering: true,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: 750,
                 onclone: (clonedDoc) => {
-                    const el = clonedDoc.getElementById('pdf-temp-template');
-                    if (el) {
-                        el.style.position = 'relative';
-                        el.style.left = '0';
-                        el.style.top = '0';
-                        el.style.zIndex = '9999';
+                    const wr = clonedDoc.getElementById('pdf-wrapper');
+                    if (wr) {
+                        wr.style.height = 'auto';
+                        wr.style.opacity = '1';
                     }
                 }
             },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        const blob = await html2pdfLib().set(opt).from(element).outputPdf('blob');
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${docTitle}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
+        
+        // Use html2pdf's native save method (more compatible on iOS/Android browsers)
+        await html2pdfLib().set(opt).from(element).save();
     } catch (err) {
         console.error("PDF download failed:", err);
         alert("Failed to download PDF Statement directly. Please check your internet connection.");
+        throw err;
     } finally {
-        document.body.removeChild(element);
+        document.body.removeChild(wrapper);
     }
 }
 
@@ -2196,6 +2214,48 @@ async function loadReferralData() {
 
         if (countEl) countEl.textContent = count;
         if (earningsEl) earningsEl.textContent = `${earnings} XP`;
+
+        // Update referral milestones & progress bar dynamically
+        const progressFill = document.getElementById('ref-progress-fill');
+        const milestoneText = document.getElementById('ref-milestone-text');
+        
+        let level = "Bronze";
+        let percent = 0;
+        
+        if (count >= 5) {
+            level = "Gold (Wealth Ambassador)";
+            percent = 100;
+        } else if (count >= 3) {
+            level = "Silver (Super Spreader)";
+            percent = 70;
+        } else if (count >= 1) {
+            level = "Bronze (Starter)";
+            percent = 35;
+        } else {
+            level = "Bronze";
+            percent = 0;
+        }
+        
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (milestoneText) milestoneText.textContent = `Level: ${level}`;
+        
+        // Highlight achieved milestones (set opacity to 1 and add checkmark/glow)
+        const m1 = document.getElementById('milestone-1');
+        const m3 = document.getElementById('milestone-3');
+        const m5 = document.getElementById('milestone-5');
+        
+        if (m1) {
+            m1.style.opacity = count >= 1 ? '1' : '0.5';
+            m1.style.color = count >= 1 ? 'var(--success-gradient, #10b981)' : 'inherit';
+        }
+        if (m3) {
+            m3.style.opacity = count >= 3 ? '1' : '0.5';
+            m3.style.color = count >= 3 ? 'var(--success-gradient, #10b981)' : 'inherit';
+        }
+        if (m5) {
+            m5.style.opacity = count >= 5 ? '1' : '0.5';
+            m5.style.color = count >= 5 ? 'var(--success-gradient, #10b981)' : 'inherit';
+        }
 
     } catch (err) {
         console.error("Error loading referral data:", err);
@@ -3245,14 +3305,16 @@ document.getElementById('save-email')?.addEventListener('click', async () => {
 // Tab Switching Wires
 const tabFaq = document.getElementById('tab-support-faq');
 const tabCreate = document.getElementById('tab-support-create');
+const tabAi = document.getElementById('tab-support-ai');
 const tabHistory = document.getElementById('tab-support-history');
 
 const panelFaq = document.getElementById('support-panel-faq');
 const panelCreate = document.getElementById('support-panel-create');
+const panelAi = document.getElementById('support-panel-ai');
 const panelHistory = document.getElementById('support-panel-history');
 
 function switchSupportTab(activeTab) {
-    [tabFaq, tabCreate, tabHistory].forEach(tab => {
+    [tabFaq, tabCreate, tabAi, tabHistory].forEach(tab => {
         if (!tab) return;
         if (tab === activeTab) {
             tab.classList.add('active');
@@ -3265,24 +3327,57 @@ function switchSupportTab(activeTab) {
         }
     });
 
-    if (activeTab === tabFaq) {
-        if (panelFaq) panelFaq.style.display = 'block';
-        if (panelCreate) panelCreate.style.display = 'none';
-        if (panelHistory) panelHistory.style.display = 'none';
-    } else if (activeTab === tabCreate) {
-        if (panelFaq) panelFaq.style.display = 'none';
-        if (panelCreate) panelCreate.style.display = 'block';
-        if (panelHistory) panelHistory.style.display = 'none';
-    } else if (activeTab === tabHistory) {
-        if (panelFaq) panelFaq.style.display = 'none';
-        if (panelCreate) panelCreate.style.display = 'none';
-        if (panelHistory) panelHistory.style.display = 'block';
+    if (panelFaq) panelFaq.style.display = activeTab === tabFaq ? 'block' : 'none';
+    if (panelCreate) {
+        panelCreate.style.display = activeTab === tabCreate ? 'block' : 'none';
+        if (activeTab === tabCreate) {
+            populateTicketTransactions();
+        }
     }
+    if (panelAi) panelAi.style.display = activeTab === tabAi ? 'block' : 'none';
+    if (panelHistory) panelHistory.style.display = activeTab === tabHistory ? 'block' : 'none';
 }
 
 tabFaq?.addEventListener('click', () => switchSupportTab(tabFaq));
 tabCreate?.addEventListener('click', () => switchSupportTab(tabCreate));
+tabAi?.addEventListener('click', () => switchSupportTab(tabAi));
 tabHistory?.addEventListener('click', () => switchSupportTab(tabHistory));
+
+// Function to dynamically load user's recent transactions for optional ticket linkage
+function populateTicketTransactions() {
+    const selectEl = document.getElementById('ticket-transaction-link');
+    if (!selectEl) return;
+    
+    selectEl.innerHTML = '<option value="">-- None --</option>';
+    
+    const localUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!localUser || !localUser.phone) return;
+    
+    const dataKey = `trackerData_${localUser.phone}`;
+    const data = JSON.parse(localStorage.getItem(dataKey)) || trackerData || [];
+    
+    // Filter transactions that have some actual amount (earns, other, or spends > 0)
+    const validRows = data
+        .filter(r => r.date && ((r.earns && parseFloat(r.earns) > 0) || (r.other && parseFloat(r.other) > 0) || (r.spends && parseFloat(r.spends) > 0)))
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 15);
+        
+    validRows.forEach(row => {
+        const earnsVal = parseFloat(row.earns) || 0;
+        const otherVal = parseFloat(row.other) || 0;
+        const spendsVal = parseFloat(row.spends) || 0;
+        const amount = earnsVal + otherVal - spendsVal;
+        const sign = amount >= 0 ? '+' : '';
+        const categoryStr = row.category && row.category !== '-' ? ` [${row.category}]` : '';
+        const dateStr = row.date;
+        const currencySymbol = typeof CS === 'function' ? CS() : '₹';
+        const label = `${dateStr}${categoryStr}: ${sign}${currencySymbol}${Math.round(Math.abs(amount))}`;
+        const option = document.createElement('option');
+        option.value = JSON.stringify({ date: row.date, category: row.category, amount: amount });
+        option.textContent = label;
+        selectEl.appendChild(option);
+    });
+}
 
 // FAQ Search Filter and Highlight
 const faqSearch = document.getElementById('faq-search');
