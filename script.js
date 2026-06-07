@@ -3,6 +3,27 @@ import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/fireb
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, query, collection, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
 
+// Polyfill Notification API for unsupported browsers (e.g. mobile Safari, in-app webviews)
+if (typeof window !== 'undefined') {
+    if (typeof window.Notification === 'undefined') {
+        const mockNotif = function(title, options) {
+            this.title = title;
+            this.options = options;
+        };
+        mockNotif.permission = 'denied';
+        mockNotif.requestPermission = function() {
+            return Promise.resolve('denied');
+        };
+        window.Notification = mockNotif;
+        if (typeof global !== 'undefined' && !global.Notification) {
+            global.Notification = mockNotif;
+        }
+        if (typeof self !== 'undefined' && !self.Notification) {
+            self.Notification = mockNotif;
+        }
+    }
+}
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);

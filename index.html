@@ -6,6 +6,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
     <script>
+        // Global error interceptor for remote debugging and user feedback
+        window.addEventListener('error', function(e) {
+            console.error("Global error caught:", e.error || e.message);
+            showStartupErrorOverlay(e.error || new Error(e.message));
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error("Global rejection caught:", e.reason);
+            showStartupErrorOverlay(e.reason || new Error("Unhandled Promise Rejection"));
+        });
+        
+        function showStartupErrorOverlay(error) {
+            if (document.getElementById('fatal-error-overlay')) return;
+            const div = document.createElement('div');
+            div.id = 'fatal-error-overlay';
+            div.style.position = 'fixed';
+            div.style.top = '0';
+            div.style.left = '0';
+            div.style.width = '100vw';
+            div.style.height = '100vh';
+            div.style.backgroundColor = '#ffffff';
+            div.style.color = '#ef4444';
+            div.style.padding = '40px 20px';
+            div.style.boxSizing = 'border-box';
+            div.style.zIndex = '999999';
+            div.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+            div.style.display = 'flex';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.textAlign = 'center';
+            
+            div.innerHTML = `
+                <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                <h1 style="font-size: 22px; font-weight: 800; color: #1f2937; margin: 0 0 10px;">Application Load Failure</h1>
+                <p style="font-size: 14px; color: #4b5563; max-width: 440px; margin: 0 0 30px; line-height: 1.5;">
+                    The application encountered a critical error during startup. Click below to clear local caches and reset, or report the details below.
+                </p>
+                <div style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; width: 100%; max-width: 550px; text-align: left; margin-bottom: 30px; overflow-x: auto; max-height: 250px; box-sizing: border-box;">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; margin-bottom: 6px;">Error Details</div>
+                    <pre style="margin: 0; font-family: monospace; font-size: 12px; color: #ef4444; white-space: pre-wrap; word-break: break-all;">${error ? (error.message + '\n' + (error.stack || '')) : 'Unknown startup error'}</pre>
+                </div>
+                <button id="reset-app-cache-btn" style="background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); outline: none;">
+                    🔄 Reset App & Reload
+                </button>
+            `;
+            
+            if (document.body) {
+                document.body.appendChild(div);
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.body.appendChild(div);
+                });
+            }
+            
+            setTimeout(() => {
+                document.getElementById('reset-app-cache-btn')?.addEventListener('click', () => {
+                    const userStr = localStorage.getItem('currentUser');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            if (user && user.phone) {
+                                localStorage.removeItem('trackerData_' + user.phone);
+                                localStorage.removeItem('weeklyBudget_' + user.phone);
+                                localStorage.removeItem('subscriptions_' + user.phone);
+                                localStorage.removeItem('userSettings_' + user.phone);
+                            }
+                        } catch(e) {}
+                    }
+                    localStorage.removeItem('trackerData');
+                    localStorage.removeItem('weeklyBudget');
+                    localStorage.removeItem('subscriptions');
+                    localStorage.removeItem('currentUser');
+                    sessionStorage.clear();
+                    window.location.reload();
+                });
+            }, 100);
+        }
+    </script>
+
+    <script>
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark-theme');
         }
