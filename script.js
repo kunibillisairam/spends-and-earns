@@ -705,7 +705,7 @@ submitEntryBtn.addEventListener('click', () => {
     renderTable();
     addEntryModal.style.display = 'none';
     setHasChangesSinceLastSave(true);
-    checkAndAwardTransactionXP();
+    checkAndAwardTransactionXP(date);
 
     // Gamification Milestone
     if (((earns || 0) + (other || 0)) > (spends || 0) * 1.5) {
@@ -726,7 +726,7 @@ function updateData(index, field, value) {
     else trackerData[index][field] = value === '' ? null : parseFloat(value);
     saveData();
     setHasChangesSinceLastSave(true);
-    checkAndAwardTransactionXP();
+    checkAndAwardTransactionXP(trackerData[index].date);
     const activeEl = document.activeElement;
     const tr = activeEl ? activeEl.closest('tr') : null;
     if (tr) {
@@ -870,17 +870,31 @@ function manualSave() {
 
 
 
-// Helper to throttle transaction XP awards and display bottom notifications
-let lastTransactionXPAwardTime = 0;
+// Helper to award transaction XP once per calendar date of transaction
+function checkAndAwardTransactionXP(txDate) {
+    if (!txDate) return;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
 
-function checkAndAwardTransactionXP() {
-    const now = Date.now();
-    // Enforce a 5-second cooldown to prevent infinite farming from typing
-    if (now - lastTransactionXPAwardTime > 5000) {
-        lastTransactionXPAwardTime = now;
-        addXP(30);
-        showXPNotification("30xp's add");
+    const milestoneKey = `xpMilestones_${user.phone}`;
+    const milestones = JSON.parse(localStorage.getItem(milestoneKey)) || {};
+    
+    // Ensure awardedTxDates array exists and is an array
+    if (!milestones.awardedTxDates || !Array.isArray(milestones.awardedTxDates)) {
+        milestones.awardedTxDates = [];
     }
+    
+    // If the txDate is already in the list of rewarded dates, do not award XP again
+    if (milestones.awardedTxDates.includes(txDate)) {
+        return;
+    }
+    
+    // Otherwise, award the 30 XP
+    milestones.awardedTxDates.push(txDate);
+    localStorage.setItem(milestoneKey, JSON.stringify(milestones));
+    
+    addXP(30);
+    showXPNotification("30xp's add");
 }
 
 function showXPNotification(message) {
