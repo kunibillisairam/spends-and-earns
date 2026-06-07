@@ -1406,6 +1406,10 @@
                 </div>
             </div>
 <div class="drawer-footer">
+                <!-- New Update Indicator -->
+                <div id="drawer-update-indicator" style="display: none; align-items: center; justify-content: center; gap: 6px; background: rgba(99, 102, 241, 0.1); border: 1.5px solid rgba(99, 102, 241, 0.25); border-radius: 10px; padding: 10px; margin-bottom: 12px; cursor: pointer; color: #6366f1; font-weight: 700; font-size: 11px; transition: all 0.2s;" title="Click to apply update">
+                    ✨ New Update Available! <span style="text-decoration: underline;">Click here</span>
+                </div>
                 <button id="logout-btn" class="secondary-btn logout-danger">🚪 Logout</button>
             </div>
         </div>
@@ -1485,6 +1489,8 @@
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                 document.getElementById('update-banner').style.display = 'flex';
+                                const drawerIndicator = document.getElementById('drawer-update-indicator');
+                                if (drawerIndicator) drawerIndicator.style.display = 'flex';
                             }
                         });
                     });
@@ -1492,9 +1498,13 @@
             });
         }
 
-        document.getElementById('update-btn')?.addEventListener('click', () => {
+        const handleAppUpdate = () => {
+            localStorage.setItem('update_completed_alert', 'true');
             window.location.reload();
-        });
+        };
+
+        document.getElementById('update-btn')?.addEventListener('click', handleAppUpdate);
+        document.getElementById('drawer-update-indicator')?.addEventListener('click', handleAppUpdate);
 
         // Header greeting
         const hour = new Date().getHours();

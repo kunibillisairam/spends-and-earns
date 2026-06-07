@@ -216,6 +216,14 @@ async function init() {
     });
 
     setHasChangesSinceLastSave(false);
+
+    // Check if we just completed an update
+    if (localStorage.getItem('update_completed_alert') === 'true') {
+        localStorage.removeItem('update_completed_alert');
+        setTimeout(() => {
+            alert('Update completed');
+        }, 800);
+    }
 }
 
 async function recoverUserDocument() {
@@ -697,6 +705,7 @@ submitEntryBtn.addEventListener('click', () => {
     renderTable();
     addEntryModal.style.display = 'none';
     setHasChangesSinceLastSave(true);
+    checkAndAwardTransactionXP();
 
     // Gamification Milestone
     if (((earns || 0) + (other || 0)) > (spends || 0) * 1.5) {
@@ -717,6 +726,7 @@ function updateData(index, field, value) {
     else trackerData[index][field] = value === '' ? null : parseFloat(value);
     saveData();
     setHasChangesSinceLastSave(true);
+    checkAndAwardTransactionXP();
     const activeEl = document.activeElement;
     const tr = activeEl ? activeEl.closest('tr') : null;
     if (tr) {
@@ -859,6 +869,57 @@ function manualSave() {
 }
 
 
+
+// Helper to throttle transaction XP awards and display bottom notifications
+let lastTransactionXPAwardTime = 0;
+
+function checkAndAwardTransactionXP() {
+    const now = Date.now();
+    // Enforce a 5-second cooldown to prevent infinite farming from typing
+    if (now - lastTransactionXPAwardTime > 5000) {
+        lastTransactionXPAwardTime = now;
+        addXP(30);
+        showXPNotification("30xp's add");
+    }
+}
+
+function showXPNotification(message) {
+    const notif = document.createElement('div');
+    notif.className = 'xp-bottom-notification';
+    notif.innerHTML = `⭐ ${message}`;
+    notif.style.position = 'fixed';
+    notif.style.bottom = '85px'; // sits nicely above mobile tab bar
+    notif.style.left = '50%';
+    notif.style.transform = 'translateX(-50%) translateY(20px)';
+    notif.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+    notif.style.color = '#ffffff';
+    notif.style.padding = '8px 16px';
+    notif.style.borderRadius = '20px';
+    notif.style.fontWeight = '800';
+    notif.style.fontSize = '12px';
+    notif.style.zIndex = '10005';
+    notif.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.3)';
+    notif.style.opacity = '0';
+    notif.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    
+    document.body.appendChild(notif);
+    
+    // Trigger reflow
+    notif.offsetHeight;
+    
+    // Fade/Slide In
+    notif.style.opacity = '1';
+    notif.style.transform = 'translateX(-50%) translateY(0)';
+    
+    // Slide Out & Remove after 2 seconds
+    setTimeout(() => {
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateX(-50%) translateY(10px)';
+        setTimeout(() => {
+            notif.remove();
+        }, 300);
+    }, 2000);
+}
 
 // ===== Comprehensive XP Milestone System =====
 function checkXPMilestones() {
