@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 // NOTE: Request a free API Key from resend.com and add it to your environment variables
-const resend = new Resend(process.env.RESEND_API_KEY || 're_your_api_key');
+const resend = new Resend(process.env.RESEND_API_KEY || 're_N1WEq15G_K8mUFL7CrcZKTR62CpSbAG9Y');
 
 export default async function handler(req, res) {
     // Add CORS headers to enable mobile / WebView cross-origin requests

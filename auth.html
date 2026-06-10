@@ -583,13 +583,13 @@
             }
         });
 
-        // 2. Verify OTP Logic
         document.getElementById('verify-otp-btn').addEventListener('click', async () => {
             const rawPhone = document.getElementById('fp-phone').value;
             const phone = cleanPhoneNumber(rawPhone);
-            const inputOtp = document.getElementById('fp-otp').value;
+            const rawOtp = document.getElementById('fp-otp').value;
+            const inputOtp = rawOtp.trim().replace(/[^0-9]/g, '');
 
-            if (inputOtp.length !== 6) return alert("Please enter 6-digit OTP");
+            if (inputOtp.length !== 6) return alert("Please enter a valid 6-digit OTP");
 
             try {
                 const otpSnap = await getDoc(doc(db, "otps", phone));
