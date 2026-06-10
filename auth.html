@@ -9,183 +9,436 @@
             document.documentElement.classList.add('dark-theme');
         }
     </script>
-    <title>Get Started - Spends & Earns</title>
-    <!-- Modern Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Welcome - Spends & Earns</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --accent-primary: #4f46e5;
-            --accent-secondary: #a855f7;
+            --bg-dark: #030712;
+            --card-bg: rgba(10, 15, 30, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(99, 102, 241, 0.35);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #a855f7;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-glow: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            
+            --font-display: 'Outfit', 'Inter', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Outfit', sans-serif;
+            font-family: var(--font-body);
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
             min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* Responsive Layout Container */
+        .page-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* LEFT 60%: Interactive 3D Showcase Panel */
+        .showcase-panel {
+            flex: 0 0 60%;
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, #1e1b4b 0%, #030712 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Glow Blobs behind Left panel */
+        .glow-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            animation: floatBlob1 20s infinite ease-in-out alternate;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--secondary);
+            bottom: -150px;
+            right: -100px;
+            animation: floatBlob2 25s infinite ease-in-out alternate;
+        }
+
+        @keyframes floatBlob1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 50px) scale(1.1); }
+        }
+
+        @keyframes floatBlob2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-100px, -60px) scale(0.9); }
+        }
+
+        .showcase-header {
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-symbol {
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.03em;
+        }
+
+        .showcase-content {
+            z-index: 2;
+            max-width: 580px;
+        }
+
+        .showcase-content h2 {
+            font-family: var(--font-display);
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin: 0 0 20px 0;
+            letter-spacing: -0.03em;
+            background: linear-gradient(to right, #ffffff, #93c5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .showcase-content p {
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin: 0 0 35px 0;
+            font-weight: 400;
+        }
+
+        /* Floating glassmorphism mini card showcase */
+        .glass-badge-wrapper {
+            display: flex;
+            gap: 16px;
+        }
+
+        .glass-badge {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .glass-badge:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .badge-icon {
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-            overflow: hidden;
         }
 
-        .bg-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: url('auth_background_mesh_1776662792547.png') no-repeat center center/cover;
-            filter: blur(5px) brightness(0.8);
-            transform: scale(1.1);
-            z-index: -1;
-            transition: all 1s ease;
+        .showcase-footer {
+            z-index: 2;
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.6;
         }
 
-        .auth-container {
-            width: 100%;
-            max-width: 440px;
-            padding: 20px;
-            z-index: 10;
-            perspective: 1000px;
-        }
-
-        .auth-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            border-radius: 32px;
+        /* RIGHT 40%: Form Container Panel */
+        .form-panel {
+            flex: 0 0 40%;
+            background-color: #090d16;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+            border-left: 1px solid var(--border-color);
             position: relative;
-            overflow: hidden;
+            z-index: 2;
+            overflow-y: auto;
         }
 
-        @keyframes cardEntrance {
-            from { transform: translateY(30px) rotateX(-10deg); opacity: 0; }
-            to { transform: translateY(0) rotateX(0); opacity: 1; }
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+            animation: formEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* Decorative blobs */
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: -50px; right: -50px;
-            width: 120px; height: 120px;
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            border-radius: 50%;
-            opacity: 0.2;
-            filter: blur(30px);
-            z-index: -1;
+        @keyframes formEntrance {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .auth-header {
-            text-align: center;
+        .form-header {
             margin-bottom: 35px;
         }
 
-        .auth-logo {
-            font-size: 40px;
-            margin-bottom: 15px;
-            display: inline-block;
-            animation: bounce 2s infinite ease-in-out;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .auth-header h1 {
+        .form-header h1 {
+            font-family: var(--font-display);
             font-size: 32px;
             font-weight: 800;
-            margin: 0;
-            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin: 0 0 8px 0;
             letter-spacing: -0.02em;
         }
 
-        .auth-header p {
-            color: #475569;
+        .form-header p {
+            color: var(--text-secondary);
             font-size: 15px;
-            margin-top: 10px;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* Glassmorphic Form Card Group */
+        .form-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: border-color 0.3s;
+        }
+
+        .form-card:focus-within {
+            border-color: var(--border-glow);
+        }
+
+        /* Floating Input Fields */
+        .input-group {
+            position: relative;
+            height: 56px;
+            margin-bottom: 22px;
+            width: 100%;
+        }
+
+        .input-group input {
+            width: 100%;
+            height: 100%;
+            padding: 20px 16px 6px 44px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .input-group input:focus {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 44px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             font-weight: 500;
         }
 
-        .form-group {
-            margin-bottom: 22px;
-            position: relative;
+        /* Float Label trigger */
+        .input-group input:focus ~ label,
+        .input-group input:not(:placeholder-shown) ~ label {
+            top: 14px;
+            font-size: 10.5px;
+            color: var(--primary);
+            font-weight: 600;
         }
 
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 8px;
-            margin-left: 4px;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-wrapper i {
+        .input-icon {
             position: absolute;
             left: 16px;
-            color: #64748b;
-            font-size: 18px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 15px 16px 15px 44px;
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 16px;
-            font-size: 15px;
-            font-family: inherit;
-            color: #0f172a;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus {
-            background: white;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-            outline: none;
-        }
-
-        .form-group input::placeholder {
-            color: #94a3b8;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 18px;
+            top: 50%;
+            transform: translateY(-50%);
             font-size: 16px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .input-group input:focus ~ .input-icon {
+            color: var(--primary);
+        }
+
+        /* Password eye show/hide toggle */
+        .password-toggle-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
-            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            outline: none;
+            transition: color 0.3s;
+            padding: 8px 4px;
+            z-index: 10;
+        }
+
+        .password-toggle-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Checkbox & Forgot Password option panel */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .checkbox-label input {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .checkbox-label input:checked + .checkbox-custom {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .checkbox-label input:checked + .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            font-weight: 800;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .forgot-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: var(--primary);
+        }
+
+        /* Primary submit button */
+        .submit-btn {
+            width: 100%;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.25);
+            outline: none;
         }
 
         .submit-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.4);
-            filter: brightness(1.1);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
         }
 
         .submit-btn:active {
@@ -195,237 +448,286 @@
         .submit-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
-        .auth-footer {
+        /* Loading spinner inside button */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Form Footer Switch Link */
+        .form-footer {
             margin-top: 25px;
             text-align: center;
-            font-size: 15px;
-            color: #475569;
-            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-secondary);
         }
 
-        .auth-footer span {
-            color: var(--accent-primary);
+        .form-footer span {
+            color: var(--primary);
             font-weight: 700;
             cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            margin-left: 5px;
-        }
-
-        .auth-footer span:hover {
-            color: var(--accent-secondary);
-            text-decoration: underline;
-        }
-
-        .helper-links {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 12px;
-            font-size: 13px;
-        }
-
-        .helper-links span {
-            color: #64748b;
-            cursor: pointer;
-            font-weight: 600;
+            margin-left: 4px;
             transition: color 0.2s;
         }
 
-        .helper-links span:hover {
-            color: var(--accent-primary);
+        .form-footer span:hover {
+            color: var(--secondary);
+            text-decoration: underline;
         }
 
-        /* Animations for switching states */
-        .fade-in {
-            animation: fadeIn 0.4s ease forwards;
+        /* Slide Transition wrapper for switching states */
+        .form-slide-container {
+            display: block;
+            transition: opacity 0.3s, transform 0.3s;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
         }
 
-        /* Mobile specific adjustments */
-        @media (max-width: 480px) {
-            .auth-card {
-                padding: 30px 20px;
-                border-radius: 24px;
+        /* =============================================
+           TABLET MEDIA QUERY (768px - 1024px)
+           ============================================= */
+        @media (max-width: 1024px) {
+            .showcase-panel {
+                display: none;
             }
-            .auth-header h1 {
-                font-size: 26px;
+
+            .form-panel {
+                flex: 0 0 100%;
+                background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #030712 100%);
+                padding: 40px 20px;
             }
-            .auth-logo {
-                font-size: 32px;
-            }
-            .form-group input {
-                padding: 12px 14px 12px 40px;
-                font-size: 14px;
-            }
-            .submit-btn {
-                padding: 14px;
-                font-size: 15px;
+
+            .form-card {
+                padding: 30px 24px;
             }
         }
-        @media (max-width: 350px) {
-            .auth-container {
-                padding: 10px;
+
+        /* =============================================
+           MOBILE MEDIA QUERY (320px - 767px)
+           ============================================= */
+        @media (max-width: 767px) {
+            body {
+                overflow-y: auto;
             }
-            .auth-card {
-                padding: 20px 15px;
-                border-radius: 20px;
+
+            .form-panel {
+                align-items: flex-end; /* Slides up from bottom sheet */
+                padding: 0;
             }
-            .auth-header h1 {
-                font-size: 22px;
+
+            .form-container {
+                max-width: 100%;
+                height: 90vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
             }
-            .auth-header p {
-                font-size: 13px;
+
+            .form-card {
+                border-radius: 28px 28px 0 0;
+                border-bottom: none;
+                border-left: none;
+                border-right: none;
+                padding: 35px 24px 45px;
+                background: rgba(10, 15, 30, 0.85);
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+                animation: sheetSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             }
-            .form-group label {
-                font-size: 11px;
-                margin-bottom: 4px;
+
+            @keyframes sheetSlideUp {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
             }
-            .form-group input {
-                padding: 10px 12px 10px 36px;
-                font-size: 13px;
-                border-radius: 12px;
-            }
-            .input-wrapper i {
-                left: 12px;
-                font-size: 16px;
-            }
-            .submit-btn {
-                padding: 12px;
-                font-size: 14px;
-                border-radius: 14px;
-            }
-            .auth-footer {
-                font-size: 13px;
-                margin-top: 15px;
+
+            /* Drag handle for mobile bottom sheet */
+            .form-card::before {
+                content: '';
+                display: block;
+                width: 36px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 2px;
+                margin: -15px auto 25px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="bg-overlay"></div>
+    <div class="page-container">
+        <!-- LEFT SCREEN: Interactive Canvas/Showcase -->
+        <section class="showcase-panel">
+            <div class="glow-blob blob-1"></div>
+            <div class="glow-blob blob-2"></div>
+            <canvas id="three-canvas"></canvas>
 
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-header">
-                <span class="auth-logo">💰</span>
-                <h1 id="auth-title">Welcome Back</h1>
-                <p id="auth-subtitle">Login to manage your daily expenses.</p>
+            <div class="showcase-header">
+                <span class="logo-symbol">💰</span>
+                <span class="logo-text">Spends & Earns</span>
             </div>
 
-            <form id="auth-form">
-                <!-- Signup Only Field -->
-                <div class="form-group signup-only" style="display: none;">
-                    <label>Full Name</label>
-                    <div class="input-wrapper">
-                        <i>👤</i>
-                        <input type="text" id="username" placeholder="John Doe">
+            <div class="showcase-content">
+                <h2>The smart way to track daily finances.</h2>
+                <p>Monitor incomes, optimize expenditures, set weekly budget caps, and audit statements inside a unified, luxury-grade web dashboard.</p>
+                
+                <div class="glass-badge-wrapper">
+                    <div class="glass-badge">
+                        <div class="badge-icon">🔒</div>
+                        <span>Secured Encryption</span>
                     </div>
-                </div>
-
-                <!-- NEW: Email for Recovery -->
-                <div class="form-group signup-only" style="display: none;">
-                    <label>Email Address</label>
-                    <div class="input-wrapper">
-                        <i>📧</i>
-                        <input type="email" id="email" placeholder="john@example.com">
+                    <div class="glass-badge">
+                        <div class="badge-icon">📊</div>
+                        <span>Realtime Analytics</span>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <div class="input-wrapper">
-                        <i>📱</i>
-                        <input type="tel" id="phone" placeholder="9876543210" pattern="[0-9+ \-()]{10,18}" maxlength="18" required>
-                    </div>
-                </div>
-
-                <div class="form-group" id="password-group">
-                    <label>Password</label>
-                    <div class="input-wrapper">
-                        <i>🔒</i>
-                        <input type="password" id="password" placeholder="••••••••" required theme="dark">
-                    </div>
-                    <div class="helper-links login-only">
-                        <span></span> <!-- Spacer -->
-                        <span id="forgot-pw-trigger">Forgot Password?</span>
-                    </div>
-                </div>
-
-                <!-- Signup Only Field -->
-                <div class="form-group signup-only" style="display: none;">
-                    <label>Confirm Password</label>
-                    <div class="input-wrapper">
-                        <i>✅</i>
-                        <input type="password" id="confirm-password" placeholder="••••••••">
-                    </div>
-                </div>
-
-                <!-- Referral Code (Optional) -->
-                <div class="form-group signup-only" style="display: none;">
-                    <label>Referral Code (Optional)</label>
-                    <div class="input-wrapper">
-                        <i>🎁</i>
-                        <input type="text" id="referral-code" placeholder="e.g. USER1234" oninput="this.value = this.value.toUpperCase()">
-                    </div>
-                </div>
-
-                <button type="submit" id="auth-submit-btn" class="submit-btn">Login</button>
-            </form>
-
-            <!-- Forgot Password View (Shared container) -->
-            <div id="forgot-pw-view" style="display: none;">
-                <div id="fp-step-1">
-                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">Enter your registered phone to receive an OTP on your email.</p>
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <div class="input-wrapper">
-                            <i>📱</i>
-                            <input type="tel" id="fp-phone" placeholder="9876543210" maxlength="18">
-                        </div>
-                    </div>
-                    <button type="button" id="send-otp-btn" class="submit-btn">Send OTP</button>
-                </div>
-
-                <div id="fp-step-2" style="display: none;">
-                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;" id="otp-status-text">OTP sent to your email. Please check.</p>
-                    <div class="form-group">
-                        <label>Enter 6-Digit OTP</label>
-                        <div class="input-wrapper">
-                            <i>🔢</i>
-                            <input type="text" id="fp-otp" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 5px; font-weight: 800;">
-                        </div>
-                    </div>
-                    <button type="button" id="verify-otp-btn" class="submit-btn">Verify OTP</button>
-                </div>
-
-                <div id="fp-step-3" style="display: none;">
-                    <p style="font-size: 14px; color: #475569; margin-bottom: 20px;">Identity verified! Set your new password.</p>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="fp-new-password" placeholder="••••••••">
-                        </div>
-                    </div>
-                    <button type="button" id="reset-pw-btn" class="submit-btn">Update Password</button>
-                </div>
-
-                <div class="auth-footer" style="margin-top: 15px;">
-                    <p><span id="back-to-login">Back to Login</span></p>
                 </div>
             </div>
 
-            <div class="auth-footer" id="main-footer">
-                <p id="toggle-text">New here?<span id="switch-auth">Create Account</span></p>
+            <div class="showcase-footer">
+                © 2026 Spends & Earns Inc. All rights reserved.
             </div>
-        </div>
+        </section>
+
+        <!-- RIGHT SCREEN: Form Panel -->
+        <section class="form-panel">
+            <div class="form-container">
+                <div class="form-header">
+                    <h1 id="auth-title">Welcome Back</h1>
+                    <p id="auth-subtitle">Login to manage your daily expenses.</p>
+                </div>
+
+                <div class="form-card">
+                    <!-- Switchable Views Container -->
+                    <div class="form-slide-container" id="form-views-wrapper">
+                        <!-- Primary Form: Login/Register -->
+                        <form id="auth-form">
+                            <!-- Signup Fields -->
+                            <div class="input-group signup-only" style="display: none;">
+                                <input type="text" id="username" placeholder=" " autocomplete="name">
+                                <label for="username">Full Name</label>
+                                <span class="input-icon">👤</span>
+                            </div>
+
+                            <div class="input-group signup-only" style="display: none;">
+                                <input type="email" id="email" placeholder=" " autocomplete="email">
+                                <label for="email">Email Address</label>
+                                <span class="input-icon">📧</span>
+                            </div>
+
+                            <!-- Shared Phone Input -->
+                            <div class="input-group">
+                                <input type="tel" id="phone" required placeholder=" " autocomplete="username" pattern="[0-9+ \-()]{10,18}" maxlength="18">
+                                <label for="phone">Phone Number</label>
+                                <span class="input-icon">📱</span>
+                            </div>
+
+                            <!-- Shared Password Input -->
+                            <div class="input-group" id="password-group">
+                                <input type="password" id="password" required placeholder=" " autocomplete="current-password">
+                                <label for="password">Password</label>
+                                <span class="input-icon">🔒</span>
+                                <button type="button" class="password-toggle-btn" id="toggle-pw">Show</button>
+                            </div>
+
+                            <!-- Signup Confirm Password -->
+                            <div class="input-group signup-only" style="display: none;">
+                                <input type="password" id="confirm-password" placeholder=" " autocomplete="new-password">
+                                <label for="confirm-password">Confirm Password</label>
+                                <span class="input-icon">✅</span>
+                            </div>
+
+                            <!-- Signup Referral Code -->
+                            <div class="input-group signup-only" style="display: none;">
+                                <input type="text" id="referral-code" placeholder=" " oninput="this.value = this.value.toUpperCase()">
+                                <label for="referral-code">Referral Code (Optional)</label>
+                                <span class="input-icon">🎁</span>
+                            </div>
+
+                            <!-- Form Options: Remember Me & Forgot Password -->
+                            <div class="form-options login-only">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="remember-me" checked>
+                                    <span class="checkbox-custom"></span>
+                                    Remember Me
+                                </label>
+                                <span id="forgot-pw-trigger" class="forgot-link">Forgot Password?</span>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" id="auth-submit-btn" class="submit-btn">
+                                <span id="btn-text">Login</span>
+                                <div class="spinner" id="btn-spinner"></div>
+                            </button>
+                        </form>
+
+                        <!-- Forgot Password Flow Container -->
+                        <div id="forgot-pw-view" style="display: none;">
+                            <div id="fp-step-1">
+                                <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 20px 0;">Enter your registered phone to receive an OTP verification code on your email.</p>
+                                <div class="input-group">
+                                    <input type="tel" id="fp-phone" placeholder=" " maxlength="18">
+                                    <label for="fp-phone">Phone Number</label>
+                                    <span class="input-icon">📱</span>
+                                </div>
+                                <button type="button" id="send-otp-btn" class="submit-btn">
+                                    <span>Send OTP</span>
+                                </button>
+                            </div>
+
+                            <div id="fp-step-2" style="display: none;">
+                                <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 20px 0;" id="otp-status-text">OTP sent to your email. Please check.</p>
+                                <div class="input-group">
+                                    <input type="text" id="fp-otp" placeholder=" " maxlength="6" style="text-align: center; letter-spacing: 5px; font-weight: 800;">
+                                    <label for="fp-otp">Enter 6-Digit OTP</label>
+                                    <span class="input-icon">🔢</span>
+                                </div>
+                                <button type="button" id="verify-otp-btn" class="submit-btn">
+                                    <span>Verify OTP</span>
+                                </button>
+                            </div>
+
+                            <div id="fp-step-3" style="display: none;">
+                                <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 20px 0;">Identity verified! Set your new secure access password.</p>
+                                <div class="input-group">
+                                    <input type="password" id="fp-new-password" placeholder=" ">
+                                    <label for="fp-new-password">New Password</label>
+                                    <span class="input-icon">🔒</span>
+                                </div>
+                                <button type="button" id="reset-pw-btn" class="submit-btn">
+                                    <span>Update Password</span>
+                                </button>
+                            </div>
+
+                            <div class="form-footer" style="margin-top: 20px;">
+                                <span id="back-to-login">Back to Login</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Toggle Footer -->
+                    <div class="form-footer" id="main-footer">
+                        <span id="toggle-label-text">New here?</span><span id="switch-auth">Create Account</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
+    <!-- MODULE SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, query, where, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -442,65 +744,90 @@
         const loginOnlyFields = document.querySelectorAll('.login-only');
         const authForm = document.getElementById('auth-form');
         const submitBtn = document.getElementById('auth-submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
         const forgotPwView = document.getElementById('forgot-pw-view');
         const mainFooter = document.getElementById('main-footer');
+        const toggleLabelText = document.getElementById('toggle-label-text');
+        const switchAuth = document.getElementById('switch-auth');
+
+        // Password Show/Hide Toggle logic
+        const passwordField = document.getElementById('password');
+        const togglePwBtn = document.getElementById('toggle-pw');
+        togglePwBtn.addEventListener('click', () => {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                togglePwBtn.textContent = 'Hide';
+            } else {
+                passwordField.type = 'password';
+                togglePwBtn.textContent = 'Show';
+            }
+        });
 
         function toggleMode() {
             isLogin = !isLogin;
             
-            const card = document.querySelector('.auth-card');
-            card.classList.remove('fade-in');
-            void card.offsetWidth; 
-            card.classList.add('fade-in');
-
-            authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
-            authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
-            submitBtn.textContent = isLogin ? "Login" : "Get Started";
+            const wrapper = document.getElementById('form-views-wrapper');
+            wrapper.classList.add('fade-out');
             
-            document.getElementById('main-footer').innerHTML = isLogin ? 
-                '<p id="toggle-text">New here? <span id="switch-auth">Create Account</span></p>' : 
-                '<p id="toggle-text">Already joined? <span id="switch-auth">Login Instead</span></p>';
+            setTimeout(() => {
+                authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
+                authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
+                btnText.textContent = isLogin ? "Login" : "Get Started";
+                
+                toggleLabelText.textContent = isLogin ? "New here? " : "Already joined? ";
+                switchAuth.textContent = isLogin ? "Create Account" : "Login Instead";
 
-            signupFields.forEach(f => f.style.display = isLogin ? 'none' : 'block');
-            loginOnlyFields.forEach(f => f.style.display = isLogin ? 'flex' : 'none');
-            
-            document.getElementById('switch-auth').addEventListener('click', toggleMode);
+                signupFields.forEach(f => f.style.display = isLogin ? 'none' : 'block');
+                loginOnlyFields.forEach(f => f.style.display = isLogin ? 'flex' : 'none');
+                
+                // Reset password type back to password on switch
+                passwordField.type = 'password';
+                togglePwBtn.textContent = 'Show';
+
+                wrapper.classList.remove('fade-out');
+            }, 300);
         }
 
-        document.getElementById('switch-auth').addEventListener('click', toggleMode);
+        switchAuth.addEventListener('click', toggleMode);
 
-        // Forgot Password UI Transitions
+        // Forgot Password Mode togglers
         document.getElementById('forgot-pw-trigger').addEventListener('click', () => {
-            authForm.style.display = 'none';
-            forgotPwView.style.display = 'block';
-            mainFooter.style.display = 'none';
-            authTitle.textContent = "Reset Password";
-            authSubtitle.textContent = "Follow the steps to recover your access.";
+            const wrapper = document.getElementById('form-views-wrapper');
+            wrapper.classList.add('fade-out');
+            
+            setTimeout(() => {
+                authForm.style.display = 'none';
+                forgotPwView.style.display = 'block';
+                mainFooter.style.display = 'none';
+                authTitle.textContent = "Reset Password";
+                authSubtitle.textContent = "Follow the steps to recover your access.";
+                wrapper.classList.remove('fade-out');
+            }, 300);
         });
 
         document.getElementById('back-to-login').addEventListener('click', () => {
-            authForm.style.display = 'block';
-            forgotPwView.style.display = 'none';
-            mainFooter.style.display = 'block';
-            authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
-            authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
+            const wrapper = document.getElementById('form-views-wrapper');
+            wrapper.classList.add('fade-out');
+            
+            setTimeout(() => {
+                authForm.style.display = 'block';
+                forgotPwView.style.display = 'none';
+                mainFooter.style.display = 'block';
+                authTitle.textContent = isLogin ? "Welcome Back" : "Create Account";
+                authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
+                wrapper.classList.remove('fade-out');
+            }, 300);
         });
 
         function cleanPhoneNumber(phoneStr) {
             if (!phoneStr) return '';
-            // Remove all non-numeric characters
             let clean = phoneStr.replace(/[^0-9]/g, '');
-            
-            // If it starts with 91 and has 12 digits (Indian country code), strip it
             if (clean.length === 12 && clean.startsWith('91')) {
                 clean = clean.slice(2);
-            }
-            // If it starts with a leading 0 and is 11 digits, strip the leading 0
-            else if (clean.length === 11 && clean.startsWith('0')) {
+            } else if (clean.length === 11 && clean.startsWith('0')) {
                 clean = clean.slice(1);
             }
-            
-            // If it's longer than 10 digits, keep only the last 10 digits
             if (clean.length > 10) {
                 clean = clean.slice(-10);
             }
@@ -513,9 +840,10 @@
             const phone = cleanPhoneNumber(rawPhone);
             if (phone.length !== 10) return alert("Please enter a valid 10-digit phone number");
 
-            const btn = document.getElementById('send-otp-btn');
-            btn.textContent = "Looking up user...";
-            btn.disabled = true;
+            const otpBtn = document.getElementById('send-otp-btn');
+            const otpBtnText = otpBtn.querySelector('span');
+            otpBtnText.textContent = "Looking up user...";
+            otpBtn.disabled = true;
 
             try {
                 const userRef = doc(db, "users", phone);
@@ -523,31 +851,30 @@
 
                 if (!userSnap.exists()) {
                     alert("No account found with this phone number.");
+                    otpBtnText.textContent = "Send OTP";
+                    otpBtn.disabled = false;
                     return;
                 }
 
                 const userData = userSnap.data();
                 if (!userData.email) {
                     alert("This account doesn't have a recovery email. Please contact support.");
+                    otpBtnText.textContent = "Send OTP";
+                    otpBtn.disabled = false;
                     return;
                 }
 
-                // Generate 6-Digit OTP
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                
-                // Store OTP in Firestore temporarily (expires in 10 mins)
                 const otpExpiry = Date.now() + (10 * 60 * 1000);
                 await setDoc(doc(db, "otps", phone), {
                     otp: otp,
                     expiry: otpExpiry
                 });
 
-                // Resolve baseUrl dynamically to hit the live backend if running on non-Vercel origin (like WebView)
                 const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
                     ? 'https://spends-and-earns.vercel.app'
                     : window.location.origin;
 
-                // Trigger Mail Sending (via our API)
                 const response = await fetch(`${baseUrl}/api/auth/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -578,8 +905,8 @@
                 console.error(err);
                 alert("Error: " + err.message);
             } finally {
-                btn.textContent = "Send OTP";
-                btn.disabled = false;
+                otpBtnText.textContent = "Send OTP";
+                otpBtn.disabled = false;
             }
         });
 
@@ -600,7 +927,6 @@
                 if (Date.now() > expiry) return alert("OTP has expired. Please request a new one.");
                 if (otp !== inputOtp) return alert("Incorrect OTP. Please try again.");
 
-                // Success
                 document.getElementById('fp-step-2').style.display = 'none';
                 document.getElementById('fp-step-3').style.display = 'block';
             } catch (err) {
@@ -650,7 +976,8 @@
                 return alert("Passwords do not match!");
             }
 
-            submitBtn.textContent = "Checking Details...";
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'block';
             submitBtn.disabled = true;
 
             try {
@@ -661,22 +988,32 @@
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
                         if (userData.password === password) {
+                            // Save "Remember Me" choice if needed
+                            const rememberMe = document.getElementById('remember-me').checked;
+                            
                             localStorage.setItem('currentUser', JSON.stringify({
                                 username: userData.username,
                                 phone: userData.phone,
                                 profileIcon: userData.profileIcon || '',
                                 profileBg: userData.profileBg || ''
                             }));
-                            window.location.replace('index.html');
+                            
+                            // Visual Confetti or transitions can go here
+                            setTimeout(() => {
+                                window.location.replace('index.html');
+                            }, 500);
                         } else {
                             alert("Incorrect password. Please try again.");
+                            resetSubmitBtn();
                         }
                     } else {
                         alert("Account not found with this phone number.");
+                        resetSubmitBtn();
                     }
                 } else {
                     if (userSnap.exists()) {
                         alert("This phone number is already registered.");
+                        resetSubmitBtn();
                     } else {
                         let referrerPhone = null;
                         let referrerName = null;
@@ -691,8 +1028,7 @@
                                 const refData = refDoc.data();
                                 if (refData.phone === phone) {
                                     alert("You cannot use your own referral code!");
-                                    submitBtn.textContent = isLogin ? "Login" : "Get Started";
-                                    submitBtn.disabled = false;
+                                    resetSubmitBtn();
                                     return;
                                 }
                                 referrerPhone = refData.phone;
@@ -700,8 +1036,7 @@
                                 referrerCurrentXp = refData.xpBalance || 0;
                             } else {
                                 alert("Invalid referral code! Please check it or leave it blank.");
-                                submitBtn.textContent = isLogin ? "Login" : "Get Started";
-                                submitBtn.disabled = false;
+                                resetSubmitBtn();
                                 return;
                             }
                         }
@@ -750,17 +1085,21 @@
             } catch (err) {
                 console.error(err);
                 alert("Something went wrong. Please check your connection.");
-            } finally {
-                submitBtn.textContent = isLogin ? "Login" : "Get Started";
-                submitBtn.disabled = false;
+                resetSubmitBtn();
             }
         });
+
+        function resetSubmitBtn() {
+            btnText.style.display = 'block';
+            btnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+        }
 
         if(localStorage.getItem('currentUser')) {
             window.location.replace('index.html');
         }
 
-        // URL Referral Code auto-prefill
+        // URL Referral Code prefill
         const params = new URLSearchParams(window.location.search);
         const refCode = params.get('ref') || params.get('referral');
         if (refCode) {
@@ -772,6 +1111,157 @@
                 refField.value = refCode.toUpperCase();
             }
         }
+
+        // =============================================
+        // HIGH PERFORMANCE 3D CANVAS ANIMATION
+        // =============================================
+        const canvas = document.getElementById('three-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+
+        window.addEventListener('resize', () => {
+            if (canvas.offsetWidth && canvas.offsetHeight) {
+                width = canvas.width = canvas.offsetWidth;
+                height = canvas.height = canvas.offsetHeight;
+            }
+        });
+
+        let mouse = { x: width / 2, y: height / 2, tx: width / 2, ty: height / 2 };
+        document.body.addEventListener('mousemove', (e) => {
+            mouse.tx = e.clientX;
+            mouse.ty = e.clientY;
+        });
+
+        // 3D Particles
+        const particles = [];
+        for (let i = 0; i < 70; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                z: Math.random() * 400 + 100, // Depth
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                r: Math.random() * 1.5 + 0.8
+            });
+        }
+
+        // 3D Rotating Cube Vertices
+        const vertices = [
+            {x: -1, y: -1, z: -1},
+            {x: 1, y: -1, z: -1},
+            {x: 1, y: 1, z: -1},
+            {x: -1, y: 1, z: -1},
+            {x: -1, y: -1, z: 1},
+            {x: 1, y: -1, z: 1},
+            {x: 1, y: 1, z: 1},
+            {x: -1, y: 1, z: 1}
+        ];
+
+        const edges = [
+            [0, 1], [1, 2], [2, 3], [3, 0], // Back
+            [4, 5], [5, 6], [6, 7], [7, 4], // Front
+            [0, 4], [1, 5], [2, 6], [3, 7]  // Connectors
+        ];
+
+        let angleX = 0.004;
+        let angleY = 0.005;
+
+        function project(x, y, z) {
+            const scale = 280 / (280 + z);
+            return {
+                x: width / 2.3 + x * 120 * scale,
+                y: height / 2 + y * 120 * scale
+            };
+        }
+
+        function rotateX(point, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return {
+                x: point.x,
+                y: point.y * cos - point.z * sin,
+                z: point.y * sin + point.z * cos
+            };
+        }
+
+        function rotateY(point, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            return {
+                x: point.x * cos - point.z * sin,
+                y: point.y,
+                z: point.x * sin + point.z * cos
+            };
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Interpolate mouse movement
+            mouse.x += (mouse.tx - mouse.x) * 0.04;
+            mouse.y += (mouse.ty - mouse.y) * 0.04;
+
+            // Draw link connections
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.04)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw Particles
+            particles.forEach(p => {
+                const px = p.x + (mouse.x - width / 2) * (35 / p.z);
+                const py = p.y + (mouse.y - height / 2) * (35 / p.z);
+
+                ctx.fillStyle = `rgba(168, 85, 247, ${180 / p.z})`;
+                ctx.beginPath();
+                ctx.arc(px, py, p.r * (350 / p.z), 0, Math.PI * 2);
+                ctx.fill();
+
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+            });
+
+            // Project and draw Cube
+            const rotated = vertices.map(v => {
+                let r = rotateX(v, angleX + (mouse.y - height/2) * 0.001);
+                r = rotateY(r, angleY + (mouse.x - width/2) * 0.001);
+                return r;
+            });
+
+            ctx.strokeStyle = 'rgba(99, 102, 241, 0.25)';
+            ctx.lineWidth = 1.5;
+            edges.forEach(edge => {
+                const p1 = project(rotated[edge[0]].x, rotated[edge[0]].y, rotated[edge[0]].z + 3);
+                const p2 = project(rotated[edge[1]].x, rotated[edge[1]].y, rotated[edge[1]].z + 3);
+                
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            });
+
+            angleX += 0.003;
+            angleY += 0.0025;
+
+            requestAnimationFrame(drawScene);
+        }
+        drawScene();
     </script>
 </body>
 </html>
