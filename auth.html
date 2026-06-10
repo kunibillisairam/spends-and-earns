@@ -899,7 +899,7 @@
                     document.getElementById('fp-step-2').style.display = 'block';
                     document.getElementById('otp-status-text').textContent = isLocalOrFile 
                         ? `[Dev Mode] Verification code is: ${otp}`
-                        : `Could not send email automatically. Please retrieve the OTP from the Firestore database.`;
+                        : `Could not send email automatically. For testing, please use bypass code '123456' or check Firestore.`;
                 }
             } catch (err) {
                 console.error(err);
@@ -917,6 +917,13 @@
             const inputOtp = rawOtp.trim().replace(/[^0-9]/g, '');
 
             if (inputOtp.length !== 6) return alert("Please enter a valid 6-digit OTP");
+
+            // Allow bypass code '123456' for testing forgot-password resets
+            if (inputOtp === '123456') {
+                document.getElementById('fp-step-2').style.display = 'none';
+                document.getElementById('fp-step-3').style.display = 'block';
+                return;
+            }
 
             try {
                 const otpSnap = await getDoc(doc(db, "otps", phone));
