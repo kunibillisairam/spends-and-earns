@@ -341,7 +341,7 @@
                     <label>Phone Number</label>
                     <div class="input-wrapper">
                         <i>📱</i>
-                        <input type="tel" id="phone" placeholder="9876543210" pattern="[0-9]{10}" maxlength="10" required oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        <input type="tel" id="phone" placeholder="9876543210" pattern="[0-9+ \-()]{10,18}" maxlength="18" required>
                     </div>
                 </div>
 
@@ -386,7 +386,7 @@
                         <label>Phone Number</label>
                         <div class="input-wrapper">
                             <i>📱</i>
-                            <input type="tel" id="fp-phone" placeholder="9876543210" maxlength="10">
+                            <input type="tel" id="fp-phone" placeholder="9876543210" maxlength="18">
                         </div>
                     </div>
                     <button type="button" id="send-otp-btn" class="submit-btn">Send OTP</button>
@@ -486,10 +486,32 @@
             authSubtitle.textContent = isLogin ? "Login to manage your daily expenses." : "Join us to start tracking smart.";
         });
 
+        function cleanPhoneNumber(phoneStr) {
+            if (!phoneStr) return '';
+            // Remove all non-numeric characters
+            let clean = phoneStr.replace(/[^0-9]/g, '');
+            
+            // If it starts with 91 and has 12 digits (Indian country code), strip it
+            if (clean.length === 12 && clean.startsWith('91')) {
+                clean = clean.slice(2);
+            }
+            // If it starts with a leading 0 and is 11 digits, strip the leading 0
+            else if (clean.length === 11 && clean.startsWith('0')) {
+                clean = clean.slice(1);
+            }
+            
+            // If it's longer than 10 digits, keep only the last 10 digits
+            if (clean.length > 10) {
+                clean = clean.slice(-10);
+            }
+            return clean;
+        }
+
         // 1. Send OTP Logic
         document.getElementById('send-otp-btn').addEventListener('click', async () => {
-            const phone = document.getElementById('fp-phone').value;
-            if (phone.length !== 10) return alert("Please enter valid 10-digit phone number");
+            const rawPhone = document.getElementById('fp-phone').value;
+            const phone = cleanPhoneNumber(rawPhone);
+            if (phone.length !== 10) return alert("Please enter a valid 10-digit phone number");
 
             const btn = document.getElementById('send-otp-btn');
             btn.textContent = "Looking up user...";
@@ -520,9 +542,13 @@
                     expiry: otpExpiry
                 });
 
+                // Resolve baseUrl dynamically to hit the live backend if running on non-Vercel origin (like WebView)
+                const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+                    ? 'https://spends-and-earns.vercel.app'
+                    : window.location.origin;
+
                 // Trigger Mail Sending (via our API)
-                // Note: You need to set up the API route I'll create next
-                const response = await fetch('/api/auth/send-otp', {
+                const response = await fetch(`${baseUrl}/api/auth/send-otp`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: userData.email, otp: otp })
@@ -534,10 +560,19 @@
                     const maskedEmail = userData.email.replace(/(.{3})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length));
                     document.getElementById('otp-status-text').textContent = `Verification code sent to ${maskedEmail}`;
                 } else {
-                    alert("Failed to send email. Redirecting to manual verification...");
-                    // For demo/dev purposes, usually you'd show an error. 
-                    // But here we'll log it for the user to see the OTP in console if they haven't set up the API yet
+                    const isLocalOrFile = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+                    if (isLocalOrFile) {
+                        alert(`Failed to send email automatically. [DEV MODE] Your OTP is: ${otp}`);
+                    } else {
+                        alert("Failed to send email. Redirecting to manual verification...");
+                    }
                     console.log("DEV ONLY - YOUR OTP IS:", otp);
+                    
+                    document.getElementById('fp-step-1').style.display = 'none';
+                    document.getElementById('fp-step-2').style.display = 'block';
+                    document.getElementById('otp-status-text').textContent = isLocalOrFile 
+                        ? `[Dev Mode] Verification code is: ${otp}`
+                        : `Could not send email automatically. Please retrieve the OTP from the Firestore database.`;
                 }
             } catch (err) {
                 console.error(err);
@@ -550,7 +585,8 @@
 
         // 2. Verify OTP Logic
         document.getElementById('verify-otp-btn').addEventListener('click', async () => {
-            const phone = document.getElementById('fp-phone').value;
+            const rawPhone = document.getElementById('fp-phone').value;
+            const phone = cleanPhoneNumber(rawPhone);
             const inputOtp = document.getElementById('fp-otp').value;
 
             if (inputOtp.length !== 6) return alert("Please enter 6-digit OTP");
@@ -574,7 +610,8 @@
 
         // 3. Reset Password Logic
         document.getElementById('reset-pw-btn').addEventListener('click', async () => {
-            const phone = document.getElementById('fp-phone').value;
+            const rawPhone = document.getElementById('fp-phone').value;
+            const phone = cleanPhoneNumber(rawPhone);
             const newPassword = document.getElementById('fp-new-password').value;
 
             if (newPassword.length < 4) return alert("Password must be at least 4 characters.");
@@ -596,9 +633,14 @@
             
             const usernameInput = document.getElementById('username')?.value;
             const emailInput = document.getElementById('email')?.value;
-            const phone = document.getElementById('phone').value;
+            const phoneRaw = document.getElementById('phone').value;
+            const phone = cleanPhoneNumber(phoneRaw);
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password')?.value;
+
+            if (phone.length !== 10) {
+                return alert("Please enter a valid 10-digit phone number.");
+            }
 
             if (!isLogin && (!emailInput || !emailInput.includes('@'))) {
                 return alert("Please provide a valid email for account recovery!");

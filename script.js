@@ -1274,10 +1274,12 @@ function initUser() {
 profileTrigger?.addEventListener('click', () => { if (profileDrawer) profileDrawer.style.display = 'block'; });
 profileDrawer?.addEventListener('click', (e) => { if (e.target === profileDrawer) profileDrawer.style.display = 'none'; });
 logoutBtn?.addEventListener('click', () => { 
-    localStorage.removeItem('currentUser'); 
-    localStorage.removeItem('trackerData');
-    localStorage.removeItem('weeklyBudget');
-    window.location.replace('auth.html'); 
+    if (confirm("Are you sure you want to logout?")) {
+        localStorage.removeItem('currentUser'); 
+        localStorage.removeItem('trackerData');
+        localStorage.removeItem('weeklyBudget');
+        window.location.replace('auth.html'); 
+    }
 });
 
 // ===== Advanced CSV & PDF Export Logic with Double Confirmation =====
