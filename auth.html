@@ -742,7 +742,7 @@
     <!-- MODULE SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, query, where, getDocs, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, query, where, getDocs, collection, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { firebaseConfig } from "./firebase-config.js";
 
         // Initialize Firebase
@@ -899,19 +899,15 @@
                     const maskedEmail = userData.email.replace(/(.{3})(.*)(?=@)/, (gp1, gp2, gp3) => gp2 + "*".repeat(gp3.length));
                     document.getElementById('otp-status-text').textContent = `Verification code sent to ${maskedEmail}`;
                 } else {
-                    const isLocalOrFile = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
-                    if (isLocalOrFile) {
-                        alert(`Failed to send email automatically. [DEV MODE] Your OTP is: ${otp}`);
-                    } else {
-                        alert("Failed to send email. Redirecting to manual verification...");
+                    let errMessage = "Unknown error";
+                    try {
+                        const errData = await response.json();
+                        errMessage = errData.message || JSON.stringify(errData);
+                    } catch (e) {
+                        errMessage = response.statusText;
                     }
-                    console.log("DEV ONLY - YOUR OTP IS:", otp);
-                    
-                    document.getElementById('fp-step-1').style.display = 'none';
-                    document.getElementById('fp-step-2').style.display = 'block';
-                    document.getElementById('otp-status-text').textContent = isLocalOrFile 
-                        ? `[Dev Mode] Verification code is: ${otp}`
-                        : `Could not send email automatically. For testing, please use bypass code '123456' or check Firestore.`;
+                    alert(`Failed to send email: ${errMessage}`);
+                    console.error("Resend API error:", errMessage);
                 }
             } catch (err) {
                 console.error(err);
@@ -930,13 +926,6 @@
 
             if (inputOtp.length !== 6) return alert("Please enter a valid 6-digit OTP");
 
-            // Allow bypass code '123456' for testing forgot-password resets
-            if (inputOtp === '123456') {
-                document.getElementById('fp-step-2').style.display = 'none';
-                document.getElementById('fp-step-3').style.display = 'block';
-                return;
-            }
-
             try {
                 const otpSnap = await getDoc(doc(db, "otps", phone));
                 if (!otpSnap.exists()) return alert("OTP expired or invalid. Try again.");
@@ -945,6 +934,9 @@
 
                 if (Date.now() > expiry) return alert("OTP has expired. Please request a new one.");
                 if (otp !== inputOtp) return alert("Incorrect OTP. Please try again.");
+
+                // Delete the OTP document so it cannot be reused
+                await deleteDoc(doc(db, "otps", phone));
 
                 document.getElementById('fp-step-2').style.display = 'none';
                 document.getElementById('fp-step-3').style.display = 'block';

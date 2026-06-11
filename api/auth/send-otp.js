@@ -1,7 +1,11 @@
 import { Resend } from 'resend';
 
-// NOTE: Request a free API Key from resend.com and add it to your environment variables
-const resend = new Resend(process.env.RESEND_API_KEY || 're_N1WEq15G_K8mUFL7CrcZKTR62CpSbAG9Y');
+const rawKey = process.env.RESEND_API_KEY || 're_N1WEq15G_K8mUFL7CrcZKTR62CpSbAG9Y';
+const maskedKey = rawKey ? `${rawKey.substring(0, 5)}...${rawKey.substring(rawKey.length - 4)}` : 'undefined';
+const apiKeySource = process.env.RESEND_API_KEY ? "environment variable" : "hardcoded fallback";
+console.log(`[Resend Config] Using Resend API Key from: ${apiKeySource} (${maskedKey})`);
+
+const resend = new Resend(rawKey);
 
 export default async function handler(req, res) {
     // Add CORS headers to enable mobile / WebView cross-origin requests
@@ -19,13 +23,19 @@ export default async function handler(req, res) {
         return;
     }
 
-    if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+    if (req.method !== 'POST') {
+        console.warn(`[send-otp] Rejected ${req.method} request`);
+        return res.status(405).json({ message: 'Method not allowed' });
+    }
 
     const { email, otp } = req.body;
 
     if (!email || !otp) {
+        console.warn(`[send-otp] Missing parameters: email=${email}, otp=${otp}`);
         return res.status(400).json({ message: 'Missing email or otp' });
     }
+
+    console.log(`[send-otp] Attempting to send OTP email to: ${email}`);
 
     try {
         const { data, error } = await resend.emails.send({
@@ -46,13 +56,23 @@ export default async function handler(req, res) {
         });
 
         if (error) {
-            console.error("Resend Error:", error);
-            return res.status(400).json(error);
+            console.error("[send-otp] Resend API reported failure:", error);
+            return res.status(400).json({
+                name: error.name || 'ResendError',
+                message: error.message || 'Unknown Resend error occurred',
+                statusCode: error.statusCode || 400,
+                ...error
+            });
         }
 
-        res.status(200).json({ message: 'Email sent successfully', id: data.id });
+        console.log(`[send-otp] Email sent successfully. Resend ID: ${data?.id}`);
+        res.status(200).json({ message: 'Email sent successfully', id: data?.id });
     } catch (err) {
-        console.error("API Error:", err);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error("[send-otp] Serverless handler caught exception:", err);
+        res.status(500).json({
+            name: err.name || 'InternalServerError',
+            message: err.message || 'Internal Server Error'
+        });
     }
 }
+
