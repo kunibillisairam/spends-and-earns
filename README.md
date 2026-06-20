@@ -20,3 +20,4 @@ A minimalist, table-centric expense tracker for daily financial logging.
 - Open `index.html` in any browser.
 - Use the **+ Add New Day** button to start a new entry.
 - All totals are summarized at the bottom of the table.
+<img width="467" height="768" alt="Screenshot 2026-06-20 145952" src="https://github.com/user-attachments/assets/0ae1a7bd-1c05-47e5-87f2-833ec528717c" />
