@@ -2552,18 +2552,69 @@ function initMonthlyChart() {
     const yearDisplay = document.getElementById('year-display');
     if (yearDisplay) yearDisplay.textContent = currentYearForChart;
     
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthlyEarns = new Array(12).fill(0);
-    const monthlySpends = new Array(12).fill(0);
+    const viewModeSelect = document.getElementById('chart-view-mode');
+    const monthSelect = document.getElementById('chart-month-select');
+    const trendsTitle = document.getElementById('trends-title');
+    const earnTrendsTitle = document.getElementById('earn-trends-title');
+    const spendTrendsTitle = document.getElementById('spend-trends-title');
 
-    trackerData.forEach(d => {
-        const dDate = new Date(d.date);
-        if (dDate.getFullYear() === currentYearForChart) {
-            const m = dDate.getMonth();
-            monthlyEarns[m] += (d.earns || 0) + (d.other || 0);
-            monthlySpends[m] += (d.spends || 0);
-        }
-    });
+    const viewMode = viewModeSelect?.value || 'monthly';
+
+    // Populate month select default value if not set
+    if (monthSelect && !monthSelect.dataset.initialized) {
+        monthSelect.value = new Date().getMonth().toString();
+        monthSelect.dataset.initialized = "true";
+    }
+
+    let labels = [];
+    let earns = [];
+    let spends = [];
+
+    if (viewMode === 'weekly') {
+        if (monthSelect) monthSelect.style.display = 'inline-block';
+        if (trendsTitle) trendsTitle.textContent = 'Weekly Trends';
+        if (earnTrendsTitle) earnTrendsTitle.textContent = 'Weekly Earnings';
+        if (spendTrendsTitle) spendTrendsTitle.textContent = 'Weekly Spends';
+
+        const selectedMonth = parseInt(monthSelect?.value || new Date().getMonth());
+        labels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
+        earns = new Array(5).fill(0);
+        spends = new Array(5).fill(0);
+
+        trackerData.forEach(d => {
+            const dDate = new Date(d.date);
+            if (dDate.getFullYear() === currentYearForChart && dDate.getMonth() === selectedMonth) {
+                const day = dDate.getDate();
+                let weekIdx = 0;
+                if (day <= 7) weekIdx = 0;
+                else if (day <= 14) weekIdx = 1;
+                else if (day <= 21) weekIdx = 2;
+                else if (day <= 28) weekIdx = 3;
+                else weekIdx = 4;
+
+                earns[weekIdx] += (d.earns || 0) + (d.other || 0);
+                spends[weekIdx] += (d.spends || 0);
+            }
+        });
+    } else {
+        if (monthSelect) monthSelect.style.display = 'none';
+        if (trendsTitle) trendsTitle.textContent = 'Yearly Trends';
+        if (earnTrendsTitle) earnTrendsTitle.textContent = 'Earnings';
+        if (spendTrendsTitle) spendTrendsTitle.textContent = 'Spends';
+
+        labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        earns = new Array(12).fill(0);
+        spends = new Array(12).fill(0);
+
+        trackerData.forEach(d => {
+            const dDate = new Date(d.date);
+            if (dDate.getFullYear() === currentYearForChart) {
+                const m = dDate.getMonth();
+                earns[m] += (d.earns || 0) + (d.other || 0);
+                spends[m] += (d.spends || 0);
+            }
+        });
+    }
 
     const topLabelsPlugin = {
         id: 'topLabelsPlugin',
@@ -2589,19 +2640,21 @@ function initMonthlyChart() {
     const earnCtx = document.getElementById('monthly-earn-chart');
     if (earnCtx) {
         if (monthlyEarnChartInstance) {
-            monthlyEarnChartInstance.data.datasets[0].data = monthlyEarns;
+            monthlyEarnChartInstance.data.labels = labels;
+            monthlyEarnChartInstance.data.datasets[0].data = earns;
+            monthlyEarnChartInstance.data.datasets[0].barPercentage = labels.length === 5 ? 0.45 : 0.6;
             monthlyEarnChartInstance.update();
         } else {
             monthlyEarnChartInstance = new Chart(earnCtx, {
                 type: 'bar',
                 data: {
-                    labels: monthNames,
+                    labels: labels,
                     datasets: [{
                         label: 'Earnings',
-                        data: monthlyEarns,
+                        data: earns,
                         backgroundColor: '#10b981',
                         borderRadius: 4,
-                        barPercentage: 0.6
+                        barPercentage: labels.length === 5 ? 0.45 : 0.6
                     }]
                 },
                 options: {
@@ -2625,19 +2678,21 @@ function initMonthlyChart() {
     const spendCtx = document.getElementById('monthly-spend-chart');
     if (spendCtx) {
         if (monthlySpendChartInstance) {
-            monthlySpendChartInstance.data.datasets[0].data = monthlySpends;
+            monthlySpendChartInstance.data.labels = labels;
+            monthlySpendChartInstance.data.datasets[0].data = spends;
+            monthlySpendChartInstance.data.datasets[0].barPercentage = labels.length === 5 ? 0.45 : 0.6;
             monthlySpendChartInstance.update();
         } else {
             monthlySpendChartInstance = new Chart(spendCtx, {
                 type: 'bar',
                 data: {
-                    labels: monthNames,
+                    labels: labels,
                     datasets: [{
                         label: 'Spends',
-                        data: monthlySpends,
+                        data: spends,
                         backgroundColor: '#ef4444',
                         borderRadius: 4,
-                        barPercentage: 0.6
+                        barPercentage: labels.length === 5 ? 0.45 : 0.6
                     }]
                 },
                 options: {
@@ -2664,6 +2719,8 @@ document.getElementById('prev-week')?.addEventListener('click', () => { weekOffs
 document.getElementById('next-week')?.addEventListener('click', () => { if(weekOffset < 0) weekOffset++; initAnalytics(); });
 document.getElementById('prev-year')?.addEventListener('click', () => { currentYearForChart--; initMonthlyChart(); });
 document.getElementById('next-year')?.addEventListener('click', () => { currentYearForChart++; initMonthlyChart(); });
+document.getElementById('chart-view-mode')?.addEventListener('change', () => { initMonthlyChart(); });
+document.getElementById('chart-month-select')?.addEventListener('change', () => { initMonthlyChart(); });
 
 
 // --- Settings Logic & Modals ---
